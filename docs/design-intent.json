@@ -1,0 +1,491 @@
+{
+  "mode": "dynamic",
+  "status": "synthesized-docs-first",
+  "project": {
+    "name": "GhostKey",
+    "suiteName": "The BreachEngine Suite",
+    "domain": "fullstack educational cybersecurity product",
+    "runtimeConstraint": "Next.js, React, Tailwind CSS, Vercel, browser Web Workers",
+    "architectureConstraint": "local-first single deployable until persistence or collaboration is approved"
+  },
+  "designPhilosophy": "GhostKey should feel like a forensic instrument for measuring cryptographic leakage. The interface must show progress, evidence, confidence, and remediation instead of hiding analysis behind generic dashboard panels.",
+  "brandAdjectives": [
+    "forensic",
+    "precise",
+    "tense",
+    "educational",
+    "instrumented"
+  ],
+  "antiAdjectives": [
+    "generic",
+    "decorative",
+    "toy-like",
+    "mysterious",
+    "template-neutral"
+  ],
+  "visualDirection": {
+    "conceptualAnchor": {
+      "name": "forensic-spectrum-analyzer-console",
+      "anchorReference": "forensic spectrum analyzer console",
+      "agentResearchMode": "brief-derived-no-user-visual-reference",
+      "sourceDomain": "scientific instrumentation",
+      "specificReferencePoint": "lab bench spectrum analyzer with live signal traces, warning bands, and measurement readouts",
+      "rationale": "Cryptanalysis is pattern detection. A spectrum analyzer metaphor turns frequency, confidence, and key search into visible measurements.",
+      "signatureMotion": "signal lock sweep when a better candidate appears",
+      "typographicDecision": "monospaced display and data roles with clearer body copy for forensic explanations",
+      "visualRiskBudget": "high distinctiveness with strict readability and reduced-motion fallbacks",
+      "motionRiskBudget": "medium-high motion for progress and state changes only",
+      "cohesionChecks": [
+        "no-dashboard-mental-model",
+        "motion-derived-from-anchor",
+        "colors-map-to-measurement-states"
+      ]
+    },
+    "distinctiveMoves": [
+      "terminal events are structured forensic measurements",
+      "confidence updates use signal lock behavior",
+      "conclusion panels are split into weakness, evidence, fix, and modern alternative"
+    ],
+    "copiedReferenceAllowed": false
+  },
+  "derivedTokenLogic": {
+    "anchorReference": "forensic spectrum analyzer console",
+    "colorDerivationSource": "Semantic colors derive from measurement states: green for confirmed lock, red for exploitable weakness, amber for uncertainty, cyan for detection and analysis status, and cool white for primary readings.",
+    "spacingDerivationSource": "Spacing follows instrument density: 8px bench rhythm with 4px internal grouping for terminal rows and compact readouts.",
+    "typographyDerivationSource": "Monospaced typography supports keys, hashes, scores, and logs; body explanations may use a more readable fallback when long text needs lower fatigue.",
+    "motionDerivationSource": "Motion derives from signal acquisition: accepted jobs arm the rail, progress pulses lightly, better candidates trigger a sweep, and reduced motion replaces sweeps with state changes.",
+    "validationRule": "Every token must support instrument measurement, breach progress, or remediation clarity. Decorative tokens without product function are invalid."
+  },
+  "aiSafeUiAudit": {
+    "status": "active",
+    "failureDefinition": "The UI fails if it becomes a generic dark dashboard, green terminal wallpaper, equal card grid, or decorative glow page without forensic measurement behavior.",
+    "interchangeabilityTest": "If GhostKey can be renamed to a generic analytics dashboard without changing composition, palette, event logs, and conclusion structure, the design must be revised.",
+    "requiredProductSpecificSignals": [
+      "IoC and frequency measurement surfaces",
+      "worker progress terminal with candidate keys and fitness scores",
+      "security conclusion bands tied to exploit evidence and remediation"
+    ],
+    "blockingByDefault": true
+  },
+  "libraryResearchStatus": "verified-for-docs-2026-04-27",
+  "libraryDecisions": [
+    {
+      "library": "Next.js App Router",
+      "purpose": "Application routing, page structure, and optional route handlers.",
+      "verifiedAt": "2026-04-27",
+      "sourceUrl": "https://nextjs.org/docs/app",
+      "stableVersion": "use create-next-app latest at implementation time",
+      "risk": "Project has no package manifest yet, so exact version must be selected during scaffold.",
+      "fallbackIfUnavailable": "Pause implementation and re-check official Next.js setup docs."
+    },
+    {
+      "library": "Tailwind CSS",
+      "purpose": "Utility styling and token-backed implementation.",
+      "verifiedAt": "2026-04-27",
+      "sourceUrl": "https://tailwindcss.com/docs/installation/framework-guides/nextjs",
+      "stableVersion": "use current official Next.js install path at implementation time",
+      "risk": "Token discipline is required so utilities do not bypass semantic design roles.",
+      "fallbackIfUnavailable": "Use CSS modules with the same token structure."
+    },
+    {
+      "library": "Web Workers API",
+      "purpose": "Run expensive cryptanalysis without freezing the UI.",
+      "verifiedAt": "2026-04-27",
+      "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers",
+      "stableVersion": "browser platform API",
+      "risk": "Worker payloads must stay structured-clone safe and cancellable.",
+      "fallbackIfUnavailable": "Use chunked main-thread execution with strict yielding only as a temporary degraded path."
+    },
+    {
+      "library": "Vercel",
+      "purpose": "Target deployment platform for the Next.js application.",
+      "verifiedAt": "2026-04-27",
+      "sourceUrl": "https://vercel.com/docs/frameworks/nextjs",
+      "stableVersion": "platform managed",
+      "risk": "Serverless routes should not run unbounded cryptanalysis jobs.",
+      "fallbackIfUnavailable": "Deploy as a static/browser-heavy Next.js app on another host after revising deployment docs."
+    }
+  ],
+  "mathSystems": {
+    "typographyScaleRatio": "minor-third for UI hierarchy with compact terminal rows",
+    "baseGridUnit": 8,
+    "denseGridUnit": 4,
+    "spacingPattern": "instrument bench rhythm",
+    "densityMode": "dense-readable"
+  },
+  "tokenSystem": {
+    "sourceOfTruth": "docs/design-intent.json",
+    "taxonomyOrder": [
+      "primitive",
+      "semantic",
+      "component"
+    ],
+    "primitiveColorSpace": "OKLCH with hex derivatives allowed",
+    "requireSemanticAliases": true,
+    "componentTokensConsumeSemantic": true,
+    "forbidDirectComponentPrimitiveBypass": true,
+    "semanticAliases": [
+      "surface.base",
+      "surface.panel",
+      "text.primary",
+      "text.muted",
+      "signal.success",
+      "signal.warning",
+      "signal.danger",
+      "signal.info",
+      "border.measurement",
+      "focus.ring"
+    ]
+  },
+  "colorTruth": {
+    "format": "OKLCH",
+    "allowHexDerivatives": true,
+    "requirePerceptualLightnessCurve": true,
+    "paletteRoles": [
+      "near-black instrument base",
+      "lifted panel black",
+      "cool white text",
+      "muted gray metadata",
+      "neon green success",
+      "red vulnerability",
+      "amber uncertainty",
+      "cyan detection"
+    ],
+    "forbidAutopilotPalettesWithoutEvidence": true,
+    "colorOnlyMeaningProhibited": true
+  },
+  "crossViewportAdaptation": {
+    "adaptByRecomposition": true,
+    "touchTargetMinPx": 44,
+    "mutationRules": {
+      "mobile": "Stack by task sequence: input, module and limits, run status, result, explanation. Advanced settings collapse.",
+      "tablet": "Pair input with live status, then show results below. Avoid cloning desktop columns.",
+      "desktop": "Use an instrument bench: input left, terminal center, findings and conclusion right."
+    }
+  },
+  "motionSystem": {
+    "allowMeaningfulMotion": true,
+    "density": "medium-high",
+    "signature": "signal lock sweep",
+    "stateBehaviors": {
+      "jobAccepted": "status rail arms",
+      "progress": "terminal append and subtle module pulse",
+      "candidateFound": "scan sweep and confidence snap",
+      "success": "green evidence confirmation",
+      "warning": "amber caveat boundary",
+      "error": "red boundary with recovery text"
+    },
+    "respectReducedMotion": true,
+    "reducedMotionFallback": "replace sweeps and pulses with immediate state and text updates"
+  },
+  "componentMorphology": {
+    "requireStateBehaviorMatrix": true,
+    "preserveIdentityAcrossViewports": true,
+    "components": {
+      "terminal": "fixed-height forensic event stream with stable row dimensions",
+      "inputWell": "secure inspection tray with loaded, focused, invalid, and empty states",
+      "moduleSwitcher": "instrument selector with risk labels and input expectations",
+      "findingRow": "ranked evidence row with confidence and key candidate",
+      "conclusionBand": "weakness, evidence, fix, and modern alternative"
+    },
+    "stateKeys": [
+      "default",
+      "hover",
+      "focus-visible",
+      "active",
+      "disabled",
+      "loading",
+      "empty",
+      "error",
+      "success",
+      "transition"
+    ]
+  },
+  "accessibilityPolicy": {
+    "hardComplianceFloor": "WCAG-2.2-AA",
+    "advisoryContrastModel": "APCA",
+    "failOnHardViolations": true,
+    "hardRequirements": {
+      "textContrastMinimum": true,
+      "nonTextContrast": true,
+      "useOfColorOnlyProhibited": true,
+      "focusVisible": true,
+      "focusAppearance": true,
+      "targetSizeMinimum": true,
+      "keyboardAccess": true,
+      "reflowRequired": true,
+      "accessibleAuthenticationMinimum": true,
+      "statusMessagesAndDynamicStateAccess": true
+    }
+  },
+  "designExecutionPolicy": {
+    "representationStrategy": "surface-plan-v1",
+    "requireSurfacePlan": true,
+    "requireComponentGraph": true,
+    "requireViewportMutationPlan": true,
+    "requireInteractionStateMatrix": true,
+    "requireContentPriorityMap": true,
+    "requireTaskFlowNarrative": true,
+    "requireSignatureMoveRationale": true,
+    "forbidScreenshotDependency": true,
+    "semanticReviewFocus": [
+      "distinctiveness-vs-genericity",
+      "contract-fidelity",
+      "hierarchy-and-task-priority",
+      "component-state-behavior",
+      "cross-viewport-mutation"
+    ]
+  },
+  "designExecutionHandoff": {
+    "version": "ui-handoff-v1",
+    "status": "ready-for-implementation-after-user-approval",
+    "primaryExperienceGoal": "Run a controlled breach analysis, inspect live progress, and understand the weakness and fix.",
+    "surfacePlan": [
+      {
+        "surfaceId": "artifact-input",
+        "role": "capture and validate user-provided artifact",
+        "priority": "high"
+      },
+      {
+        "surfaceId": "breach-terminal",
+        "role": "show worker progress and candidate evidence",
+        "priority": "high"
+      },
+      {
+        "surfaceId": "findings-panel",
+        "role": "rank results and explain confidence",
+        "priority": "high"
+      },
+      {
+        "surfaceId": "security-conclusion",
+        "role": "teach weakness and remediation",
+        "priority": "high"
+      }
+    ],
+    "componentGraph": {
+      "nodes": [
+        { "id": "module-switcher", "role": "select attack vector" },
+        { "id": "input-well", "role": "artifact entry" },
+        { "id": "worker-status", "role": "job state" },
+        { "id": "terminal-log", "role": "progress events" },
+        { "id": "finding-list", "role": "ranked candidates" },
+        { "id": "conclusion-band", "role": "why weak and how to fix" }
+      ],
+      "edges": [
+        { "from": "module-switcher", "to": "input-well", "relationship": "sets expected artifact shape" },
+        { "from": "input-well", "to": "worker-status", "relationship": "starts bounded worker job" },
+        { "from": "worker-status", "to": "terminal-log", "relationship": "streams event messages" },
+        { "from": "terminal-log", "to": "finding-list", "relationship": "promotes best candidates" },
+        { "from": "finding-list", "to": "conclusion-band", "relationship": "explains selected finding" }
+      ]
+    },
+    "contentPriorityMap": {
+      "primary": [
+        "input artifact",
+        "run breach",
+        "current worker status",
+        "best finding",
+        "security conclusion"
+      ],
+      "secondary": [
+        "language detection",
+        "IoC score",
+        "fitness trace",
+        "module caveats"
+      ],
+      "deferred": [
+        "advanced limits",
+        "export report",
+        "corpus details"
+      ]
+    },
+    "viewportMutationPlan": {
+      "mobile": {
+        "primaryOperation": "task-sequence-stack",
+        "requiredSurfaceActions": [
+          "place run action near input",
+          "collapse advanced settings",
+          "show latest status before full log"
+        ],
+        "forbiddenPatterns": [
+          "scale-only-shrink",
+          "three-column-squeeze"
+        ]
+      },
+      "tablet": {
+        "primaryOperation": "input-status-pairing",
+        "requiredSurfaceActions": [
+          "pair input with terminal",
+          "move findings under active job"
+        ],
+        "forbiddenPatterns": [
+          "uniform-module-grid-without-role-change"
+        ]
+      },
+      "desktop": {
+        "primaryOperation": "instrument-bench",
+        "requiredSurfaceActions": [
+          "left input controls",
+          "center live terminal",
+          "right findings and conclusion"
+        ],
+        "forbiddenPatterns": [
+          "interchangeable-dashboard-or-landing-chrome"
+        ]
+      }
+    },
+    "interactionStateMatrix": [
+      {
+        "componentId": "run-button",
+        "states": [
+          "default",
+          "hover",
+          "focus-visible",
+          "loading",
+          "disabled",
+          "success",
+          "error"
+        ],
+        "notes": "Must communicate running and cancellable states without relying on color alone."
+      },
+      {
+        "componentId": "terminal-log",
+        "states": [
+          "empty",
+          "streaming",
+          "candidate-found",
+          "completed",
+          "failed"
+        ],
+        "notes": "Must keep stable height and expose updates to assistive technology."
+      }
+    ],
+    "taskFlowNarrative": [
+      "Entry: user chooses an attack vector and provides an artifact.",
+      "Process: worker emits progress events while UI keeps controls responsive.",
+      "Resolution: user inspects ranked findings and reads why the artifact is weak and how to fix it."
+    ],
+    "signatureMoveRationale": "The signal lock sweep makes a better candidate feel like a measured acquisition event. A generic spinner would hide the actual analysis state."
+  },
+  "reviewRubric": {
+    "version": "ui-rubric-v1",
+    "genericityAutoFail": true,
+    "dimensions": [
+      {
+        "key": "distinctiveness",
+        "blockingByDefault": true,
+        "question": "Does the UI read as a cryptanalysis instrument rather than a generic dashboard?"
+      },
+      {
+        "key": "contractFidelity",
+        "blockingByDefault": true,
+        "question": "Do UI choices follow the forensic spectrum analyzer anchor and worker-flow contract?"
+      },
+      {
+        "key": "accessibility",
+        "blockingByDefault": true,
+        "question": "Are contrast, focus, target size, keyboard access, and dynamic status access preserved?"
+      },
+      {
+        "key": "motionDiscipline",
+        "blockingByDefault": false,
+        "question": "Does motion clarify progress and state instead of decorating the page?"
+      }
+    ],
+    "genericitySignals": [
+      "generic-card-grid",
+      "decorative-terminal-wallpaper",
+      "green-black-only-palette",
+      "spinner-instead-of-progress-evidence",
+      "scale-only-responsive-layout",
+      "conclusion-without-remediation"
+    ],
+    "validBoldSignals": [
+      "forensic-instrument-layout",
+      "measurement-based-color-roles",
+      "structured-terminal-events",
+      "signal-lock-candidate-motion",
+      "task-priority-responsive-recomposition"
+    ]
+  },
+  "contextHygiene": {
+    "continuityMode": "opt-in-only",
+    "allowedSources": [
+      "current-user-brief",
+      "current-repo-evidence",
+      "current-project-docs",
+      "official-docs-research"
+    ],
+    "taintedSources": [
+      "prior-project-style-memory",
+      "movie-terminal-imitation",
+      "generic-template-recall"
+    ],
+    "repoEvidenceOverridesMemory": true
+  },
+  "experiencePrinciples": [
+    "Show progress as evidence, not theater.",
+    "Explain every successful breach with a fix.",
+    "Keep sensitive artifacts local by default.",
+    "Use dense layouts only when they improve forensic scanning.",
+    "Treat accessibility and reduced motion as part of the instrument design."
+  ],
+  "forbiddenPatterns": [
+    "remote-attack-fields",
+    "generic-card-grid",
+    "decorative-scanlines-without-status-function",
+    "unbounded-terminal-growth",
+    "color-only-risk-state",
+    "jwt-decode-presented-as-trust",
+    "real-world-key-breaking-claims"
+  ],
+  "validationHints": {
+    "requireViewportMutationRules": true,
+    "requirePerceptualColorRationale": true,
+    "requireTokenLayering": true,
+    "requireMotionRationale": true,
+    "requireStateMorphology": true,
+    "requireAccessibilitySplit": true,
+    "requireWcagHardFloor": true,
+    "requireStructuredDesignHandoff": true,
+    "rejectTemplateNeutralLayout": true,
+    "requireThreeProductSpecificSignals": true
+  },
+  "requiredDesignSections": [
+    "Design Vision and Product Personality",
+    "Audience and Use-Context Signals",
+    "Visual Direction and Distinctive Moves",
+    "Color Science and Semantic Roles",
+    "Typographic Engineering and Hierarchy",
+    "Spacing, Layout Rhythm, and Density Strategy",
+    "Token Architecture and Alias Strategy",
+    "Responsive Strategy and Cross-Viewport Adaptation Matrix",
+    "Motion and Interaction Principles",
+    "Component Language and Morphology",
+    "Context Hygiene and Source Boundaries",
+    "Accessibility Non-Negotiables",
+    "Anti-Patterns to Avoid",
+    "Implementation Notes for Future UI Tasks"
+  ],
+  "implementation": {
+    "requiredDeliverables": [
+      "docs/DESIGN.md",
+      "docs/design-intent.json"
+    ],
+    "requireDesignRationale": true,
+    "requireDistinctVisualDirection": true,
+    "requireMachineReadableContract": true,
+    "requireViewportMutationRules": true,
+    "requirePurposefulMotionGuidelines": true,
+    "requireRecognizableVisualBet": true,
+    "requireConceptualAnchor": true
+  },
+  "repoEvidence": {
+    "freshWorkspace": true,
+    "packageManifestPresent": false,
+    "gitRepositoryPresent": false,
+    "existingDocsBeforeThisPass": [
+      "docs/design-intent.json"
+    ]
+  }
+}

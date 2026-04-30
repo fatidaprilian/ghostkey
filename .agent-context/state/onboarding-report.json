@@ -1,0 +1,122 @@
+{
+  "cliVersion": "3.0.36",
+  "generatedAt": "2026-04-27T12:38:41.880Z",
+  "operationMode": "init",
+  "selectedProfile": "balanced",
+  "selectedPreset": null,
+  "projectScope": {
+    "key": "both",
+    "label": "Both (frontend + backend)"
+  },
+  "projectTopology": "Agent recommendation required from current brief, repo evidence, and live official docs",
+  "runtimeDecision": {
+    "mode": "agent-decision-required",
+    "explicitStack": null,
+    "detectedStackEvidence": null,
+    "detectedAdditionalStackEvidence": []
+  },
+  "architectureDecision": {
+    "mode": "agent-decision-required",
+    "explicitBlueprint": null,
+    "detectedBlueprintEvidence": null
+  },
+  "selectedStack": null,
+  "selectedAdditionalStacks": [],
+  "selectedBlueprint": null,
+  "selectedAdditionalBlueprints": [],
+  "ruleLoadingPolicy": {
+    "canonicalSource": ".instructions.md",
+    "stackLoadingMode": "lazy",
+    "domainRuleLoadingMode": "lazy",
+    "loadedOnDemand": true,
+    "primaryStack": null,
+    "additionalStacks": [],
+    "agentDecisionRequired": true
+  },
+  "ciGuardrailsEnabled": true,
+  "setupDurationMs": 52395,
+  "runtimeEnvironment": {
+    "selected": "windows",
+    "selectedLabel": "Windows",
+    "detected": "windows",
+    "detectedLabel": "Windows",
+    "detectionSource": "process.platform"
+  },
+  "tokenOptimization": {
+    "enabled": true,
+    "selectedAgent": "copilot",
+    "preferredShellProxy": "native-fallback",
+    "stateFile": ".agent-context/state/token-optimization.json"
+  },
+  "memoryContinuity": {
+    "enabled": true,
+    "hydrationMode": "progressive-disclosure",
+    "adapters": [
+      "claude-code",
+      "gemini-cli",
+      "vscode-chat"
+    ],
+    "stateFile": ".agent-context/state/memory-continuity.json",
+    "activeSnapshotFile": ".agent-context/state/active-memory.json"
+  },
+  "autoDetection": {
+    "detectedStack": null,
+    "detectedAdditionalStacks": [],
+    "detectedBlueprint": null,
+    "detectedAdditionalBlueprints": [],
+    "confidenceLabel": null,
+    "confidenceScore": 0,
+    "confidenceGap": 0,
+    "detectionReasoning": "No known project markers were detected.",
+    "rankedCandidates": [],
+    "evidence": [],
+    "detectionTransparency": {
+      "declaredAt": "2026-04-27T12:37:49.493Z",
+      "declarationType": "fresh-project",
+      "declarationShown": false,
+      "detectionSummary": "No existing project markers were detected.",
+      "activeRulesSummary": {
+        "canonicalSource": ".instructions.md",
+        "compiledEntrypoints": [
+          ".agent-instructions.md",
+          ".cursorrules",
+          ".windsurfrules",
+          ".clauderc",
+          ".gemini/instructions.md",
+          ".github/copilot-instructions.md"
+        ],
+        "stackLoadingMode": "lazy",
+        "domainRuleLoadingMode": "lazy",
+        "selectedProfile": "balanced",
+        "selectedProfileDisplayName": "Balanced",
+        "blockingSeverities": [
+          "critical",
+          "high"
+        ],
+        "ciGuardrailsEnabled": true
+      },
+      "majorConstraints": [
+        "Preserve existing project markers and avoid forced stack migration.",
+        "Use detected runtime markers as evidence only; do not convert them into stack migration or design direction.",
+        "Explicit stack or blueprint overrides are constraints only when the user provides them."
+      ],
+      "quickConfirmation": {
+        "offered": false,
+        "response": "not-applicable",
+        "source": "existing-project-detection"
+      },
+      "decision": {
+        "mode": "fresh-agent-decision-required",
+        "selectedStackFileName": "agent-decision-runtime.md",
+        "selectedBlueprintFileName": "agent-decision-architecture.md",
+        "selectedAdditionalStackFileNames": [],
+        "selectedAdditionalBlueprintFileNames": [],
+        "usedDetectedSetup": false,
+        "selectedProjectScopeKey": "both",
+        "selectedProjectScopeLabel": "Both (frontend + backend)"
+      },
+      "projectContextEvidence": null
+    },
+    "uiScope": null
+  }
+}

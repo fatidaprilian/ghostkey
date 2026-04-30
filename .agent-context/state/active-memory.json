@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "active-memory-v1",
+  "snapshotPurpose": "compact-cross-session-continuity",
+  "updatePolicy": {
+    "writeWhen": "natural-task-boundary",
+    "overwriteOnlyWithCurrentRepoEvidence": true,
+    "preserveUserOwnedContent": true
+  },
+  "project": {
+    "name": "GhostKey",
+    "currentFocus": "Frontend-heavy MVP scaffold for The BreachEngine Suite with no custom backend, prepared for initial GitHub publication.",
+    "durableFacts": [
+      "MVP direction is a single Next.js App Router application with React, Tailwind CSS, Vercel deployment, and browser Web Workers for heavy cryptanalysis.",
+      "MVP has no custom backend, no database, and no auth unless saved labs, classroom management, accounts, sharing, or server-side processing are approved later.",
+      "Initial implementation includes a Next.js 16.2.4 App Router app with React 19.2.5, Tailwind 4.2.4, TypeScript, and browser worker orchestration.",
+      "Auto Detect is the default breach mode and runs in the browser worker without app/api routes.",
+      "Dual-use security boundary is documented: local educational analysis only, no remote attack automation, no bundled large cracking wordlists.",
+      "Design anchor is a forensic spectrum analyzer console with signal-lock progress motion and semantic measurement colors."
+    ]
+  },
+  "progress": {
+    "lastAchievements": [
+      "Created required project docs: project brief, ADR, flow overview, API contract, data model, design contract, and design intent.",
+      "Added security-and-ethics and algorithm-spec docs for safe scope and implementation planning.",
+      "Added backend-frontend-boundary.md and clarified that backend rules are future guardrails, not MVP implementation scope.",
+      "Scaffolded a no-backend Breach Workspace UI with a browser Web Worker, Caesar demo analysis, and JWT decode demo.",
+      "Upgraded analysis from common-word-only scoring to IoC, frequency chi-square, trigram and quadgram hints, language markers, and auto-detect family ranking.",
+      "Pinned PostCSS override to 8.5.12 after npm audit flagged Next's nested PostCSS advisory path.",
+      "Validated docs/design-intent.json parses as JSON.",
+      "Prepared the workspace for initial GitHub publication with a root README and Git hygiene updates."
+    ],
+    "pendingIssues": [
+      "English and Indonesian quadgram data sources and licenses still need validation.",
+      "Only Caesar and JWT full worker result paths are implemented; Vigenere and Autokey are currently detection candidates, not full solvers yet."
+    ],
+    "nextBestActions": [
+      "Replace lightweight ngram hints with licensed English and Indonesian quadgram tables.",
+      "Add Vigenere and monoalphabetic worker modules behind the existing worker contract.",
+      "Add behavior tests for malformed artifacts, worker errors, and result conclusions."
+    ],
+    "validationState": [
+      "docs/design-intent.json parsed with PowerShell ConvertFrom-Json.",
+      "Docs were scanned for banned filler terms and unresolved placeholders; no hits found.",
+      "npm run validate passed outside the sandbox because Next.js build worker spawn was blocked by sandbox EPERM.",
+      "npm audit --omit=dev found 0 vulnerabilities after PostCSS override.",
+      "Local dev server responded with HTTP 200 at http://127.0.0.1:3000.",
+      "Local publish-readiness scan found no .env files and no obvious secret patterns before git initialization.",
+      "npm.cmd run validate passed outside the sandbox on 2026-04-30 before initial publication."
+    ]
+  },
+  "designContinuity": {
+    "visualLanguageContinuity": "opt-in-only",
+    "currentConceptualAnchor": "forensic spectrum analyzer console",
+    "forbiddenCarryover": [
+      "prior-project-style-memory",
+      "old-ui-visual-dna-without-user-approval",
+      "generic-dashboard-defaults"
+    ]
+  },
+  "privacy": {
+    "storeSecrets": false,
+    "storeRawChatLogs": false,
+    "redactSensitiveTextBeforeWriting": true
+  },
+  "generatedAt": "2026-04-27T12:38:41.841Z",
+  "lastUpdatedAt": "2026-04-30T13:35:57.7909868+07:00"
+}
