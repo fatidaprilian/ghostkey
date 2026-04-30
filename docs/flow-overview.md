@@ -15,8 +15,13 @@
    - weak RSA sample
    - weak ElGamal sample
 3. The user pastes the artifact and chooses either automatic detection or a specific module.
-4. GhostKey normalizes the input locally.
-5. GhostKey runs a fast pre-analysis:
+4. By default, Bypass Tool runs a ciphertext-only attack with no key, plaintext, or cribs supplied.
+5. For explicit crib-attack lessons only, the user may add local attack evidence:
+   - a known plaintext prefix
+   - probable words or cribs
+   - a maximum key length for bounded classical search
+6. GhostKey normalizes the input locally.
+7. GhostKey runs a fast pre-analysis:
    - character set check
    - length check
    - Index of Coincidence
@@ -28,16 +33,17 @@
    - Vigenere and Autokey family hints from Index of Coincidence
    - bounded columnar and monoalphabetic search where input length makes it practical
    - confidence caps for short artifacts where language evidence is weak
-6. GhostKey creates a worker job with a bounded iteration plan.
-7. The worker streams progress events:
+8. When attack evidence is supplied, GhostKey derives Vigenere or Autokey keys from known-plaintext consistency before falling back to language scoring.
+9. GhostKey creates a worker job with a bounded iteration plan.
+10. The worker streams progress events:
    - current key candidate
    - current fitness score
    - best candidate so far
    - iteration count
    - elapsed time
-8. The UI updates the terminal log and result panel.
-9. The worker completes, fails safely, or is cancelled by the user.
-10. GhostKey shows:
+11. The UI updates the terminal log and result panel.
+12. The worker completes, fails safely, or is cancelled by the user.
+13. GhostKey shows:
    - best plaintext or decoded artifact
    - guessed key or weak parameter
    - confidence score
@@ -96,15 +102,18 @@
 3. Estimate Caesar shifts per position.
 4. Refine the key through local search.
 5. Score candidates with local n-gram corpus fitness and language markers.
-6. Explain that repeated-key polyalphabetic ciphers leak periodic structure.
+6. When a known plaintext prefix is supplied, derive repeated-key candidates and validate periodic consistency before scoring.
+7. Explain that repeated-key polyalphabetic ciphers leak periodic structure.
 
 ## Flow: Autokey Breach
 
 1. Detect whether Vigenere-style key length confidence is low.
 2. Use likely starting key candidates.
-3. Generate plaintext candidates by feeding recovered text into later key positions.
-4. Score with local n-gram corpus fitness and language markers.
-5. Explain that Autokey improves on repeated keys but is still unsafe against modern cryptanalysis and known-plaintext attacks.
+3. When a known plaintext prefix is supplied, derive seed-key candidates directly from ciphertext minus plaintext and validate later Autokey stream positions.
+4. Generate plaintext candidates by feeding recovered text into later key positions.
+5. Score with local n-gram corpus fitness and language markers.
+6. Boost confidence only when supplied cribs or known plaintext match the recovered candidate.
+7. Explain that Autokey improves on repeated keys but is still unsafe against modern cryptanalysis and known-plaintext attacks.
 
 Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt path is mandatory and deterministic; breach mode is heuristic and should keep confidence caveats visible.
 

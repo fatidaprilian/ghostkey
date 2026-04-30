@@ -6,6 +6,7 @@ import { solveAutoDetectClassical, solveClassicalModule } from "@/lib/crypto-ana
 import { detectArtifact } from "@/lib/crypto-analysis/detection";
 import { analyzeJwt } from "@/lib/crypto-analysis/jwt";
 import type {
+  ClassicalAttackHints,
   GhostKeyProblem,
   ProgressData,
   WorkerJobEvent,
@@ -14,6 +15,7 @@ import type {
 
 type ArtifactPayload = {
   artifact: string;
+  attackHints?: ClassicalAttackHints;
 };
 
 const workerScope = self as DedicatedWorkerGlobalScope;
@@ -47,7 +49,7 @@ workerScope.onmessage = (message: MessageEvent<WorkerJobRequest<ArtifactPayload>
 
       const solved = looksNumeric(artifact)
         ? solveNumericAutoDetect(artifact)
-        : solveAutoDetectClassical(artifact);
+        : solveAutoDetectClassical(artifact, request.payload.attackHints);
       const bestSolvedScore = solved.results[0]?.fitnessScore ?? solved.results[0]?.confidence ?? 0;
 
       solved.trace.slice(0, request.limits.maxCandidates * 2).forEach((trace, index) => {
@@ -98,7 +100,7 @@ workerScope.onmessage = (message: MessageEvent<WorkerJobRequest<ArtifactPayload>
       request.module === "classical-substitution" ||
       request.module === "transposition-columnar"
     ) {
-      const output = solveClassicalModule(request.module, artifact);
+      const output = solveClassicalModule(request.module, artifact, request.payload.attackHints);
       output.trace.slice(0, Math.max(1, request.limits.maxCandidates * 2)).forEach((trace, index) => {
         postEvent(request.jobId, "job.progress", {
           iteration: index + 1,

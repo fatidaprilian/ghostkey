@@ -41,6 +41,7 @@ The signature interaction is a **message handoff**. When the user clicks Encrypt
 - Local history is visibly browser-owned and clearable, not an account feature.
 - Bypass panels should stay on the same light learning surface as Autokey. Finding blocks, history rows, terminal feeds, confidence meters, and spectrum bars should avoid leftover dark or gray-box styling.
 - Short ciphertext should never look magically solved. Complex solvers such as Autokey, Vigenere, Column, and Monoalphabetic must show capped confidence and caveats when the artifact is too short for strong statistical evidence.
+- Bypass Tool defaults to ciphertext-only attack mode. Optional crib controls are available only as a separate attack evidence mode so users do not think "bypass" requires knowing the plaintext.
 
 ## Color Science and Semantic Roles
 
@@ -132,6 +133,10 @@ The input well should feel like a secure inspection tray. It needs clear empty, 
 ### Module Switcher
 
 The module switcher should act like an instrument selector. Each module needs a short risk label and expected input type.
+
+### Assisted Bypass Evidence
+
+Ciphertext-only must be the first visible bypass mode. Known plaintext, probable words, and max key length controls may appear only after the user selects optional crib attack mode because they change the solver's evidence model. The fields must stay compact, clearly local, and keyboard-accessible. They should not imply GhostKey can break modern cryptography; they are a way to demonstrate known-plaintext and crib attacks against classroom-sized classical ciphers.
 
 ### Finding Row
 

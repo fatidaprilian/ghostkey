@@ -8,45 +8,36 @@
   },
   "project": {
     "name": "GhostKey",
-    "currentFocus": "Friendly two-tab GhostKey learning web app with simplified Autokey simulation and local corpus-backed bypass scoring.",
+    "currentFocus": "Friendly two-tab GhostKey learning web app with ciphertext-only Bypass Tool by default and optional crib attack mode separated.",
     "durableFacts": [
       "MVP direction is a single Next.js App Router application with React, Tailwind CSS, Vercel deployment, and browser Web Workers for heavy cryptanalysis.",
       "MVP has no custom backend, no database, and no auth unless saved labs, classroom management, accounts, sharing, or server-side processing are approved later.",
-      "Initial implementation includes a Next.js 16.2.4 App Router app with React 19.2.5, Tailwind 4.2.4, TypeScript, and browser worker orchestration.",
       "Auto Detect is the default breach mode and runs in the browser worker without app/api routes.",
       "Dual-use security boundary is documented: local educational analysis only, no remote attack automation, no bundled large cracking wordlists.",
       "Design anchor is now an interactive classroom message lab with Alice, Eve, Bob, readable formulas, and friendly learning colors.",
       "Autokey Cipher encryption and decryption with a user-provided key is the grading-safe core path.",
       "Bypass Tool now targets classroom demos for Caesar, Reverse, Vigenere, Autokey, Monoalphabetic, Column, toy RSA, toy ElGamal, and JWT locally.",
-      "Run history is browser-local through localStorage; there is still no login, database, or custom backend.",
       "Autokey breach uses beam search over seed-key prefixes plus coordinate refinement, with Indonesian scoring support for classroom phrases.",
       "Plaintext fitness now uses embedded English and Indonesian corpora to build local n-gram and frequency models, then meta-ranks solver outputs by language quality, solver confidence, complexity, and ciphertext length.",
       "Autokey coursework UI includes Encrypt & Send, Decrypt Message, Reset, Eve confusion, Bob reveal, CSS characters, and formula rows for Pi, Ki, and Ci.",
-      "Language corpora are isolated in src/lib/crypto-analysis/language-corpora.ts so local scoring can grow without adding an API key or backend.",
       "Auto Detect prefers strong cheap Caesar or Reverse evidence before expensive heuristic solvers and caps complex solver confidence on short artifacts.",
-      "Bypass Tool visual styling now uses light learning surfaces for findings, history, terminal feed, meters, spectrum bars, and action controls."
+      "Bypass Tool defaults to ciphertext-only attack mode. Optional crib attack mode can pass local known plaintext, probable words, and max key length hints for separate known-plaintext lessons."
     ]
   },
   "progress": {
     "lastAchievements": [
-      "Scaffolded a no-backend Breach Workspace UI with a browser Web Worker, Caesar demo analysis, and JWT decode demo.",
-      "Upgraded analysis from common-word-only scoring to IoC, frequency chi-square, trigram and quadgram hints, language markers, and auto-detect family ranking.",
-      "Added deterministic Autokey encrypt/decrypt logic with visible keystream output.",
-      "Redesigned the first workspace into an Autokey Core plus Breach Console instrument layout.",
-      "Implemented bounded local solvers/auditors for Reverse, Vigenere, Autokey breach, Monoalphabetic hill climbing, Column permutation, RSA small-prime factoring, and ElGamal tiny-group discrete log.",
       "Added browser-local run history with clear action and no account or backend dependency.",
       "Updated project, flow, API, data, algorithm, and design docs for the hybrid Autokey plus classroom breach suite direction.",
       "Improved Autokey breach so the sample ciphertext CICAFY QRRXGE SRKT XSJAK ranks KELAS -> SERANG MARKAS SAAT FAJAR first.",
       "Replaced fixed phrase-heavy text metrics with corpus-built language scoring and Auto Detect meta-ranking across active solver results.",
       "Added a live Autokey sender-observer-receiver simulation with formula tables to strengthen the mandatory coursework path.",
       "Split the primary UI into Autokey Cipher and Bypass Tool tabs, with staged compose, encrypt, intercept, and decrypt simulation states.",
-      "Moved English and Indonesian scoring text into a larger local corpus pack for browser-side n-gram language scoring."
-      ,
       "Restyled the primary Autokey surface from forced hacker/forensic styling into a friendlier classroom learning web app.",
       "Simplified Autokey simulation controls to Encrypt & Send, Decrypt Message, and Reset, with Eve confusion and Bob reveal.",
       "Lightened Bypass Tool panels and controls, removed leftover gray/dark result surfaces, and made tab switching reset stale Bypass findings.",
       "Tuned Auto Detect so short ambiguous ciphertext is capped at low confidence while the user's Autokey sample still recovers KELAS -> SERANG MARKAS SAAT FAJAR.",
-      "Improved short Autokey seed ranking so MQO KOUN DNGOCOET recovers MS -> AYO MAIN VALORANT instead of a false high-ranking candidate."
+      "Improved short Autokey seed ranking so MQO KOUN DNGOCOET recovers MS -> AYO MAIN VALORANT instead of a false high-ranking candidate.",
+      "Separated Bypass Tool into default ciphertext-only mode and optional crib attack mode so the main bypass path no longer implies prior plaintext knowledge."
     ],
     "pendingIssues": [
       "English and Indonesian quadgram data sources and licenses still need validation.",
@@ -55,19 +46,10 @@
     ],
     "nextBestActions": [
       "Replace lightweight ngram hints with licensed English and Indonesian quadgram tables.",
-      "Tune remaining demo fixtures so every class algorithm has a reliable presentation path.",
+      "Add a fixture pack for known-plaintext and crib-assisted demo cases across classical modules.",
       "Add behavior tests for malformed artifacts, worker errors, and result conclusions."
     ],
     "validationState": [
-      "A headless Node check of the upgraded Autokey search returned KELAS and SERANG MARKAS SAAT FAJAR for the user's sample ciphertext.",
-      "npm.cmd run validate passed outside the sandbox on 2026-04-30 after the Autokey accuracy fix.",
-      "A headless Node check after the scorer rewrite returned Auto Detect rank 1 classical-autokey, KELAS, and SERANG MARKAS SAAT FAJAR for CICAFY QRRXGE SRKT XSJAK.",
-      "npm.cmd run validate passed outside the sandbox on 2026-04-30 after replacing fixed text metrics with corpus-built scoring and Auto Detect meta-ranking.",
-      "docs/design-intent.json parsed with PowerShell ConvertFrom-Json after adding Autokey simulation scope.",
-      "npm.cmd run typecheck and npm.cmd run lint passed after adding the Autokey simulation UI.",
-      "Headless Autokey check returned CICAFY QRRXGE SRKT XSJAK and decrypted back to SERANG MARKAS SAAT FAJAR.",
-      "npm.cmd run validate passed outside the sandbox on 2026-04-30 after adding the Autokey simulation UI.",
-      "npm.cmd run typecheck and npm.cmd run lint passed after adding two-tab staged simulation and local language corpus pack.",
       "Headless Autokey and Auto Detect check returned CICAFY QRRXGE SRKT XSJAK, KELAS, and SERANG MARKAS SAAT FAJAR after the local corpus pack change.",
       "npm.cmd run validate passed outside the sandbox on 2026-04-30 after adding two-tab staged simulation and the local corpus pack.",
       "npm.cmd run typecheck and npm.cmd run lint passed after simplifying the Autokey simulation and restyling the UI.",
@@ -77,7 +59,9 @@
       "npm.cmd run typecheck and npm.cmd run lint passed after Bypass Tool visual polish and short-text confidence tuning.",
       "Headless solver smoke test returned Autokey KELAS -> SERANG MARKAS SAAT FAJAR for CICAFY QRRXGE SRKT XSJAK and capped ambiguous CDBA CEUH TIGM at 32 percent confidence.",
       "npm.cmd run validate passed outside the sandbox on 2026-04-30 after Bypass Tool visual polish, tab-switch cleanup, and confidence tuning.",
-      "Headless solver probe returned Auto Detect rank 1 classical-autokey, MS, and AYO MAIN VALORANT for MQO KOUN DNGOCOET."
+      "Headless solver probe returned Auto Detect rank 1 classical-autokey, MS, and AYO MAIN VALORANT for MQO KOUN DNGOCOET.",
+      "Headless assisted-bypass probe returned Auto Detect rank 1 classical-autokey, MS, AYO MAIN VALORANT, and 85 percent confidence for MQO KOUN DNGOCOET with known plaintext and cribs.",
+      "npm.cmd run validate passed outside the sandbox on 2026-04-30 after making ciphertext-only the default Bypass mode and separating optional crib attack controls."
     ]
   },
   "designContinuity": {
@@ -95,5 +79,5 @@
     "redactSensitiveTextBeforeWriting": true
   },
   "generatedAt": "2026-04-27T12:38:41.841Z",
-  "lastUpdatedAt": "2026-04-30T21:05:00+07:00"
+  "lastUpdatedAt": "2026-04-30T21:52:00+07:00"
 }

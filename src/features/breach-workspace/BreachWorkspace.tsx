@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { decryptAutokey, encryptAutokey } from "@/lib/crypto-analysis/autokey";
 import type {
   BreachResult,
+  ClassicalAttackHints,
   ProgressData,
   WorkerJobEvent,
   WorkerJobRequest,
@@ -32,6 +33,7 @@ const historyStorageKey = "ghostkey.local-history.v1";
 type WorkspaceMode = "autokey" | "breach";
 type AutokeyScene = "idle" | "encrypted" | "decrypted";
 type JobStatus = "idle" | "running" | "complete" | "error";
+type AttackEvidenceMode = "ciphertext-only" | "crib-assisted";
 
 type TerminalLine = {
   id: string;
@@ -124,6 +126,11 @@ export function BreachWorkspace() {
   const [autokeyKey, setAutokeyKey] = useState(sampleAutokeyKey);
   const [module, setModule] = useState<WorkerModule>("auto-detect");
   const [artifact, setArtifact] = useState(sampleCipher);
+  const [attackEvidenceMode, setAttackEvidenceMode] =
+    useState<AttackEvidenceMode>("ciphertext-only");
+  const [knownPlaintext, setKnownPlaintext] = useState("");
+  const [cribText, setCribText] = useState("");
+  const [maxKeyLength, setMaxKeyLength] = useState(6);
   const [status, setStatus] = useState<JobStatus>("idle");
   const [logs, setLogs] = useState<TerminalLine[]>([
     makeLog("SYSTEM", "Workspace armed. Autokey lab is the primary coursework path.")
@@ -240,11 +247,15 @@ export function BreachWorkspace() {
     setLogs([makeLog("LOCAL", "Starting browser worker. Artifact stays on this device.")]);
 
     const worker = createWorker();
-    const request: WorkerJobRequest<{ artifact: string }> = {
+    const attackHints =
+      attackEvidenceMode === "crib-assisted"
+        ? buildAttackHints(knownPlaintext, cribText, maxKeyLength)
+        : undefined;
+    const request: WorkerJobRequest<{ artifact: string; attackHints?: ClassicalAttackHints }> = {
       jobId: crypto.randomUUID(),
       module,
       mode: module === "auto-detect" ? "detect" : module === "jwt-debugger" ? "decode" : "attack",
-      payload: { artifact },
+      payload: { artifact, attackHints },
       limits: {
         maxIterations: module === "jwt-debugger" ? 1 : 2400,
         maxRuntimeMs: 3000,
@@ -271,6 +282,10 @@ export function BreachWorkspace() {
 
     setModule(nextModule);
     setArtifact(sampleArtifacts[nextModule]);
+    setAttackEvidenceMode("ciphertext-only");
+    setKnownPlaintext("");
+    setCribText("");
+    setMaxKeyLength(6);
     setResults([]);
     setProblem(null);
     setStatus("idle");
@@ -542,6 +557,68 @@ export function BreachWorkspace() {
               className="artifact-well breach-input"
             />
 
+            <div className="attack-mode-toggle" aria-label="Bypass evidence mode">
+              <button
+                type="button"
+                className={attackEvidenceMode === "ciphertext-only" ? "is-active" : ""}
+                onClick={() => setAttackEvidenceMode("ciphertext-only")}
+              >
+                Ciphertext-only
+              </button>
+              <button
+                type="button"
+                className={attackEvidenceMode === "crib-assisted" ? "is-active" : ""}
+                onClick={() => setAttackEvidenceMode("crib-assisted")}
+              >
+                Optional crib attack
+              </button>
+            </div>
+
+            {attackEvidenceMode === "crib-assisted" ? (
+              <div className="attack-hints-grid" aria-label="Optional crib attack evidence">
+                <label className="field-label" htmlFor="known-plaintext">
+                  Known plaintext prefix
+                </label>
+                <textarea
+                  id="known-plaintext"
+                  value={knownPlaintext}
+                  onChange={(event) => setKnownPlaintext(event.target.value)}
+                  spellCheck={false}
+                  className="hint-well"
+                  placeholder="Only when the demo intentionally uses a known phrase"
+                />
+
+                <label className="field-label" htmlFor="crib-text">
+                  Probable words
+                </label>
+                <input
+                  id="crib-text"
+                  value={cribText}
+                  onChange={(event) => setCribText(event.target.value)}
+                  spellCheck={false}
+                  className="key-input"
+                  placeholder="VALORANT, MAIN"
+                />
+
+                <label className="field-label" htmlFor="max-key-length">
+                  Max key length
+                </label>
+                <input
+                  id="max-key-length"
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={maxKeyLength}
+                  onChange={(event) => setMaxKeyLength(Number(event.target.value))}
+                  className="key-input"
+                />
+              </div>
+            ) : (
+              <p className="ciphertext-only-note">
+                Real bypass mode. No key, plaintext, or cribs are supplied to the worker.
+              </p>
+            )}
+
             <div className="breach-actions">
               <button
                 type="button"
@@ -810,6 +887,24 @@ function makeLog(tag: string, message: string): TerminalLine {
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     tag,
     message
+  };
+}
+
+function buildAttackHints(
+  knownPlaintext: string,
+  cribText: string,
+  maxKeyLength: number
+): ClassicalAttackHints {
+  const cribs = cribText
+    .split(/[\n,;|]+/)
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .slice(0, 10);
+
+  return {
+    knownPlaintext: knownPlaintext.trim(),
+    cribs,
+    maxKeyLength: Math.max(1, Math.min(12, Math.floor(maxKeyLength || 6)))
   };
 }
 

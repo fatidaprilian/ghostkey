@@ -305,7 +305,8 @@ input:focus-visible {
 }
 
 .key-input,
-.artifact-well {
+.artifact-well,
+.hint-well {
   width: 100%;
   border: 1px solid var(--border-soft);
   border-radius: 12px;
@@ -332,6 +333,63 @@ input:focus-visible {
 
 .breach-input {
   min-height: 148px;
+}
+
+.attack-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.attack-mode-toggle button {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(40, 120, 200, 0.16);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.attack-mode-toggle button.is-active {
+  border-color: rgba(40, 120, 200, 0.42);
+  background: rgba(40, 120, 200, 0.1);
+  color: var(--signal-info);
+}
+
+.ciphertext-only-note {
+  margin-top: 10px;
+  border: 1px solid rgba(54, 165, 117, 0.22);
+  border-radius: 12px;
+  background: rgba(54, 165, 117, 0.08);
+  padding: 10px 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.attack-hints-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.7fr) minmax(96px, 0.25fr);
+  column-gap: 10px;
+  align-items: end;
+  margin-top: 4px;
+}
+
+.attack-hints-grid .field-label {
+  grid-row: 1;
+}
+
+.hint-well {
+  min-height: 64px;
+  margin-top: 8px;
+  resize: vertical;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  text-transform: uppercase;
 }
 
 .autokey-actions,
@@ -1110,8 +1168,14 @@ input:focus-visible {
   .ribbon-readouts,
   .workspace-grid,
   .autokey-actions,
-  .breach-actions {
+  .breach-actions,
+  .attack-mode-toggle,
+  .attack-hints-grid {
     grid-template-columns: 1fr;
+  }
+
+  .attack-hints-grid .field-label {
+    grid-row: auto;
   }
 
   .workspace-breach {

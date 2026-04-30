@@ -64,8 +64,21 @@ The first detection pass should:
 7. run bounded Column and Monoalphabetic searches when practical
 8. detect toy numeric RSA and ElGamal parameters
 9. return ranked family hints with confidence and evidence
+10. when supplied, use known-plaintext and crib evidence as a verifier before raising confidence
 
 Auto-detect may run a quick solver for the highest-confidence family. It must label uncertain results clearly.
+
+## Verified Classroom Bypass
+
+Bypass Tool defaults to ciphertext-only attacks. The user should be able to run Auto Detect, Caesar, Reverse, Vigenere, Autokey, Substitution, Column, toy RSA, toy ElGamal, and JWT analysis without knowing the key.
+
+Some short classical ciphertexts cannot be ranked reliably from ciphertext-only language scoring. For separate crib-attack lessons, GhostKey supports optional local evidence:
+
+- known plaintext prefix
+- probable words or cribs
+- maximum key length
+
+The worker uses this evidence to derive Vigenere and Autokey key candidates, then ranks candidates that match the supplied cribs above candidates that only look language-like. This mode must not be presented as the default bypass path; it is a separate known-plaintext or crib attack lesson.
 
 ## Language Support
 
@@ -149,6 +162,7 @@ Current MVP approach:
 
 - Rank seed-key prefixes with beam search instead of shallow local mutation.
 - Exhaustively score short Autokey seed keys before beam refinement so brief classroom phrases do not get buried by weak prefix evidence.
+- Derive seed keys from known-plaintext consistency when a demo crib is supplied.
 - Refine complete seed keys with coordinate search.
 - Score Indonesian and English natural-language candidates separately enough that Indonesian classroom phrases do not lose to English-looking false positives.
 - Keep confidence caveats visible because short ciphertext can still produce plausible wrong candidates.

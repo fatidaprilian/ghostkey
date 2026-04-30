@@ -1,5 +1,12 @@
-import type { BreachResult, WorkerModule } from "@/lib/worker-contracts";
+import type { BreachResult, ClassicalAttackHints, WorkerModule } from "@/lib/worker-contracts";
 import { decryptAutokey } from "@/lib/crypto-analysis/autokey";
+import {
+  applyAttackHintsToResults,
+  clampMaxKeyLength,
+  letterValue,
+  normalizeLetters,
+  scoreWithAttackHints
+} from "@/lib/crypto-analysis/attack-hints";
 import { solveCaesar, toCaesarResult } from "@/lib/crypto-analysis/caesar";
 import {
   analyzeTextFitness,
@@ -19,11 +26,18 @@ export type SolverOutput = {
   }>;
 };
 
-export function solveClassicalModule(module: WorkerModule, artifact: string): SolverOutput {
+export function solveClassicalModule(
+  module: WorkerModule,
+  artifact: string,
+  attackHints?: ClassicalAttackHints
+): SolverOutput {
   if (module === "classical-caesar") {
     const candidates = solveCaesar(artifact);
     return {
-      results: candidates.slice(0, 3).map(toCaesarResult),
+      results: applyAttackHintsToResults(
+        candidates.slice(0, 3).map(toCaesarResult),
+        attackHints
+      ),
       trace: candidates.slice(0, 8).map((candidate) => ({
         key: `shift-${candidate.shift}`,
         fitness: candidate.fitness,
@@ -33,31 +47,31 @@ export function solveClassicalModule(module: WorkerModule, artifact: string): So
   }
 
   if (module === "classical-vigenere") {
-    return solveVigenere(artifact);
+    return solveVigenere(artifact, attackHints);
   }
 
   if (module === "classical-autokey") {
-    return solveAutokey(artifact);
+    return solveAutokey(artifact, attackHints);
   }
 
   if (module === "classical-substitution") {
-    return solveMonoalphabetic(artifact);
+    return solveMonoalphabetic(artifact, attackHints);
   }
 
   if (module === "transposition-columnar") {
-    return solveColumnarTransposition(artifact);
+    return solveColumnarTransposition(artifact, attackHints);
   }
 
   if (module === "classical-reverse") {
-    return solveReverse(artifact);
+    return solveReverse(artifact, attackHints);
   }
 
   throw new Error(`Unsupported classical module: ${module}`);
 }
 
-export function solveAutoDetectClassical(artifact: string): SolverOutput {
+export function solveAutoDetectClassical(artifact: string, attackHints?: ClassicalAttackHints): SolverOutput {
   const cheapModules: WorkerModule[] = ["classical-caesar", "classical-reverse"];
-  const cheapOutputs = cheapModules.map((module) => solveClassicalModule(module, artifact));
+  const cheapOutputs = cheapModules.map((module) => solveClassicalModule(module, artifact, attackHints));
   const cheapRanked = rankCandidateResults(cheapOutputs.flatMap((output) => output.results));
   const strongCheapHit = cheapRanked[0];
 
@@ -79,7 +93,10 @@ export function solveAutoDetectClassical(artifact: string): SolverOutput {
     "transposition-columnar",
     "classical-substitution"
   ];
-  const outputs = [...cheapOutputs, ...modules.map((module) => solveClassicalModule(module, artifact))];
+  const outputs = [
+    ...cheapOutputs,
+    ...modules.map((module) => solveClassicalModule(module, artifact, attackHints))
+  ];
   const ranked = formatAutoRankedResults(
     rankCandidateResults(outputs.flatMap((output) => output.results)).slice(0, 5)
   );
@@ -100,7 +117,7 @@ function formatAutoRankedResults(
   return ranked.map(({ result, metrics, calibratedScore }, index) => ({
     ...result,
     rank: index + 1,
-    confidence: calibrateConfidence(calibratedScore, metrics.letterCount, result.module),
+    confidence: Math.max(result.confidence, calibrateConfidence(calibratedScore, metrics.letterCount, result.module)),
     evidence: [
       `Auto-ranker language: ${metrics.language}.`,
       `Auto-ranker score: ${calibratedScore.toFixed(2)}.`,
@@ -109,7 +126,7 @@ function formatAutoRankedResults(
   }));
 }
 
-export function solveReverse(ciphertext: string): SolverOutput {
+export function solveReverse(ciphertext: string, attackHints?: ClassicalAttackHints): SolverOutput {
   const candidates = [
     {
       key: "reverse-all",
@@ -130,23 +147,26 @@ export function solveReverse(ciphertext: string): SolverOutput {
   candidates.sort((left, right) => right.metrics.fitness - left.metrics.fitness);
 
   return {
-    results: candidates.map((candidate, index) =>
-      textResult({
-        rank: index + 1,
-        module: "classical-reverse",
-        key: candidate.key,
-        plaintext: candidate.plaintext,
-        fitness: candidate.metrics.fitness,
-        confidence: confidenceFromFitness(candidate.metrics.fitness, 24),
-        evidence: [
-          "GhostKey tried whole-string and per-word reversal.",
-          `Best reverse mode: ${candidate.key}.`,
-          `Language hint: ${candidate.metrics.language}.`
-        ],
-        whyWeak: "Reverse cipher is weak because the transformation has only a few obvious variants.",
-        fix: "Do not treat text reversal as encryption. It is only obfuscation.",
-        alternative: "Use authenticated encryption for real secrecy."
-      })
+    results: applyAttackHintsToResults(
+      candidates.map((candidate, index) =>
+        textResult({
+          rank: index + 1,
+          module: "classical-reverse",
+          key: candidate.key,
+          plaintext: candidate.plaintext,
+          fitness: candidate.metrics.fitness,
+          confidence: confidenceFromFitness(candidate.metrics.fitness, 24),
+          evidence: [
+            "GhostKey tried whole-string and per-word reversal.",
+            `Best reverse mode: ${candidate.key}.`,
+            `Language hint: ${candidate.metrics.language}.`
+          ],
+          whyWeak: "Reverse cipher is weak because the transformation has only a few obvious variants.",
+          fix: "Do not treat text reversal as encryption. It is only obfuscation.",
+          alternative: "Use authenticated encryption for real secrecy."
+        })
+      ),
+      attackHints
     ),
     trace: candidates.map((candidate) => ({
       key: candidate.key,
@@ -156,43 +176,72 @@ export function solveReverse(ciphertext: string): SolverOutput {
   };
 }
 
-export function solveVigenere(ciphertext: string): SolverOutput {
+export function solveVigenere(ciphertext: string, attackHints?: ClassicalAttackHints): SolverOutput {
   const keyLengthHints = estimateVigenereKeyLengths(ciphertext, 10).slice(0, 5);
-  const candidates = keyLengthHints.map((hint) => {
-    const key = deriveVigenereKey(ciphertext, hint.keyLength);
-    const plaintext = decryptVigenere(ciphertext, key);
-    const metrics = analyzeTextFitness(plaintext);
+  const derivedKeys = deriveVigenereKeysFromKnownPlaintext(ciphertext, attackHints);
+  const candidates = [
+    ...derivedKeys.map((key) => ({
+      key,
+      plaintext: decryptVigenere(ciphertext, key),
+      ioc: 0,
+      derivedFromKnownPlaintext: true
+    })),
+    ...keyLengthHints.map((hint) => {
+      const key = deriveVigenereKey(ciphertext, hint.keyLength);
+      return {
+        key,
+        plaintext: decryptVigenere(ciphertext, key),
+        ioc: hint.averageIoc,
+        derivedFromKnownPlaintext: false
+      };
+    })
+  ].map((candidate) => {
+    const metrics = analyzeTextFitness(candidate.plaintext);
 
     return {
-      key,
-      plaintext,
+      ...candidate,
       fitness: metrics.fitness,
-      ioc: hint.averageIoc,
       metrics
     };
   });
 
-  candidates.sort((left, right) => right.fitness - left.fitness);
+  candidates.sort(
+    (left, right) =>
+      scoreWithAttackHints(right.plaintext, right.fitness, attackHints) -
+      scoreWithAttackHints(left.plaintext, left.fitness, attackHints)
+  );
 
   return {
-    results: candidates.slice(0, 5).map((candidate, index) =>
-      textResult({
-        rank: index + 1,
-        module: "classical-vigenere",
-        key: candidate.key.toUpperCase(),
-        plaintext: candidate.plaintext,
-        fitness: candidate.fitness,
-        confidence: confidenceFromFitness(candidate.fitness, 34, "classical-vigenere", candidate.plaintext),
-        evidence: [
-          `Estimated key length: ${candidate.key.length}.`,
-          `Average bucket IoC: ${candidate.ioc.toFixed(3)}.`,
-          ...shortCipherEvidence(candidate.plaintext, "Vigenere key search"),
-          "Each key position was solved as a Caesar frequency problem."
-        ],
-        whyWeak: "Repeated-key Vigenere leaks periodic letter-frequency structure.",
-        fix: "Do not reuse short repeating keys for secrecy.",
-        alternative: "Use modern authenticated encryption with random nonces and managed keys."
-      })
+    results: applyAttackHintsToResults(
+      dedupeByKey(candidates)
+        .slice(0, 5)
+        .map((candidate, index) =>
+          textResult({
+            rank: index + 1,
+            module: "classical-vigenere",
+            key: candidate.key.toUpperCase(),
+            plaintext: candidate.plaintext,
+            fitness: scoreWithAttackHints(candidate.plaintext, candidate.fitness, attackHints),
+            confidence: confidenceFromFitness(
+              candidate.fitness,
+              34,
+              "classical-vigenere",
+              candidate.plaintext
+            ),
+            evidence: [
+              candidate.derivedFromKnownPlaintext
+                ? "Key candidate derived from known-plaintext consistency."
+                : `Estimated key length: ${candidate.key.length}.`,
+              `Average bucket IoC: ${candidate.ioc.toFixed(3)}.`,
+              ...shortCipherEvidence(candidate.plaintext, "Vigenere key search"),
+              "Each key position was solved as a Caesar frequency problem."
+            ],
+            whyWeak: "Repeated-key Vigenere leaks periodic letter-frequency structure.",
+            fix: "Do not reuse short repeating keys for secrecy.",
+            alternative: "Use modern authenticated encryption with random nonces and managed keys."
+          })
+        ),
+      attackHints
     ),
     trace: candidates.map((candidate) => ({
       key: candidate.key.toUpperCase(),
@@ -202,34 +251,41 @@ export function solveVigenere(ciphertext: string): SolverOutput {
   };
 }
 
-export function solveAutokey(ciphertext: string): SolverOutput {
-  const seedKeys = generateAutokeySeedKeys(ciphertext);
+export function solveAutokey(ciphertext: string, attackHints?: ClassicalAttackHints): SolverOutput {
+  const seedKeys = generateAutokeySeedKeys(ciphertext, attackHints);
   const candidates = seedKeys.map((key) => refineAutokeyKey(ciphertext, key));
 
-  candidates.sort((left, right) => right.fitness - left.fitness);
+  candidates.sort(
+    (left, right) =>
+      scoreWithAttackHints(right.plaintext, right.fitness, attackHints) -
+      scoreWithAttackHints(left.plaintext, left.fitness, attackHints)
+  );
 
   return {
-    results: dedupeByKey(candidates)
-      .slice(0, 5)
-      .map((candidate, index) =>
-        textResult({
-          rank: index + 1,
-          module: "classical-autokey",
-          key: candidate.key.toUpperCase(),
-          plaintext: candidate.plaintext,
-          fitness: candidate.fitness,
-          confidence: confidenceFromFitness(candidate.fitness, 38, "classical-autokey", candidate.plaintext),
-          evidence: [
-            `Seed key length searched: ${candidate.key.length}.`,
-            "Beam search ranked seed-key prefixes before coordinate refinement.",
-            ...shortCipherEvidence(candidate.plaintext, "Autokey seed search"),
-            "Autokey confidence is heuristic because the key stream depends on recovered plaintext."
-          ],
-          whyWeak: "Autokey hides periodicity better than Vigenere, but short seed keys still leak language structure in classroom-sized text.",
-          fix: "Do not use Autokey for real secrecy. It remains a classical cipher.",
-          alternative: "Use audited modern cryptographic libraries and authenticated encryption."
-        })
-      ),
+    results: applyAttackHintsToResults(
+      dedupeByKey(candidates)
+        .slice(0, 5)
+        .map((candidate, index) =>
+          textResult({
+            rank: index + 1,
+            module: "classical-autokey",
+            key: candidate.key.toUpperCase(),
+            plaintext: candidate.plaintext,
+            fitness: scoreWithAttackHints(candidate.plaintext, candidate.fitness, attackHints),
+            confidence: confidenceFromFitness(candidate.fitness, 38, "classical-autokey", candidate.plaintext),
+            evidence: [
+              `Seed key length searched: ${candidate.key.length}.`,
+              "Beam search ranked seed-key prefixes before coordinate refinement.",
+              ...shortCipherEvidence(candidate.plaintext, "Autokey seed search"),
+              "Autokey confidence is heuristic because the key stream depends on recovered plaintext."
+            ],
+            whyWeak: "Autokey hides periodicity better than Vigenere, but short seed keys still leak language structure in classroom-sized text.",
+            fix: "Do not use Autokey for real secrecy. It remains a classical cipher.",
+            alternative: "Use audited modern cryptographic libraries and authenticated encryption."
+          })
+        ),
+      attackHints
+    ),
     trace: dedupeByKey(candidates)
       .slice(0, 10)
       .map((candidate) => ({
@@ -240,7 +296,7 @@ export function solveAutokey(ciphertext: string): SolverOutput {
   };
 }
 
-export function solveMonoalphabetic(ciphertext: string): SolverOutput {
+export function solveMonoalphabetic(ciphertext: string, attackHints?: ClassicalAttackHints): SolverOutput {
   const baseMapping = initialSubstitutionMapping(ciphertext);
   const candidates: Array<{
     key: string;
@@ -281,26 +337,33 @@ export function solveMonoalphabetic(ciphertext: string): SolverOutput {
     });
   }
 
-  candidates.sort((left, right) => right.fitness - left.fitness);
+  candidates.sort(
+    (left, right) =>
+      scoreWithAttackHints(right.plaintext, right.fitness, attackHints) -
+      scoreWithAttackHints(left.plaintext, left.fitness, attackHints)
+  );
 
   return {
-    results: candidates.slice(0, 5).map((candidate, index) =>
-      textResult({
-        rank: index + 1,
-        module: "classical-substitution",
-        key: candidate.key,
-        plaintext: candidate.plaintext,
-        fitness: candidate.fitness,
-        confidence: confidenceFromFitness(candidate.fitness, 42, "classical-substitution", candidate.plaintext),
-        evidence: [
-          "Frequency mapping created the starting substitution key.",
-          `${restarts} deterministic hill-climbing restarts refined letter swaps.`,
-          "Longer ciphertext improves monoalphabetic confidence."
-        ],
-        whyWeak: "Monoalphabetic substitution preserves natural-language frequency relationships.",
-        fix: "Do not rely on fixed substitution alphabets.",
-        alternative: "Use modern authenticated encryption rather than hand-rolled ciphers."
-      })
+    results: applyAttackHintsToResults(
+      candidates.slice(0, 5).map((candidate, index) =>
+        textResult({
+          rank: index + 1,
+          module: "classical-substitution",
+          key: candidate.key,
+          plaintext: candidate.plaintext,
+          fitness: scoreWithAttackHints(candidate.plaintext, candidate.fitness, attackHints),
+          confidence: confidenceFromFitness(candidate.fitness, 42, "classical-substitution", candidate.plaintext),
+          evidence: [
+            "Frequency mapping created the starting substitution key.",
+            `${restarts} deterministic hill-climbing restarts refined letter swaps.`,
+            "Longer ciphertext improves monoalphabetic confidence."
+          ],
+          whyWeak: "Monoalphabetic substitution preserves natural-language frequency relationships.",
+          fix: "Do not rely on fixed substitution alphabets.",
+          alternative: "Use modern authenticated encryption rather than hand-rolled ciphers."
+        })
+      ),
+      attackHints
     ),
     trace: candidates.map((candidate) => ({
       key: candidate.key.slice(0, 18),
@@ -310,7 +373,7 @@ export function solveMonoalphabetic(ciphertext: string): SolverOutput {
   };
 }
 
-export function solveColumnarTransposition(ciphertext: string): SolverOutput {
+export function solveColumnarTransposition(ciphertext: string, attackHints?: ClassicalAttackHints): SolverOutput {
   const compact = ciphertext.replace(/\s+/g, "");
   const candidates: Array<{
     key: string;
@@ -330,26 +393,33 @@ export function solveColumnarTransposition(ciphertext: string): SolverOutput {
     }
   }
 
-  candidates.sort((left, right) => right.fitness - left.fitness);
+  candidates.sort(
+    (left, right) =>
+      scoreWithAttackHints(right.plaintext, right.fitness, attackHints) -
+      scoreWithAttackHints(left.plaintext, left.fitness, attackHints)
+  );
 
   return {
-    results: candidates.slice(0, 5).map((candidate, index) =>
-      textResult({
-        rank: index + 1,
-        module: "transposition-columnar",
-        key: candidate.key,
-        plaintext: candidate.plaintext,
-        fitness: candidate.fitness,
-        confidence: confidenceFromFitness(candidate.fitness, 36, "transposition-columnar", candidate.plaintext),
-        evidence: [
-          "Column counts 2-7 were searched with all column orders.",
-          "Letter frequency is preserved, so natural-language scoring can still rank candidates.",
-          "Whitespace cannot be perfectly restored from a bare transposition ciphertext."
-        ],
-        whyWeak: "Simple columnar transposition rearranges letters but keeps language statistics intact.",
-        fix: "Do not use manual transposition as a secrecy system.",
-        alternative: "Use a standard authenticated cipher with well-defined key management."
-      })
+    results: applyAttackHintsToResults(
+      candidates.slice(0, 5).map((candidate, index) =>
+        textResult({
+          rank: index + 1,
+          module: "transposition-columnar",
+          key: candidate.key,
+          plaintext: candidate.plaintext,
+          fitness: scoreWithAttackHints(candidate.plaintext, candidate.fitness, attackHints),
+          confidence: confidenceFromFitness(candidate.fitness, 36, "transposition-columnar", candidate.plaintext),
+          evidence: [
+            "Column counts 2-7 were searched with all column orders.",
+            "Letter frequency is preserved, so natural-language scoring can still rank candidates.",
+            "Whitespace cannot be perfectly restored from a bare transposition ciphertext."
+          ],
+          whyWeak: "Simple columnar transposition rearranges letters but keeps language statistics intact.",
+          fix: "Do not use manual transposition as a secrecy system.",
+          alternative: "Use a standard authenticated cipher with well-defined key management."
+        })
+      ),
+      attackHints
     ),
     trace: candidates.slice(0, 10).map((candidate) => ({
       key: candidate.key,
@@ -404,11 +474,87 @@ function scoreAutokeyCandidate(ciphertext: string, key: string) {
   };
 }
 
-function generateAutokeySeedKeys(ciphertext: string) {
+function deriveVigenereKeysFromKnownPlaintext(ciphertext: string, attackHints?: ClassicalAttackHints) {
+  const knownPlaintext = normalizeLetters(attackHints?.knownPlaintext ?? "");
+  const cipherLetters = normalizeLetters(ciphertext);
+  if (knownPlaintext.length < 3 || cipherLetters.length < 3) {
+    return [];
+  }
+
+  const maxKeyLength = clampMaxKeyLength(attackHints?.maxKeyLength ?? 8, 10);
+  const keys: string[] = [];
+  for (let keyLength = 1; keyLength <= Math.min(maxKeyLength, knownPlaintext.length); keyLength += 1) {
+    const shifts: Array<number | undefined> = Array.from({ length: keyLength });
+    let valid = true;
+
+    for (let index = 0; index < Math.min(knownPlaintext.length, cipherLetters.length); index += 1) {
+      const shift = (letterValue(cipherLetters[index]) - letterValue(knownPlaintext[index]) + 26) % 26;
+      const keyIndex = index % keyLength;
+      if (shifts[keyIndex] !== undefined && shifts[keyIndex] !== shift) {
+        valid = false;
+        break;
+      }
+      shifts[keyIndex] = shift;
+    }
+
+    if (valid && shifts.every((shift) => shift !== undefined)) {
+      keys.push(shifts.map((shift) => alphabet[shift ?? 0]).join(""));
+    }
+  }
+
+  return Array.from(new Set(keys));
+}
+
+function deriveAutokeyKeysFromKnownPlaintext(
+  ciphertext: string,
+  attackHints: ClassicalAttackHints | undefined,
+  maxKeyLength: number
+) {
+  const knownPlaintext = normalizeLetters(attackHints?.knownPlaintext ?? "");
+  const cipherLetters = normalizeLetters(ciphertext);
+  if (knownPlaintext.length < 3 || cipherLetters.length < 3) {
+    return [];
+  }
+
+  const keys: string[] = [];
+  for (let keyLength = 1; keyLength <= Math.min(maxKeyLength, knownPlaintext.length); keyLength += 1) {
+    const shifts: number[] = [];
+    let valid = true;
+    const inspectedLength = Math.min(knownPlaintext.length, cipherLetters.length);
+
+    for (let index = 0; index < inspectedLength; index += 1) {
+      const actualShift = (letterValue(cipherLetters[index]) - letterValue(knownPlaintext[index]) + 26) % 26;
+      if (index < keyLength) {
+        shifts.push(actualShift);
+        continue;
+      }
+
+      const expectedShift = letterValue(knownPlaintext[index - keyLength]);
+      if (actualShift !== expectedShift) {
+        valid = false;
+        break;
+      }
+    }
+
+    if (valid && shifts.length === keyLength) {
+      keys.push(shifts.map((shift) => alphabet[shift]).join(""));
+    }
+  }
+
+  return Array.from(new Set(keys));
+}
+
+function generateAutokeySeedKeys(ciphertext: string, attackHints?: ClassicalAttackHints) {
   const letterCount = ciphertext.replace(/[^a-z]/gi, "").length;
   const beamWidth = letterCount < 18 ? 60 : 96;
-  const maxKeyLength = letterCount < 28 ? 5 : 6;
-  const finalKeys: string[] = generateShortAutokeyKeys(ciphertext, letterCount);
+  const maxKeyLength = clampMaxKeyLength(
+    attackHints?.maxKeyLength ?? (letterCount < 28 ? 5 : 6),
+    letterCount < 28 ? 6 : 8
+  );
+  const finalKeys: string[] = [
+    ...deriveAutokeyKeysFromKnownPlaintext(ciphertext, attackHints, maxKeyLength),
+    ...generateShortAutokeyKeys(ciphertext, letterCount, maxKeyLength)
+  ];
 
   for (let keyLength = 1; keyLength <= maxKeyLength; keyLength += 1) {
     let beam = [{ key: "", score: 0 }];
@@ -440,8 +586,8 @@ function generateAutokeySeedKeys(ciphertext: string) {
   return Array.from(new Set(finalKeys));
 }
 
-function generateShortAutokeyKeys(ciphertext: string, letterCount: number) {
-  const maxExhaustiveLength = letterCount < 24 ? 3 : 2;
+function generateShortAutokeyKeys(ciphertext: string, letterCount: number, maxKeyLength: number) {
+  const maxExhaustiveLength = Math.min(maxKeyLength, letterCount < 24 ? 3 : 2);
   const candidates: Array<{ key: string; score: number }> = [];
 
   for (let keyLength = 1; keyLength <= maxExhaustiveLength; keyLength += 1) {

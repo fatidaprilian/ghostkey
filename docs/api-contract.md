@@ -54,6 +54,23 @@ type WorkerJobRequest<TPayload> = {
 };
 ```
 
+Classical attack payloads default to ciphertext-only analysis. They may include local-only evidence only when the UI is in optional crib attack mode:
+
+```ts
+type ClassicalAttackHints = {
+  knownPlaintext?: string;
+  cribs?: string[];
+  maxKeyLength?: number;
+};
+
+type ClassicalArtifactPayload = {
+  artifact: string;
+  attackHints?: ClassicalAttackHints;
+};
+```
+
+Known plaintext and crib hints must stay in the browser worker payload. They are not sent to a server in the MVP. The UI must not send this object during default ciphertext-only bypass runs.
+
 ## Worker Event Contract
 
 All worker events must follow this envelope:
@@ -103,6 +120,8 @@ The first auto-detect pass must inspect:
 Auto-detect results must include ranked family hints in `evidence[]`. If a full solver is not implemented for the top family yet, the worker must say so safely rather than pretending it recovered a key.
 
 Auto-detect ranking must evaluate recovered plaintext candidates across active solvers. The final rank should use calibrated plaintext quality, detected language confidence, solver complexity, and ciphertext length rather than a static algorithm order.
+
+When known plaintext or crib hints are supplied in optional crib attack mode, Auto Detect may raise confidence only after a candidate matches that evidence. For Vigenere and Autokey, the worker should derive candidate keys from known-plaintext consistency before falling back to pure language scoring.
 
 Example terminal message:
 

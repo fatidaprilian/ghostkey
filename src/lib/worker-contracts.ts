@@ -25,6 +25,12 @@ export type WorkerJobRequest<TPayload> = {
   localeHints?: Array<"en" | "id">;
 };
 
+export type ClassicalAttackHints = {
+  knownPlaintext?: string;
+  cribs?: string[];
+  maxKeyLength?: number;
+};
+
 export type WorkerJobEvent<TData> = {
   jobId: string;
   type:

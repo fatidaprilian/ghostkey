@@ -49,7 +49,8 @@
       "conclusion panels are split into weakness, evidence, fix, and modern alternative"
       ,
       "Bypass panels keep the same light learning palette instead of falling back to gray forensic boxes",
-      "Short ciphertext produces capped confidence and caveats instead of overconfident magic"
+      "Short ciphertext produces capped confidence and caveats instead of overconfident magic",
+      "Bypass defaults to ciphertext-only attack mode, with optional crib evidence separated into its own control state"
     ],
     "copiedReferenceAllowed": false
   },
@@ -72,7 +73,8 @@
       "Autokey sender-observer-receiver simulation with friendly CSS characters, Eve confusion, Bob reveal, reset, and formula rows for Pi, Ki, and Ci"
       ,
       "short-artifact confidence caps for complex heuristic solvers",
-      "light Bypass Tool panels, history rows, terminal feed, and finding blocks"
+      "light Bypass Tool panels, history rows, terminal feed, and finding blocks",
+      "ciphertext-only mode marker plus optional crib controls only when explicitly selected"
     ],
     "blockingByDefault": true
   },
@@ -193,6 +195,7 @@
     "components": {
       "terminal": "fixed-height evidence event stream with stable row dimensions",
       "inputWell": "secure inspection tray with loaded, focused, invalid, and empty states",
+      "assistedBypassEvidence": "ciphertext-only by default; compact local-only known plaintext, crib, and key-length controls appear only in optional crib attack mode",
       "autokeySimulation": "two-action sender-observer-receiver lesson with CSS characters, Eve confusion, Bob reveal, reset, and formula rows from the active Autokey transform",
       "moduleSwitcher": "instrument selector with risk labels and input expectations",
       "findingRow": "ranked evidence row with confidence and key candidate",
