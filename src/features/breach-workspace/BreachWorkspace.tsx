@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { decryptAutokey, encryptAutokey } from "@/lib/crypto-analysis/autokey";
 import type {
   BreachResult,
   ProgressData,
@@ -12,57 +13,171 @@ import type {
 const sampleCipher = "WKH EUHDFK HQJLQH LV ORFDO ILUVW";
 const sampleJwt =
   "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJkZW1vLXN0dWRlbnQiLCJyb2xlIjoibGFiIiwiaWF0IjoxNzEwMDAwMDAwfQ.";
+const sampleAutokeyPlain = "SERANG MARKAS SAAT FAJAR";
+const sampleAutokeyKey = "KELAS";
+const sampleArtifacts: Record<WorkerModule, string> = {
+  "auto-detect": sampleCipher,
+  "classical-caesar": sampleCipher,
+  "classical-reverse": "TSRIF LACOL SI ENIGNE HCAERB EHT",
+  "classical-substitution": "GSV YIVZXS VMTRMV RH OLXZO URIHG",
+  "classical-vigenere": "ZOS TKKHQZ XTNWFX OZ ZGVGS TAKYA",
+  "classical-autokey": "CIWAEI EEIOWW QKMD XDNRV",
+  "transposition-columnar": "TEANHICEGINESLOCLFRSBTREEAHIAIT",
+  "asymmetric-rsa": "n=3233 e=17 c=855",
+  "asymmetric-elgamal": "p=467 g=2 y=32 c1=8 c2=254",
+  "jwt-debugger": sampleJwt
+};
+const historyStorageKey = "ghostkey.local-history.v1";
+
+type WorkspaceMode = "autokey" | "breach";
+type AutokeyAction = "encrypt" | "decrypt";
+type JobStatus = "idle" | "running" | "complete" | "error";
+
+type TerminalLine = {
+  id: string;
+  tag: string;
+  message: string;
+};
+
+type HistoryEntry = {
+  id: string;
+  module: WorkerModule;
+  label: string;
+  artifactPreview: string;
+  confidence: number;
+  createdAt: string;
+};
 
 const moduleOptions: Array<{
   id: WorkerModule;
   label: string;
-  inputHint: string;
   risk: string;
+  ready: boolean;
 }> = [
   {
     id: "auto-detect",
     label: "Auto Detect",
-    inputHint: "Paste ciphertext or a JWT and let GhostKey choose the first analysis path.",
-    risk: "Heuristic family detection"
+    risk: "family ranking",
+    ready: true
   },
   {
     id: "classical-caesar",
-    label: "Caesar Breach",
-    inputHint: "Paste a Caesar-shifted message.",
-    risk: "Tiny keyspace"
+    label: "Caesar",
+    risk: "26-shift sweep",
+    ready: true
+  },
+  {
+    id: "classical-reverse",
+    label: "Reverse",
+    risk: "flip variants",
+    ready: true
+  },
+  {
+    id: "classical-vigenere",
+    label: "Vigenere",
+    risk: "IoC key search",
+    ready: true
+  },
+  {
+    id: "classical-autokey",
+    label: "Autokey Breach",
+    risk: "seed search",
+    ready: true
+  },
+  {
+    id: "classical-substitution",
+    label: "Monoalphabetic",
+    risk: "hill climb",
+    ready: true
+  },
+  {
+    id: "transposition-columnar",
+    label: "Column",
+    risk: "permutation",
+    ready: true
+  },
+  {
+    id: "asymmetric-rsa",
+    label: "RSA",
+    risk: "small primes",
+    ready: true
+  },
+  {
+    id: "asymmetric-elgamal",
+    label: "ElGamal",
+    risk: "tiny group",
+    ready: true
   },
   {
     id: "jwt-debugger",
-    label: "JWT Debugger",
-    inputHint: "Paste a JWT with three dot-separated parts.",
-    risk: "Unsigned or weakly signed token"
+    label: "JWT",
+    risk: "decode audit",
+    ready: true
   }
 ];
 
 export function BreachWorkspace() {
   const workerRef = useRef<Worker | null>(null);
+  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("autokey");
+  const [autokeyAction, setAutokeyAction] = useState<AutokeyAction>("encrypt");
+  const [autokeyInput, setAutokeyInput] = useState(sampleAutokeyPlain);
+  const [autokeyKey, setAutokeyKey] = useState(sampleAutokeyKey);
   const [module, setModule] = useState<WorkerModule>("auto-detect");
   const [artifact, setArtifact] = useState(sampleCipher);
-  const [status, setStatus] = useState<"idle" | "running" | "complete" | "error">("idle");
-  const [logs, setLogs] = useState<string[]>([
-    "[SYSTEM] Breach workspace armed. Backend route surface disabled for MVP."
+  const [status, setStatus] = useState<JobStatus>("idle");
+  const [logs, setLogs] = useState<TerminalLine[]>([
+    makeLog("SYSTEM", "Workspace armed. Autokey lab is the primary coursework path.")
   ]);
   const [results, setResults] = useState<BreachResult[]>([]);
   const [problem, setProblem] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const selectedModule = useMemo(
     () => moduleOptions.find((option) => option.id === module) ?? moduleOptions[0],
     [module]
   );
 
+  const autokeyResult = useMemo(() => {
+    try {
+      const result =
+        autokeyAction === "encrypt"
+          ? encryptAutokey(autokeyInput, autokeyKey)
+          : decryptAutokey(autokeyInput, autokeyKey);
+
+      return {
+        result,
+        error: null
+      };
+    } catch (error) {
+      return {
+        result: null,
+        error: error instanceof Error ? error.message : "Autokey transform failed."
+      };
+    }
+  }, [autokeyAction, autokeyInput, autokeyKey]);
+
+  const activeResult = results[0];
+  const confidence = activeResult ? Math.round(activeResult.confidence * 100) : 0;
+
   useEffect(() => {
+    queueMicrotask(() => {
+      try {
+        const stored = window.localStorage.getItem(historyStorageKey);
+        if (stored) {
+          setHistory(JSON.parse(stored) as HistoryEntry[]);
+        }
+      } catch {
+        window.localStorage.removeItem(historyStorageKey);
+      }
+    });
+
     return () => {
       workerRef.current?.terminate();
     };
   }, []);
 
-  function appendLog(line: string) {
-    setLogs((current) => [...current.slice(-18), line]);
+  function appendLog(tag: string, message: string) {
+    setLogs((current) => [...current.slice(-16), makeLog(tag, message)]);
   }
 
   function createWorker() {
@@ -76,24 +191,22 @@ export function BreachWorkspace() {
 
       if (event.type === "job.accepted") {
         setStatus("running");
-        appendLog("[JOB ACCEPTED] Worker running locally in browser thread.");
+        appendLog("ACCEPTED", "Browser worker accepted the local analysis job.");
       }
 
       if (event.type === "job.progress") {
         const progress = event.data as ProgressData;
         appendLog(
-          `[TRYING KEY: ${progress.currentKey ?? "n/a"}] [FITNESS: ${
-            progress.currentFitness?.toFixed(2) ?? "n/a"
-          }] [ITERATION: ${progress.iteration}] ${progress.message}`
+          "TRACE",
+          `${progress.currentKey ?? "n/a"} | fitness ${progress.currentFitness?.toFixed(2) ?? "n/a"} | iteration ${progress.iteration} | ${progress.message}`
         );
       }
 
       if (event.type === "candidate.found") {
         const candidate = event.data as BreachResult;
         appendLog(
-          `[SIGNAL LOCK] rank=${candidate.rank} confidence=${Math.round(
-            candidate.confidence * 100
-          )}% evidence=${candidate.evidence[0] ?? "candidate improved"}`
+          "LOCK",
+          `rank ${candidate.rank} | confidence ${Math.round(candidate.confidence * 100)}% | ${candidate.evidence[0] ?? "candidate improved"}`
         );
       }
 
@@ -101,14 +214,15 @@ export function BreachWorkspace() {
         const completed = event.data as { results: BreachResult[] };
         setStatus("complete");
         setResults(completed.results);
-        appendLog("[JOB COMPLETED] Local breach analysis finished.");
+        rememberRun(completed.results[0], module, artifact);
+        appendLog("COMPLETE", "Local breach analysis finished.");
       }
 
       if (event.type === "job.failed") {
         const failed = event.data as { message: string; recovery: string };
         setStatus("error");
         setProblem(`${failed.message} ${failed.recovery}`);
-        appendLog(`[WORKER FAILED] ${failed.message}`);
+        appendLog("FAILED", failed.message);
       }
     };
 
@@ -117,10 +231,11 @@ export function BreachWorkspace() {
   }
 
   function runBreach() {
+    setWorkspaceMode("breach");
     setStatus("running");
     setProblem(null);
     setResults([]);
-    setLogs(["[LOCAL ONLY] Starting browser worker. No backend endpoint will receive this artifact."]);
+    setLogs([makeLog("LOCAL", "Starting browser worker. Artifact stays on this device.")]);
 
     const worker = createWorker();
     const request: WorkerJobRequest<{ artifact: string }> = {
@@ -129,9 +244,9 @@ export function BreachWorkspace() {
       mode: module === "auto-detect" ? "detect" : module === "jwt-debugger" ? "decode" : "attack",
       payload: { artifact },
       limits: {
-        maxIterations: module === "jwt-debugger" ? 1 : 26,
+        maxIterations: module === "jwt-debugger" ? 1 : 2400,
         maxRuntimeMs: 3000,
-        maxCandidates: 5
+        maxCandidates: 6
       },
       localeHints: ["en", "id"]
     };
@@ -143,221 +258,391 @@ export function BreachWorkspace() {
     workerRef.current?.terminate();
     workerRef.current = null;
     setStatus("idle");
-    appendLog("[JOB CANCELLED] Worker terminated by user.");
+    appendLog("CANCELLED", "Worker terminated by user.");
   }
 
-  function loadSample(nextModule: WorkerModule) {
+  function selectModule(nextModule: WorkerModule) {
+    const option = moduleOptions.find((item) => item.id === nextModule);
+    if (!option?.ready) {
+      return;
+    }
+
     setModule(nextModule);
-    setArtifact(nextModule === "jwt-debugger" ? sampleJwt : sampleCipher);
+    setArtifact(sampleArtifacts[nextModule]);
     setResults([]);
     setProblem(null);
     setStatus("idle");
-    setLogs([`[SAMPLE LOADED] ${nextModule}`]);
+    setLogs([makeLog("MODULE", `${option.label} sample loaded.`)]);
   }
 
-  const activeResult = results[0];
+  function useAutokeyOutputAsInput() {
+    if (!autokeyResult.result) {
+      return;
+    }
+
+    setAutokeyInput(autokeyResult.result.text);
+    setAutokeyAction(autokeyAction === "encrypt" ? "decrypt" : "encrypt");
+  }
+
+  function loadAutokeyRoundTrip() {
+    const encrypted = encryptAutokey(sampleAutokeyPlain, sampleAutokeyKey);
+    setAutokeyKey(sampleAutokeyKey);
+    setAutokeyInput(encrypted.text);
+    setAutokeyAction("decrypt");
+    setWorkspaceMode("autokey");
+  }
+
+  function rememberRun(result: BreachResult | undefined, currentModule: WorkerModule, currentArtifact: string) {
+    if (!result) {
+      return;
+    }
+
+    const option = moduleOptions.find((item) => item.id === currentModule);
+    const nextHistory = [
+      {
+        id: crypto.randomUUID(),
+        module: currentModule,
+        label: option?.label ?? currentModule,
+        artifactPreview: currentArtifact.slice(0, 72),
+        confidence: Math.round(result.confidence * 100),
+        createdAt: new Date().toISOString()
+      },
+      ...history
+    ].slice(0, 8);
+
+    setHistory(nextHistory);
+    window.localStorage.setItem(historyStorageKey, JSON.stringify(nextHistory));
+  }
+
+  function clearHistory() {
+    setHistory([]);
+    window.localStorage.removeItem(historyStorageKey);
+  }
 
   return (
-    <main className="min-h-screen px-4 py-5 text-[var(--text-primary)] md:px-6 lg:px-8">
-      <section className="mx-auto grid max-w-[1480px] gap-4 lg:grid-cols-[360px_minmax(0,1fr)_420px]">
-        <div className="lg:col-span-3">
-          <div className="flex flex-col gap-3 border-b border-[var(--border-measurement)] pb-5 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.36em] text-[var(--signal-info)]">
-                GhostKey // BreachEngine Suite
-              </p>
-              <h1 className="mt-2 text-3xl font-black uppercase leading-none md:text-5xl">
-                Local Breach Bench
-              </h1>
-            </div>
-            <div className="max-w-xl text-sm leading-6 text-[var(--text-muted)]">
-              Browser-side cryptanalysis lab. Web Workers do the heavy work; no MVP backend route
-              receives your artifacts.
-            </div>
+    <main className="min-h-screen text-[var(--text-primary)]">
+      <section className="bench-shell">
+        <header className="command-ribbon">
+          <div>
+            <p className="eyebrow">GhostKey // BreachEngine Suite</p>
+            <h1>Autokey Core + Breach Mode</h1>
           </div>
+          <div className="ribbon-readouts" aria-label="Project status">
+            <Readout label="Core" value="Autokey ready" tone="success" />
+            <Readout label="Engine" value="local worker" tone="info" />
+            <Readout label="Scope" value="no backend" tone="warning" />
+          </div>
+        </header>
+
+        <div className="mode-rail" role="tablist" aria-label="Workspace mode">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={workspaceMode === "autokey"}
+            onClick={() => setWorkspaceMode("autokey")}
+            className={workspaceMode === "autokey" ? "is-active" : ""}
+          >
+            Autokey Lab
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={workspaceMode === "breach"}
+            onClick={() => setWorkspaceMode("breach")}
+            className={workspaceMode === "breach" ? "is-active" : ""}
+          >
+            Breach Console
+          </button>
         </div>
 
-        <aside className="rounded-sm border border-[var(--border-measurement)] bg-[rgba(7,16,13,0.86)] p-4 shadow-[0_0_30px_rgba(0,255,102,0.08)]">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-sm font-bold uppercase text-[var(--signal-success)]">
-              Artifact Input
-            </h2>
-            <span className="border border-[rgba(0,255,102,0.36)] px-2 py-1 text-[10px] uppercase text-[var(--signal-success)]">
-              local only
-            </span>
-          </div>
-
-          <label className="block text-xs uppercase text-[var(--text-muted)]" htmlFor="module">
-            Attack vector
-          </label>
-          <select
-            id="module"
-            value={module}
-            onChange={(event) => loadSample(event.target.value as WorkerModule)}
-            className="mt-2 w-full border border-[var(--border-measurement)] bg-black px-3 py-3 text-sm text-[var(--text-primary)]"
-          >
-            {moduleOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <div className="mt-4 border-l-2 border-[var(--signal-warning)] pl-3 text-xs leading-5 text-[var(--text-muted)]">
-            <strong className="text-[var(--signal-warning)]">{selectedModule.risk}</strong>
-            <br />
-            {selectedModule.inputHint}
-          </div>
-
-          <label className="mt-5 block text-xs uppercase text-[var(--text-muted)]" htmlFor="artifact">
-            Artifact
-          </label>
-          <textarea
-            id="artifact"
-            value={artifact}
-            onChange={(event) => setArtifact(event.target.value)}
-            spellCheck={false}
-            className="mt-2 min-h-48 w-full resize-y border border-[var(--border-measurement)] bg-black/70 p-3 text-sm leading-6 text-[var(--text-primary)]"
-          />
-
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={runBreach}
-              disabled={status === "running" || artifact.trim().length === 0}
-              className="min-h-12 border border-[var(--signal-success)] bg-[rgba(0,255,102,0.12)] px-3 text-sm font-bold uppercase text-[var(--signal-success)] transition hover:bg-[rgba(0,255,102,0.2)] disabled:cursor-not-allowed disabled:border-zinc-700 disabled:text-zinc-600"
-            >
-              Run Breach
-            </button>
-            <button
-              type="button"
-              onClick={cancelJob}
-              disabled={status !== "running"}
-              className="min-h-12 border border-[var(--signal-danger)] bg-[rgba(255,43,43,0.08)] px-3 text-sm font-bold uppercase text-[var(--signal-danger)] transition hover:bg-[rgba(255,43,43,0.16)] disabled:cursor-not-allowed disabled:border-zinc-700 disabled:text-zinc-600"
-            >
-              Cancel
-            </button>
-          </div>
-        </aside>
-
-        <section className="min-h-[540px] rounded-sm border border-[var(--border-measurement)] bg-[rgba(3,7,6,0.9)] p-4">
-          <div className="flex flex-col gap-2 border-b border-[var(--border-measurement)] pb-3 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-sm font-bold uppercase text-[var(--signal-info)]">
-              Real-Time Log Terminal
-            </h2>
-            <StatusBadge status={status} />
-          </div>
-
-          <div
-            aria-live="polite"
-            className="mt-4 h-[460px] overflow-hidden border-l border-[rgba(54,217,255,0.32)] pl-4"
-          >
-            {logs.map((line, index) => (
-              <div
-                key={`${line}-${index}`}
-                className="grid min-h-6 grid-cols-[72px_minmax(0,1fr)] gap-3 text-xs leading-6"
-              >
-                <span className="text-[var(--text-muted)]">
-                  {String(index + 1).padStart(4, "0")}
-                </span>
-                <span className="break-words text-[var(--text-primary)]">{line}</span>
+        <section className="workspace-grid">
+          <section className="instrument-panel autokey-panel" aria-labelledby="autokey-title">
+            <div className="panel-heading">
+              <div>
+                <p className="panel-kicker">grading-safe path</p>
+                <h2 id="autokey-title">Autokey Cipher</h2>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <aside className="rounded-sm border border-[var(--border-measurement)] bg-[rgba(7,16,13,0.86)] p-4">
-          <h2 className="text-sm font-bold uppercase text-[var(--signal-success)]">
-            Findings
-          </h2>
-
-          {problem ? (
-            <div className="mt-4 border border-[var(--signal-danger)] bg-[rgba(255,43,43,0.08)] p-3 text-sm leading-6 text-[var(--signal-danger)]">
-              {problem}
+              <div className="segmented-control" aria-label="Autokey action">
+                <button
+                  type="button"
+                  onClick={() => setAutokeyAction("encrypt")}
+                  className={autokeyAction === "encrypt" ? "is-active" : ""}
+                >
+                  Encrypt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAutokeyAction("decrypt")}
+                  className={autokeyAction === "decrypt" ? "is-active" : ""}
+                >
+                  Decrypt
+                </button>
+              </div>
             </div>
-          ) : null}
 
-          {!activeResult ? (
-            <div className="mt-4 border border-dashed border-[var(--border-measurement)] p-4 text-sm leading-6 text-[var(--text-muted)]">
-              Run a local breach job to populate ranked findings, evidence, and remediation.
+            <label className="field-label" htmlFor="autokey-key">
+              Key
+            </label>
+            <input
+              id="autokey-key"
+              value={autokeyKey}
+              onChange={(event) => setAutokeyKey(event.target.value)}
+              spellCheck={false}
+              className="key-input"
+            />
+
+            <label className="field-label" htmlFor="autokey-input">
+              {autokeyAction === "encrypt" ? "Plaintext" : "Ciphertext"}
+            </label>
+            <textarea
+              id="autokey-input"
+              value={autokeyInput}
+              onChange={(event) => setAutokeyInput(event.target.value)}
+              spellCheck={false}
+              className="artifact-well"
+            />
+
+            <div className="autokey-actions">
+              <button type="button" className="primary-action" onClick={useAutokeyOutputAsInput}>
+                Round Trip
+              </button>
+              <button type="button" className="ghost-action" onClick={loadAutokeyRoundTrip}>
+                Decrypt Sample
+              </button>
             </div>
-          ) : (
-            <div className="mt-4 space-y-4">
-              <div className="border border-[rgba(0,255,102,0.36)] bg-[rgba(0,255,102,0.08)] p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs uppercase text-[var(--text-muted)]">Confidence</span>
-                  <span className="text-2xl font-black text-[var(--signal-success)]">
-                    {Math.round(activeResult.confidence * 100)}%
-                  </span>
+
+            <div className="result-slab" aria-live="polite">
+              <div className="slab-topline">
+                <span>{autokeyAction === "encrypt" ? "Ciphertext" : "Plaintext"}</span>
+                <span>{autokeyResult.result?.normalizedKey.toUpperCase() ?? "KEY ERROR"}</span>
+              </div>
+              {autokeyResult.error ? (
+                <p className="error-copy">{autokeyResult.error}</p>
+              ) : (
+                <pre>{autokeyResult.result?.text}</pre>
+              )}
+            </div>
+
+            <div className="keystream-strip">
+              <span>Keystream</span>
+              <code>{autokeyResult.result?.keystream || "waiting for alphabetic input"}</code>
+            </div>
+          </section>
+
+          <section className="instrument-panel breach-panel" aria-labelledby="breach-title">
+            <div className="panel-heading">
+              <div>
+                <p className="panel-kicker">automated showcase</p>
+                <h2 id="breach-title">Breach Console</h2>
+              </div>
+              <StatusBadge status={status} />
+            </div>
+
+            <div className="module-grid" aria-label="Attack vector">
+              {moduleOptions.map((option) => (
+                <button
+                  type="button"
+                  key={option.id}
+                  onClick={() => selectModule(option.id)}
+                  disabled={!option.ready || status === "running"}
+                  className={module === option.id ? "is-active" : ""}
+                >
+                  <span>{option.label}</span>
+                  <small>{option.risk}</small>
+                </button>
+              ))}
+            </div>
+
+            <label className="field-label" htmlFor="artifact">
+              Artifact
+            </label>
+            <textarea
+              id="artifact"
+              value={artifact}
+              onChange={(event) => setArtifact(event.target.value)}
+              spellCheck={false}
+              className="artifact-well breach-input"
+            />
+
+            <div className="breach-actions">
+              <button
+                type="button"
+                onClick={runBreach}
+                disabled={status === "running" || artifact.trim().length === 0}
+                className="primary-action"
+              >
+                Run Breach
+              </button>
+              <button
+                type="button"
+                onClick={cancelJob}
+                disabled={status !== "running"}
+                className="danger-action"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="spectrum-stage" aria-label="Signal confidence">
+              <div className="spectrum-scale">
+                {Array.from({ length: 28 }, (_, index) => {
+                  const lit = status === "running" || confidence > index * 3.5;
+                  return (
+                    <span
+                      key={index}
+                      className={lit ? "is-lit" : ""}
+                      style={{ height: `${18 + ((index * 11) % 46)}px` }}
+                    />
+                  );
+                })}
+              </div>
+              <div className={`signal-sweep ${status === "running" ? "is-running" : ""}`} />
+            </div>
+          </section>
+
+          <section className="instrument-panel terminal-panel" aria-labelledby="terminal-title">
+            <div className="panel-heading">
+              <div>
+                <p className="panel-kicker">worker event stream</p>
+                <h2 id="terminal-title">Trace Log</h2>
+              </div>
+              <span className="micro-status">{selectedModule.label}</span>
+            </div>
+
+            <div aria-live="polite" className="terminal-feed">
+              {logs.map((line, index) => (
+                <div className="terminal-row" key={line.id}>
+                  <span>{String(index + 1).padStart(3, "0")}</span>
+                  <strong>{line.tag}</strong>
+                  <p>{line.message}</p>
                 </div>
-                <div className="mt-3 h-2 bg-black">
-                  <div
-                    className="h-full bg-[var(--signal-success)]"
-                    style={{ width: `${Math.round(activeResult.confidence * 100)}%` }}
+              ))}
+            </div>
+          </section>
+
+          <aside className="instrument-panel findings-panel" aria-labelledby="findings-title">
+            <div className="panel-heading">
+              <div>
+                <p className="panel-kicker">ranked evidence</p>
+                <h2 id="findings-title">Findings</h2>
+              </div>
+              <span className="confidence-readout">{confidence}%</span>
+            </div>
+
+            {problem ? <div className="problem-band">{problem}</div> : null}
+
+            {!activeResult ? (
+              <div className="empty-state">
+                <span>Awaiting worker output</span>
+                <p>Caesar, JWT, and family detection are active. Autokey breach remains roadmap.</p>
+              </div>
+            ) : (
+              <div className="finding-stack">
+                <div className="confidence-meter">
+                  <div style={{ width: `${confidence}%` }} />
+                </div>
+                {activeResult.keyCandidate ? (
+                  <FindingBlock label="Key candidate" value={activeResult.keyCandidate} />
+                ) : null}
+                {activeResult.plaintextPreview ? (
+                  <FindingBlock label="Plaintext preview" value={activeResult.plaintextPreview} />
+                ) : null}
+                {activeResult.decodedHeader ? (
+                  <FindingBlock
+                    label="Decoded header"
+                    value={JSON.stringify(activeResult.decodedHeader, null, 2)}
+                  />
+                ) : null}
+                {activeResult.decodedPayload ? (
+                  <FindingBlock
+                    label="Decoded payload"
+                    value={JSON.stringify(activeResult.decodedPayload, null, 2)}
+                  />
+                ) : null}
+                {activeResult.weakParameter ? (
+                  <FindingBlock label="Weak parameter" value={activeResult.weakParameter} />
+                ) : null}
+                <div className="conclusion-band">
+                  <ConclusionLine title="Why weak" value={activeResult.conclusion.whyWeak} />
+                  <ConclusionLine title="Fix" value={activeResult.conclusion.howToFix} />
+                  <ConclusionLine
+                    title="Modern alternative"
+                    value={activeResult.conclusion.safeModernAlternative}
                   />
                 </div>
               </div>
+            )}
 
-              {activeResult.keyCandidate ? (
-                <FindingBlock label="Key candidate" value={activeResult.keyCandidate} />
-              ) : null}
-
-              {activeResult.plaintextPreview ? (
-                <FindingBlock label="Plaintext preview" value={activeResult.plaintextPreview} />
-              ) : null}
-
-              {activeResult.decodedHeader ? (
-                <FindingBlock
-                  label="Decoded header"
-                  value={JSON.stringify(activeResult.decodedHeader, null, 2)}
-                />
-              ) : null}
-
-              {activeResult.decodedPayload ? (
-                <FindingBlock
-                  label="Decoded payload"
-                  value={JSON.stringify(activeResult.decodedPayload, null, 2)}
-                />
-              ) : null}
-
-              <div className="space-y-3 border border-[rgba(255,191,61,0.42)] bg-[rgba(255,191,61,0.08)] p-3 text-sm leading-6">
-                <ConclusionLine title="Why this is weak" value={activeResult.conclusion.whyWeak} />
-                <ConclusionLine title="How to fix it" value={activeResult.conclusion.howToFix} />
-                <ConclusionLine
-                  title="Modern alternative"
-                  value={activeResult.conclusion.safeModernAlternative}
-                />
+            <div className="history-panel">
+              <div className="history-heading">
+                <span>Local history</span>
+                <button type="button" onClick={clearHistory} disabled={history.length === 0}>
+                  Clear
+                </button>
               </div>
+              {history.length === 0 ? (
+                <p>No browser-local runs saved yet.</p>
+              ) : (
+                <div className="history-list">
+                  {history.map((entry) => (
+                    <button
+                      type="button"
+                      key={entry.id}
+                      onClick={() => {
+                        setModule(entry.module);
+                        setArtifact(entry.artifactPreview);
+                        setWorkspaceMode("breach");
+                      }}
+                    >
+                      <strong>{entry.label}</strong>
+                      <span>{entry.confidence}%</span>
+                      <small>{entry.artifactPreview}</small>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </aside>
+          </aside>
+        </section>
       </section>
     </main>
   );
 }
 
-function StatusBadge({ status }: { status: "idle" | "running" | "complete" | "error" }) {
-  const styles = {
-    idle: "border-[var(--text-muted)] text-[var(--text-muted)]",
-    running: "border-[var(--signal-info)] text-[var(--signal-info)]",
-    complete: "border-[var(--signal-success)] text-[var(--signal-success)]",
-    error: "border-[var(--signal-danger)] text-[var(--signal-danger)]"
+function makeLog(tag: string, message: string): TerminalLine {
+  return {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    tag,
+    message
   };
+}
 
+function Readout({
+  label,
+  value,
+  tone
+}: {
+  label: string;
+  value: string;
+  tone: "success" | "warning" | "info";
+}) {
   return (
-    <span className={`border px-2 py-1 text-xs uppercase ${styles[status]}`}>
-      {status}
-    </span>
+    <div className={`readout readout-${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
+}
+
+function StatusBadge({ status }: { status: JobStatus }) {
+  return <span className={`status-badge status-${status}`}>{status}</span>;
 }
 
 function FindingBlock({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-[var(--border-measurement)] bg-black/40 p-3">
-      <div className="text-xs uppercase text-[var(--text-muted)]">{label}</div>
-      <pre className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-[var(--text-primary)]">
-        {value}
-      </pre>
+    <div className="finding-block">
+      <div>{label}</div>
+      <pre>{value}</pre>
     </div>
   );
 }
@@ -365,8 +650,8 @@ function FindingBlock({ label, value }: { label: string; value: string }) {
 function ConclusionLine({ title, value }: { title: string; value: string }) {
   return (
     <div>
-      <div className="text-xs uppercase text-[var(--signal-warning)]">{title}</div>
-      <p className="mt-1 text-[var(--text-primary)]">{value}</p>
+      <strong>{title}</strong>
+      <p>{value}</p>
     </div>
   );
 }

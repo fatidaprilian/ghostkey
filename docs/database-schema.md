@@ -2,9 +2,9 @@
 
 ## Current Decision
 
-GhostKey should not use a persistent database in the MVP.
+GhostKey should not use a server-side persistent database in the MVP.
 
-The first version is a local-first educational dashboard. It can run analysis in the browser, hold session state in memory, and use static demo fixtures. This reduces privacy risk because user-provided ciphertext, JWTs, candidate secrets, and wordlists do not need to leave the device.
+The first version is a local-first educational dashboard. It can run analysis in the browser, hold active session state in memory, store a small local run history in `localStorage`, and use static demo fixtures. This reduces privacy risk because user-provided ciphertext, JWTs, candidate secrets, and wordlists do not need to leave the device.
 
 ## Data Classes
 
@@ -15,6 +15,7 @@ The first version is a local-first educational dashboard. It can run analysis in
 | Scoring data | quadgram tables, language frequency tables | Static bundled assets | Must document source and language coverage. |
 | Demo fixtures | toy ciphers, toy JWTs, weak RSA examples | Static bundled assets | Must be synthetic and safe. |
 | Analysis result | plaintext candidates, confidence, explanation | Browser memory, optional local export | Export must be user-initiated. |
+| Local run history | module, artifact preview, confidence, timestamp | Browser `localStorage` only | Must be clearable and must not require login or server sync. |
 
 ## Future Persistence Trigger
 
@@ -79,6 +80,21 @@ Do not store raw JWTs, raw secrets, private keys, or private user artifacts unle
 - Redact secrets from logs and analytics.
 - Document export and deletion behavior.
 
+## Browser-Local History Shape
+
+```ts
+type LocalHistoryEntry = {
+  id: string;
+  module: string;
+  label: string;
+  artifactPreview: string;
+  confidence: number;
+  createdAt: string;
+};
+```
+
+Store only compact previews and scores by default. Keep full artifacts in active memory only unless the user explicitly exports a report.
+
 ## Next Validation Action
 
-Keep the MVP database-free. Revisit this document only when a saved-workspace or classroom feature is approved.
+Keep the MVP server-database-free. Revisit this document only when a saved-workspace, sync, or classroom account feature is approved.

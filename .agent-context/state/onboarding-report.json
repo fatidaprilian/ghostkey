@@ -1,18 +1,17 @@
 {
-  "cliVersion": "3.0.36",
-  "generatedAt": "2026-04-27T12:38:41.880Z",
-  "operationMode": "init",
+  "cliVersion": "3.0.39",
+  "generatedAt": "2026-04-30T06:52:23.003Z",
+  "operationMode": "upgrade",
   "selectedProfile": "balanced",
-  "selectedPreset": null,
   "projectScope": {
     "key": "both",
     "label": "Both (frontend + backend)"
   },
-  "projectTopology": "Agent recommendation required from current brief, repo evidence, and live official docs",
+  "projectTopology": null,
   "runtimeDecision": {
     "mode": "agent-decision-required",
     "explicitStack": null,
-    "detectedStackEvidence": null,
+    "detectedStackEvidence": "typescript.md",
     "detectedAdditionalStackEvidence": []
   },
   "architectureDecision": {
@@ -34,7 +33,7 @@
     "agentDecisionRequired": true
   },
   "ciGuardrailsEnabled": true,
-  "setupDurationMs": 52395,
+  "setupDurationMs": 168,
   "runtimeEnvironment": {
     "selected": "windows",
     "selectedLabel": "Windows",
@@ -43,12 +42,122 @@
     "detectionSource": "process.platform"
   },
   "tokenOptimization": {
+    "schemaVersion": "token-optimization-v1",
     "enabled": true,
     "selectedAgent": "copilot",
     "preferredShellProxy": "native-fallback",
-    "stateFile": ".agent-context/state/token-optimization.json"
+    "externalProxy": {
+      "detected": false,
+      "version": null,
+      "detectionError": "Unknown external proxy detection error"
+    },
+    "commandRewriteMappings": [
+      {
+        "rawCommand": "ls -la",
+        "optimizedCommand": "rtk ls .",
+        "reason": "Directory listings are grouped and compacted before entering the model context."
+      },
+      {
+        "rawCommand": "tree",
+        "optimizedCommand": "rtk ls .",
+        "reason": "Large trees are summarized without losing high-signal structure."
+      },
+      {
+        "rawCommand": "cat file.ext",
+        "optimizedCommand": "rtk read file.ext",
+        "reason": "File reads keep signatures and relevant lines while trimming boilerplate."
+      },
+      {
+        "rawCommand": "rg pattern .",
+        "optimizedCommand": "rtk grep \"pattern\" .",
+        "reason": "Search hits are grouped and deduplicated for faster reasoning."
+      },
+      {
+        "rawCommand": "git status",
+        "optimizedCommand": "rtk git status",
+        "reason": "Status output is condensed to actionable file changes."
+      },
+      {
+        "rawCommand": "git diff",
+        "optimizedCommand": "rtk git diff",
+        "reason": "Diff noise is trimmed while preserving code-review context."
+      },
+      {
+        "rawCommand": "git log -n 10",
+        "optimizedCommand": "rtk git log -n 10",
+        "reason": "History is converted to compact one-line summaries."
+      },
+      {
+        "rawCommand": "npm test",
+        "optimizedCommand": "rtk test npm test",
+        "reason": "Test results emphasize failures and suppress repetitive pass logs."
+      },
+      {
+        "rawCommand": "npm run build",
+        "optimizedCommand": "rtk err npm run build",
+        "reason": "Build runs return errors and warnings only for quicker remediation."
+      },
+      {
+        "rawCommand": "tsc --noEmit",
+        "optimizedCommand": "rtk tsc",
+        "reason": "TypeScript diagnostics are grouped by file with less repetition."
+      },
+      {
+        "rawCommand": "eslint .",
+        "optimizedCommand": "rtk lint",
+        "reason": "Lint output is grouped by rule and location to reduce token churn."
+      },
+      {
+        "rawCommand": "docker ps",
+        "optimizedCommand": "rtk docker ps",
+        "reason": "Container state is summarized into compact rows."
+      },
+      {
+        "rawCommand": "kubectl get pods",
+        "optimizedCommand": "rtk kubectl pods",
+        "reason": "Kubernetes output is condensed and stable for agent consumption."
+      }
+    ],
+    "outputFoldingStrategy": {
+      "mode": "compact-high-signal-output",
+      "appliesTo": [
+        "shell-command-output",
+        "test-output",
+        "build-output",
+        "diff-output",
+        "log-output"
+      ],
+      "preserveAlways": [
+        "exit-code",
+        "failing-command",
+        "file-and-line",
+        "error-message",
+        "actionable-warning"
+      ],
+      "foldByDefault": [
+        "repeated-success-lines",
+        "large-unchanged-diff-context",
+        "verbose-install-progress",
+        "duplicated-stack-frames",
+        "low-signal-directory-noise"
+      ],
+      "nativeFallback": [
+        "prefer --stat or --name-only before full diff",
+        "prefer focused rg queries before broad file dumps",
+        "prefer failure-focused test reporters when available",
+        "summarize long logs before hydrating full detail"
+      ],
+      "safetyBoundary": [
+        "never hide failing checks",
+        "never drop the command that produced output",
+        "never persist secrets into summaries",
+        "hydrate full output only when the compact summary is insufficient"
+      ]
+    },
+    "generatedAt": "2026-04-27T12:38:41.846Z"
   },
   "memoryContinuity": {
+    "schemaVersion": "memory-continuity-v1",
     "enabled": true,
     "hydrationMode": "progressive-disclosure",
     "adapters": [
@@ -56,34 +165,61 @@
       "gemini-cli",
       "vscode-chat"
     ],
-    "stateFile": ".agent-context/state/memory-continuity.json",
-    "activeSnapshotFile": ".agent-context/state/active-memory.json"
+    "retrieval": {
+      "sessionStartIndexLimit": 8,
+      "fullHydrationLimit": 2
+    },
+    "privacy": {
+      "redactPrivateTags": true,
+      "redactInlineSensitivePatterns": true
+    },
+    "generatedAt": "2026-04-27T12:38:41.840Z"
   },
   "autoDetection": {
-    "detectedStack": null,
+    "detectedStack": "typescript.md",
     "detectedAdditionalStacks": [],
     "detectedBlueprint": null,
     "detectedAdditionalBlueprints": [],
-    "confidenceLabel": null,
-    "confidenceScore": 0,
-    "confidenceGap": 0,
-    "detectionReasoning": "No known project markers were detected.",
-    "rankedCandidates": [],
-    "evidence": [],
+    "confidenceLabel": "high",
+    "confidenceScore": 0.94,
+    "confidenceGap": 0.94,
+    "detectionReasoning": "Top signal Typescript won with confidence 0.94 from markers: package.json, tsconfig.json.",
+    "rankedCandidates": [
+      {
+        "stackFileName": "typescript.md",
+        "confidenceScore": 0.94,
+        "evidence": [
+          "package.json",
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "evidence": [
+      "package.json",
+      "tsconfig.json"
+    ],
     "detectionTransparency": {
-      "declaredAt": "2026-04-27T12:37:49.493Z",
-      "declarationType": "fresh-project",
-      "declarationShown": false,
-      "detectionSummary": "No existing project markers were detected.",
+      "declaredAt": "2026-04-30T06:52:22.885Z",
+      "declarationType": "existing-project",
+      "declarationShown": true,
+      "detectionSummary": "This folder looks like Typescript with high confidence based on package.json, tsconfig.json. Confidence gap: 0.94.",
       "activeRulesSummary": {
         "canonicalSource": ".instructions.md",
-        "compiledEntrypoints": [
-          ".agent-instructions.md",
+        "compiledRulebook": ".agent-instructions.md",
+        "legacyThinAdapters": [
           ".cursorrules",
           ".windsurfrules",
-          ".clauderc",
-          ".gemini/instructions.md",
-          ".github/copilot-instructions.md"
+          ".clauderc"
+        ],
+        "generatedBridgeAdapters": [
+          "AGENTS.md",
+          "CLAUDE.md",
+          "GEMINI.md",
+          ".cursor/rules/agentic-senior-core.mdc",
+          ".windsurf/rules/agentic-senior-core.md",
+          ".github/copilot-instructions.md",
+          ".github/instructions/agentic-senior-core.instructions.md",
+          ".gemini/instructions.md"
         ],
         "stackLoadingMode": "lazy",
         "domainRuleLoadingMode": "lazy",
@@ -97,26 +233,303 @@
       },
       "majorConstraints": [
         "Preserve existing project markers and avoid forced stack migration.",
-        "Use detected runtime markers as evidence only; do not convert them into stack migration or design direction.",
-        "Explicit stack or blueprint overrides are constraints only when the user provides them."
+        "Use runtime markers as evidence only unless the user already recorded an explicit runtime constraint.",
+        "Upgrade keeps prior explicit onboarding constraints but does not create new stack or blueprint decisions."
       ],
       "quickConfirmation": {
         "offered": false,
-        "response": "not-applicable",
-        "source": "existing-project-detection"
+        "response": "upgrade-auto",
+        "source": "upgrade-assistant"
       },
       "decision": {
-        "mode": "fresh-agent-decision-required",
+        "mode": "upgrade-auto",
         "selectedStackFileName": "agent-decision-runtime.md",
-        "selectedBlueprintFileName": "agent-decision-architecture.md",
-        "selectedAdditionalStackFileNames": [],
-        "selectedAdditionalBlueprintFileNames": [],
-        "usedDetectedSetup": false,
-        "selectedProjectScopeKey": "both",
-        "selectedProjectScopeLabel": "Both (frontend + backend)"
-      },
-      "projectContextEvidence": null
+        "selectedBlueprintFileName": "agent-decision-architecture.md"
+      }
     },
-    "uiScope": null
+    "uiScope": {
+      "isUiScopeLikely": true,
+      "signalReasons": [
+        "onboarding project scope: both",
+        "ui markers: src, next.config.ts",
+        "ui dependencies: next, react, react-dom, tailwindcss",
+        "workspace src: ui markers: app"
+      ],
+      "workspaceUiEntries": [
+        {
+          "relativePath": "src",
+          "detectedUiMarkers": [
+            "app"
+          ],
+          "detectedUiDependencies": []
+        }
+      ],
+      "frontendEvidenceMetrics": {
+        "scannedFileCount": 10,
+        "hardcodedColorCount": 30,
+        "propDrillingCandidateCount": 0,
+        "mediaQueryCount": 1,
+        "tailwindBreakpointUsageCount": 11,
+        "arbitraryBreakpointCount": 0,
+        "uniqueMediaWidthCount": 0,
+        "structuredClassAttributeCount": 45,
+        "boundClassExpressionCount": 1,
+        "inlineStyleObjectCount": 1,
+        "inlineStyleBindingCount": 0,
+        "inlineStyleTokenBypassCount": 0
+      },
+      "designEvidenceSummary": {
+        "summaryVersion": "v1",
+        "source": "lightweight-static-scan",
+        "scanRootRelativePaths": [
+          "src"
+        ],
+        "scannedFileCount": 10,
+        "cssVariables": {
+          "definitionCount": 10,
+          "referenceCount": 51,
+          "sampleNames": [
+            "background",
+            "surface-panel",
+            "surface-raised",
+            "signal-success",
+            "signal-warning",
+            "signal-danger",
+            "signal-info",
+            "text-primary",
+            "text-muted",
+            "border-measurement"
+          ],
+          "categoryCounts": {
+            "color": 5,
+            "spacing": 0,
+            "radius": 0,
+            "shadow": 0,
+            "typography": 0,
+            "motion": 0,
+            "other": 5
+          }
+        },
+        "colors": {
+          "hardcodedCount": 30,
+          "kindCounts": {
+            "hex": 9,
+            "rgb": 21,
+            "hsl": 0,
+            "oklch": 0,
+            "other": 0
+          },
+          "sampleValues": [
+            "#030706",
+            "#07100d",
+            "#0d1814",
+            "#00ff66",
+            "#ffbf3d",
+            "#ff2b2b",
+            "#36d9ff",
+            "#f3fff8",
+            "#88a095",
+            "rgba(54, 217, 255, 0.28)",
+            "rgba(54, 217, 255, 0.05)",
+            "rgba(0, 255, 102, 0.04)"
+          ]
+        },
+        "spacing": {
+          "rawValueCount": 1,
+          "sampleValues": [
+            "100vh"
+          ]
+        },
+        "radius": {
+          "rawValueCount": 0,
+          "sampleValues": []
+        },
+        "shadow": {
+          "rawValueCount": 0,
+          "sampleValues": []
+        },
+        "typography": {
+          "fontFamilyCount": 1,
+          "fontSizeCount": 0,
+          "lineHeightCount": 0,
+          "letterSpacingCount": 0,
+          "fontFamilySamples": [
+            "JetBrains Mono\","
+          ],
+          "fontSizeSamples": [],
+          "lineHeightSamples": [],
+          "letterSpacingSamples": []
+        },
+        "motion": {
+          "transitionCount": 3,
+          "animationCount": 2,
+          "durationCount": 2,
+          "durationSamples": [
+            "0.001ms"
+          ]
+        },
+        "tailwind": {
+          "breakpointUsageCount": 11,
+          "arbitraryBreakpointCount": 0,
+          "utilityFamilyCounts": {
+            "min": 6,
+            "px": 8,
+            "py": 4,
+            "text": 52,
+            "mx": 1,
+            "grid": 6,
+            "max": 2,
+            "gap": 7,
+            "col": 1,
+            "flex": 8,
+            "border": 38,
+            "pb": 2,
+            "items": 4,
+            "justify": 4,
+            "uppercase": 14,
+            "tracking": 1,
+            "mt": 13,
+            "font": 7,
+            "leading": 9,
+            "rounded": 3,
+            "bg": 15,
+            "p": 9,
+            "shadow": 1,
+            "mb": 1,
+            "block": 2,
+            "w": 2,
+            "pl": 2,
+            "resize": 1,
+            "transition": 2,
+            "cursor": 2,
+            "h": 3,
+            "overflow": 1,
+            "break": 2,
+            "space": 2,
+            "${styles[status]}": 1,
+            "whitespace": 1
+          },
+          "utilityFamilySamples": [
+            "min",
+            "px",
+            "py",
+            "text",
+            "mx",
+            "grid",
+            "max",
+            "gap",
+            "col",
+            "flex",
+            "border",
+            "pb"
+          ]
+        },
+        "componentInventory": {
+          "componentFileCount": 1,
+          "pageFileCount": 3,
+          "layoutFileCount": 1,
+          "surfaceFileSamples": [
+            "src/app/globals.css",
+            "src/app/layout.tsx",
+            "src/app/page.tsx",
+            "src/features/breach-workspace/BreachWorkspace.tsx"
+          ]
+        },
+        "structuredInspection": {
+          "mode": "attribute-aware-static-scan",
+          "classAttributeCount": 45,
+          "boundClassExpressionCount": 1,
+          "inlineStyleObjectCount": 1,
+          "inlineStyleBindingCount": 0,
+          "classAttributeSamples": [
+            "min-h-screen px-4 py-5 text-[var(--text-primary)] md:px-6 lg:px-8",
+            "mx-auto grid max-w-[1480px] gap-4 lg:grid-cols-[360px_minmax(0,1fr)_420px]",
+            "lg:col-span-3",
+            "flex flex-col gap-3 border-b border-[var(--border-measurement)] pb-5 md:flex-row md:items-end md:justify-between",
+            "text-xs uppercase tracking-[0.36em] text-[var(--signal-info)]",
+            "mt-2 text-3xl font-black uppercase leading-none md:text-5xl",
+            "max-w-xl text-sm leading-6 text-[var(--text-muted)]",
+            "rounded-sm border border-[var(--border-measurement)] bg-[rgba(7,16,13,0.86)] p-4 shadow-[0_0_30px_rgba(0,255,102,0.08)]",
+            "mb-4 flex items-center justify-between gap-3",
+            "text-sm font-bold uppercase text-[var(--signal-success)]",
+            "border border-[rgba(0,255,102,0.36)] px-2 py-1 text-[10px] uppercase text-[var(--signal-success)]",
+            "block text-xs uppercase text-[var(--text-muted)]"
+          ],
+          "inlineStyleSamples": [
+            "width: `${Math.round(activeResult.confidence * 100)}%`"
+          ],
+          "utilityFamilyCounts": {
+            "min": 6,
+            "px": 8,
+            "py": 4,
+            "text": 52,
+            "mx": 1,
+            "grid": 6,
+            "max": 2,
+            "gap": 7,
+            "col": 1,
+            "flex": 8,
+            "border": 38,
+            "pb": 2,
+            "items": 4,
+            "justify": 4,
+            "uppercase": 14,
+            "tracking": 1,
+            "mt": 13,
+            "font": 7,
+            "leading": 9,
+            "rounded": 3,
+            "bg": 15,
+            "p": 9,
+            "shadow": 1,
+            "mb": 1,
+            "block": 2,
+            "w": 2,
+            "pl": 2,
+            "resize": 1,
+            "transition": 2,
+            "cursor": 2,
+            "h": 3,
+            "overflow": 1,
+            "break": 2,
+            "space": 2,
+            "${styles[status]}": 1,
+            "whitespace": 1
+          },
+          "utilityFamilySamples": [
+            "min",
+            "px",
+            "py",
+            "text",
+            "mx",
+            "grid",
+            "max",
+            "gap",
+            "col",
+            "flex",
+            "border",
+            "pb"
+          ],
+          "inlineTokenBypassSignals": {
+            "hardcodedColorCount": 0,
+            "rawSpacingCount": 0,
+            "rawRadiusCount": 0,
+            "rawShadowCount": 0,
+            "cssVariableReferenceCount": 0
+          }
+        },
+        "tokenBypassSignals": {
+          "hardcodedColorCount": 30,
+          "rawSpacingCount": 1,
+          "rawRadiusCount": 0,
+          "rawShadowCount": 0,
+          "inlineHardcodedColorCount": 0,
+          "inlineRawSpacingCount": 0,
+          "inlineRawRadiusCount": 0,
+          "inlineRawShadowCount": 0,
+          "inlineCssVariableReferenceCount": 0
+        }
+      }
+    }
   }
 }

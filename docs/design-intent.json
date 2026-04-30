@@ -9,6 +9,7 @@
     "architectureConstraint": "local-first single deployable until persistence or collaboration is approved"
   },
   "designPhilosophy": "GhostKey should feel like a forensic instrument for measuring cryptographic leakage. The interface must show progress, evidence, confidence, and remediation instead of hiding analysis behind generic dashboard panels.",
+  "currentScopeDecision": "Autokey Cipher encrypt/decrypt is the grading-safe core. Automated Breach Mode is a bounded classroom attack suite for weak algorithms and toy asymmetric parameters. It must not claim to break modern cryptography.",
   "brandAdjectives": [
     "forensic",
     "precise",
@@ -242,6 +243,11 @@
     "primaryExperienceGoal": "Run a controlled breach analysis, inspect live progress, and understand the weakness and fix.",
     "surfacePlan": [
       {
+        "surfaceId": "autokey-lab",
+        "role": "mandatory coursework encryption and decryption path with visible keystream",
+        "priority": "highest"
+      },
+      {
         "surfaceId": "artifact-input",
         "role": "capture and validate user-provided artifact",
         "priority": "high"
@@ -281,11 +287,16 @@
     },
     "contentPriorityMap": {
       "primary": [
+        "Autokey encrypt/decrypt",
+        "Autokey key",
+        "generated keystream",
+        "class algorithm roster",
         "input artifact",
         "run breach",
         "current worker status",
         "best finding",
-        "security conclusion"
+        "security conclusion",
+        "browser-local history"
       ],
       "secondary": [
         "language detection",
@@ -303,6 +314,7 @@
       "mobile": {
         "primaryOperation": "task-sequence-stack",
         "requiredSurfaceActions": [
+          "place Autokey controls before breach showcase",
           "place run action near input",
           "collapse advanced settings",
           "show latest status before full log"
@@ -481,11 +493,18 @@
     "requireConceptualAnchor": true
   },
   "repoEvidence": {
-    "freshWorkspace": true,
-    "packageManifestPresent": false,
-    "gitRepositoryPresent": false,
+    "freshWorkspace": false,
+    "packageManifestPresent": true,
+    "gitRepositoryPresent": true,
     "existingDocsBeforeThisPass": [
       "docs/design-intent.json"
+    ],
+    "implementationEvidence": [
+      "Next.js App Router scaffold exists",
+      "BreachWorkspace UI exists",
+      "browser worker contract exists",
+      "Caesar, JWT, and auto-detect MVP paths exist",
+      "Classroom breach paths now target Caesar, Reverse, Monoalphabetic, Column, Vigenere, Autokey, RSA toy keys, and ElGamal toy groups"
     ]
   }
 }

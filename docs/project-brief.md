@@ -22,7 +22,9 @@ The product must explain what it is doing while it works. A user should see the 
   - Quadgram fitness scoring for English and Indonesian text.
   - Hill climbing search for key optimization.
   - Index of Coincidence analysis for language and cipher hints.
-- The repository is a fresh workspace. There is no `package.json`, source tree, or Git repository yet.
+- Current implementation evidence: the repo now contains a Next.js application scaffold, TypeScript cryptanalysis modules, worker contracts, and an MVP Breach Workspace.
+- Coursework safety requirement: GhostKey must keep correct Autokey Cipher encryption and decryption with a user-provided key as a first-class path while Breach Mode demonstrates bounded ciphertext-only attacks against classroom-sized weak algorithms.
+- Current product direction: GhostKey is a hybrid cryptography platform. It implements the required Autokey Cipher curriculum path and also provides a local automated cryptanalysis engine for dynamic classroom demos.
 
 ## User Outcomes
 
@@ -32,6 +34,7 @@ The product must explain what it is doing while it works. A user should see the 
 4. A learner can decode a JWT and understand which parts are only encoded and which parts are signed.
 5. A learner can test a JWT against a small local wordlist to show why weak secrets fail.
 6. A learner receives a conclusion that answers "Why is this weak?" and "How do I fix it?"
+7. A learner can keep a small browser-local run history without accounts, login, or server persistence.
 
 ## Non-Goals
 
@@ -67,7 +70,18 @@ Needs a fast way to explain why classical ciphers, weak RSA examples, and weak J
 
 The main workspace accepts an input artifact, selects an attack module, and streams progress events into a terminal-style log. It returns ranked findings with candidate plaintext, key material when found, confidence score, and reasoning.
 
-The default module should be Auto Detect. A user should not need to know whether an artifact is Caesar, Vigenere, Autokey, or JWT before starting. Manual module selection remains useful for demos and controlled labs.
+The default module should be Auto Detect. A user should not need to know whether an artifact is Caesar, Reverse, Monoalphabetic, Column, Vigenere, Autokey, RSA, ElGamal, or JWT before starting. Manual module selection remains useful for demos and controlled labs.
+
+### Autokey Coursework Lab
+
+The mandatory classroom path must support:
+
+- encrypting plaintext with Autokey Cipher and a user-provided key
+- decrypting Autokey ciphertext with the same key
+- preserving readable spacing and punctuation while applying the keystream only to letters
+- showing the generated keystream so the implementation can be explained during presentation
+
+This path is the grading-safe foundation. Breach Mode is the deeper showcase layered beside it.
 
 ### Classical Breach Engine
 
@@ -77,6 +91,7 @@ The first implementation should support:
 - Monoalphabetic substitution with hill climbing and quadgram fitness.
 - Vigenere key-length estimation with Index of Coincidence and key search.
 - Autokey search as a more advanced classical mode.
+- Reverse cipher variants.
 
 ### Transposition Solver
 
@@ -128,7 +143,7 @@ Backend rules remain useful as guardrails, not as implementation scope. They bec
 
 ## Database Recommendation
 
-Do not add a persistent database in the MVP. The first version can work with client-side state, local import/export, and static demo fixtures. Add persistence later only if the product needs accounts, saved labs, class assignments, or audit history.
+Do not add a persistent database in the MVP. The first version can work with client-side state, `localStorage` run history, local import/export, and static demo fixtures. Add server persistence later only if the product needs accounts, saved labs, class assignments, or shared audit history.
 
 ## Auth Recommendation
 
@@ -152,6 +167,7 @@ Fetched on 2026-04-27.
 - The user wants English formal docs even though the brief is in Indonesian, because local governance requires English by default.
 - Indonesian quadgram data will need a documented corpus source before it is treated as reliable.
 - Vercel is the target deploy platform, but the first algorithm-heavy tasks should run in the browser to avoid serverless time and resource limits.
+- The practical project story should present Autokey correctness first, then explain automated cryptanalysis as a bounded classroom attack suite for weak/toy algorithms.
 
 ## Next Validation Action
 

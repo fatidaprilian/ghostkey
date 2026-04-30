@@ -51,10 +51,13 @@ The first detection pass should:
 
 1. detect JWT shape from three Base64URL-like dot-separated parts
 2. run Caesar scoring across all shifts
-3. compute source Index of Coincidence
-4. estimate Vigenere key lengths with bucketed IoC
-5. keep Autokey as a candidate when language signal exists but periodic evidence is weaker
-6. return ranked family hints with confidence and evidence
+3. try Reverse variants
+4. compute source Index of Coincidence
+5. estimate Vigenere key lengths with bucketed IoC
+6. run bounded Autokey seed search
+7. run bounded Column and Monoalphabetic searches when practical
+8. detect toy numeric RSA and ElGamal parameters
+9. return ranked family hints with confidence and evidence
 
 Auto-detect may run a quick solver for the highest-confidence family. It must label uncertain results clearly.
 
@@ -107,6 +110,8 @@ Output:
 - score trace
 - explanation that language frequency leaks structure
 
+The MVP implementation may use deterministic restarts and bounded swap iterations so classroom demos remain fast in a browser worker.
+
 ## Vigenere Solver
 
 The Vigenere solver should:
@@ -133,6 +138,21 @@ Output:
 - candidate plaintext
 - confidence caveats
 - explanation that known plaintext can expose the key stream
+
+## Autokey Encrypt and Decrypt
+
+Autokey encryption and decryption are mandatory classroom functions.
+
+Rules:
+
+- Accept an alphabetic key and reject empty or non-alphabetic keys after normalization.
+- Preserve non-letter characters in the displayed result.
+- Consume keystream positions only for letters.
+- For encryption, append normalized plaintext letters after the initial key.
+- For decryption, append each recovered plaintext letter after the initial key.
+- Return the generated keystream for explainability.
+
+This deterministic path must remain separate from heuristic breach logic.
 
 ## Columnar Transposition Solver
 

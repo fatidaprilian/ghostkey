@@ -1,6 +1,7 @@
 export type WorkerModule =
   | "auto-detect"
   | "classical-caesar"
+  | "classical-reverse"
   | "classical-substitution"
   | "classical-vigenere"
   | "classical-autokey"

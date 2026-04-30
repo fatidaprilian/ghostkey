@@ -1,6 +1,8 @@
 /// <reference lib="webworker" />
 
 import { solveCaesar, toCaesarResult } from "@/lib/crypto-analysis/caesar";
+import { auditWeakElGamal, auditWeakRsa } from "@/lib/crypto-analysis/asymmetric";
+import { solveAutoDetectClassical, solveClassicalModule } from "@/lib/crypto-analysis/classical-solvers";
 import { detectArtifact } from "@/lib/crypto-analysis/detection";
 import { analyzeJwt } from "@/lib/crypto-analysis/jwt";
 import type {
@@ -42,9 +44,25 @@ workerScope.onmessage = (message: MessageEvent<WorkerJobRequest<ArtifactPayload>
           message: finding.reason
         } satisfies ProgressData);
       });
-      postEvent(request.jobId, "candidate.found", detection.results[0]);
+
+      const solved = looksNumeric(artifact)
+        ? solveNumericAutoDetect(artifact)
+        : solveAutoDetectClassical(artifact);
+
+      solved.trace.slice(0, request.limits.maxCandidates * 2).forEach((trace, index) => {
+        postEvent(request.jobId, "job.progress", {
+          iteration: detection.findings.length + index + 1,
+          elapsedMs: Math.round(performance.now() - startedAt),
+          currentKey: trace.key,
+          currentFitness: trace.fitness,
+          bestFitness: solved.results[0]?.fitnessScore ?? solved.results[0]?.confidence,
+          message: trace.message
+        } satisfies ProgressData);
+      });
+
+      postEvent(request.jobId, "candidate.found", solved.results[0] ?? detection.results[0]);
       postEvent(request.jobId, "job.completed", {
-        results: detection.results
+        results: solved.results.length > 0 ? solved.results : detection.results
       });
       return;
     }
@@ -68,6 +86,69 @@ workerScope.onmessage = (message: MessageEvent<WorkerJobRequest<ArtifactPayload>
       postEvent(request.jobId, "candidate.found", result);
       postEvent(request.jobId, "job.completed", {
         results: [result]
+      });
+      return;
+    }
+
+    if (
+      request.module === "classical-reverse" ||
+      request.module === "classical-vigenere" ||
+      request.module === "classical-autokey" ||
+      request.module === "classical-substitution" ||
+      request.module === "transposition-columnar"
+    ) {
+      const output = solveClassicalModule(request.module, artifact);
+      output.trace.slice(0, Math.max(1, request.limits.maxCandidates * 2)).forEach((trace, index) => {
+        postEvent(request.jobId, "job.progress", {
+          iteration: index + 1,
+          elapsedMs: Math.round(performance.now() - startedAt),
+          currentKey: trace.key,
+          currentFitness: trace.fitness,
+          bestFitness: output.results[0]?.fitnessScore ?? output.results[0]?.confidence,
+          message: trace.message
+        } satisfies ProgressData);
+      });
+      postEvent(request.jobId, "candidate.found", output.results[0]);
+      postEvent(request.jobId, "job.completed", {
+        results: output.results
+      });
+      return;
+    }
+
+    if (request.module === "asymmetric-rsa") {
+      const output = auditWeakRsa(artifact);
+      output.trace.forEach((trace, index) => {
+        postEvent(request.jobId, "job.progress", {
+          iteration: index + 1,
+          elapsedMs: Math.round(performance.now() - startedAt),
+          currentKey: trace.key,
+          currentFitness: trace.fitness,
+          bestFitness: output.results[0]?.confidence,
+          message: trace.message
+        } satisfies ProgressData);
+      });
+      postEvent(request.jobId, "candidate.found", output.results[0]);
+      postEvent(request.jobId, "job.completed", {
+        results: output.results
+      });
+      return;
+    }
+
+    if (request.module === "asymmetric-elgamal") {
+      const output = auditWeakElGamal(artifact);
+      output.trace.forEach((trace, index) => {
+        postEvent(request.jobId, "job.progress", {
+          iteration: index + 1,
+          elapsedMs: Math.round(performance.now() - startedAt),
+          currentKey: trace.key,
+          currentFitness: trace.fitness,
+          bestFitness: output.results[0]?.confidence,
+          message: trace.message
+        } satisfies ProgressData);
+      });
+      postEvent(request.jobId, "candidate.found", output.results[0]);
+      postEvent(request.jobId, "job.completed", {
+        results: output.results
       });
       return;
     }
@@ -99,6 +180,18 @@ workerScope.onmessage = (message: MessageEvent<WorkerJobRequest<ArtifactPayload>
     postEvent(request.jobId, "job.failed", safeProblem);
   }
 };
+
+function solveNumericAutoDetect(artifact: string) {
+  if (/\bc1\s*[:=]/i.test(artifact) || /\bc2\s*[:=]/i.test(artifact) || /\bg\s*[:=]/i.test(artifact)) {
+    return auditWeakElGamal(artifact);
+  }
+
+  return auditWeakRsa(artifact);
+}
+
+function looksNumeric(artifact: string) {
+  return /\b(n|p|g|y|e|c|c1|c2)\s*[:=]\s*\d+/i.test(artifact);
+}
 
 function postEvent<TData>(jobId: string, type: WorkerJobEvent<TData>["type"], data: TData) {
   const event: WorkerJobEvent<TData> = {

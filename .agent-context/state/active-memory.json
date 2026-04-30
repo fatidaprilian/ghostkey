@@ -8,34 +8,36 @@
   },
   "project": {
     "name": "GhostKey",
-    "currentFocus": "Frontend-heavy MVP scaffold for The BreachEngine Suite with no custom backend, prepared for initial GitHub publication.",
+    "currentFocus": "Hybrid Autokey coursework lab plus bounded classroom automated cryptanalysis suite.",
     "durableFacts": [
       "MVP direction is a single Next.js App Router application with React, Tailwind CSS, Vercel deployment, and browser Web Workers for heavy cryptanalysis.",
       "MVP has no custom backend, no database, and no auth unless saved labs, classroom management, accounts, sharing, or server-side processing are approved later.",
       "Initial implementation includes a Next.js 16.2.4 App Router app with React 19.2.5, Tailwind 4.2.4, TypeScript, and browser worker orchestration.",
       "Auto Detect is the default breach mode and runs in the browser worker without app/api routes.",
       "Dual-use security boundary is documented: local educational analysis only, no remote attack automation, no bundled large cracking wordlists.",
-      "Design anchor is a forensic spectrum analyzer console with signal-lock progress motion and semantic measurement colors."
+      "Design anchor is a forensic spectrum analyzer console with signal-lock progress motion and semantic measurement colors.",
+      "Autokey Cipher encryption and decryption with a user-provided key is the grading-safe core path.",
+      "Breach Mode now targets classroom demos for Caesar, Reverse, Vigenere, Autokey, Monoalphabetic, Column, toy RSA, toy ElGamal, and JWT locally.",
+      "Run history is browser-local through localStorage; there is still no login, database, or custom backend."
     ]
   },
   "progress": {
     "lastAchievements": [
-      "Created required project docs: project brief, ADR, flow overview, API contract, data model, design contract, and design intent.",
-      "Added security-and-ethics and algorithm-spec docs for safe scope and implementation planning.",
-      "Added backend-frontend-boundary.md and clarified that backend rules are future guardrails, not MVP implementation scope.",
       "Scaffolded a no-backend Breach Workspace UI with a browser Web Worker, Caesar demo analysis, and JWT decode demo.",
       "Upgraded analysis from common-word-only scoring to IoC, frequency chi-square, trigram and quadgram hints, language markers, and auto-detect family ranking.",
-      "Pinned PostCSS override to 8.5.12 after npm audit flagged Next's nested PostCSS advisory path.",
-      "Validated docs/design-intent.json parses as JSON.",
-      "Prepared the workspace for initial GitHub publication with a root README and Git hygiene updates."
+      "Added deterministic Autokey encrypt/decrypt logic with visible keystream output.",
+      "Redesigned the first workspace into an Autokey Core plus Breach Console instrument layout.",
+      "Implemented bounded local solvers/auditors for Reverse, Vigenere, Autokey breach, Monoalphabetic hill climbing, Column permutation, RSA small-prime factoring, and ElGamal tiny-group discrete log.",
+      "Added browser-local run history with clear action and no account or backend dependency.",
+      "Updated project, flow, API, data, algorithm, and design docs for the hybrid Autokey plus classroom breach suite direction."
     ],
     "pendingIssues": [
       "English and Indonesian quadgram data sources and licenses still need validation.",
-      "Only Caesar and JWT full worker result paths are implemented; Vigenere and Autokey are currently detection candidates, not full solvers yet."
+      "Classical breach results remain heuristic and work best on classroom-sized, sufficiently long ciphertext."
     ],
     "nextBestActions": [
       "Replace lightweight ngram hints with licensed English and Indonesian quadgram tables.",
-      "Add Vigenere and monoalphabetic worker modules behind the existing worker contract.",
+      "Tune demo fixtures so every class algorithm has a reliable presentation path.",
       "Add behavior tests for malformed artifacts, worker errors, and result conclusions."
     ],
     "validationState": [
@@ -45,7 +47,10 @@
       "npm audit --omit=dev found 0 vulnerabilities after PostCSS override.",
       "Local dev server responded with HTTP 200 at http://127.0.0.1:3000.",
       "Local publish-readiness scan found no .env files and no obvious secret patterns before git initialization.",
-      "npm.cmd run validate passed outside the sandbox on 2026-04-30 before initial publication."
+      "npm.cmd run validate passed outside the sandbox on 2026-04-30 before initial publication.",
+      "npm.cmd run validate passed outside the sandbox on 2026-04-30 after the Autokey-first UI redesign.",
+      "npm.cmd run validate passed outside the sandbox on 2026-04-30 after adding the classroom breach suite.",
+      "The local dev server responded with HTTP 200 at http://127.0.0.1:3000 after restarting the stale Next dev process."
     ]
   },
   "designContinuity": {
@@ -63,5 +68,5 @@
     "redactSensitiveTextBeforeWriting": true
   },
   "generatedAt": "2026-04-27T12:38:41.841Z",
-  "lastUpdatedAt": "2026-04-30T13:35:57.7909868+07:00"
+  "lastUpdatedAt": "2026-04-30T14:38:00+07:00"
 }

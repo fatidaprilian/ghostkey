@@ -35,6 +35,7 @@ type WorkerJobRequest<TPayload> = {
   module:
     | "auto-detect"
     | "classical-caesar"
+    | "classical-reverse"
     | "classical-substitution"
     | "classical-vigenere"
     | "classical-autokey"
@@ -93,9 +94,11 @@ The first auto-detect pass must inspect:
 
 - JWT shape from three Base64URL-like dot-separated parts
 - Caesar candidates across all shifts
+- Reverse variants
 - source Index of Coincidence
 - Vigenere key-length hints from bucketed IoC
 - Autokey likelihood when language signal exists but periodic evidence is weaker
+- toy numeric shapes for RSA and ElGamal
 
 Auto-detect results must include ranked family hints in `evidence[]`. If a full solver is not implemented for the top family yet, the worker must say so safely rather than pretending it recovered a key.
 
@@ -184,6 +187,23 @@ Server routes must not execute unbounded cracking jobs. Any server-side analysis
 - abuse prevention
 - log redaction
 - whether artifacts are stored
+
+## Browser-Local History Contract
+
+Local history is not a backend API. It is a browser-owned `localStorage` feature:
+
+```ts
+type LocalHistoryEntry = {
+  id: string;
+  module: WorkerModule;
+  label: string;
+  artifactPreview: string;
+  confidence: number;
+  createdAt: string;
+};
+```
+
+History must be clearable and must not require login, cookies, or a database.
 
 ## Security Requirements
 

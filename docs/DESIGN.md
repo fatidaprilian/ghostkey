@@ -6,6 +6,8 @@ GhostKey should feel like a forensic instrument, not a generic admin dashboard. 
 
 The visual language should be dark, sharp, and precise. The product can use hacker-aesthetic signals, but they must serve the task. Terminal logs, status rails, confidence meters, and diagnostic overlays are product surfaces, not decoration.
 
+Current direction: the first viewport must make the Autokey Cipher lab feel like the grading-safe core and the automated breach engine feel like a serious classroom breach suite. The interface should communicate that GhostKey can attack weak class algorithms while clearly separating toy/classroom limits from modern cryptographic security.
+
 ## Audience and Use-Context Signals
 
 GhostKey is for learners, lecturers, and junior security engineers. The interface must support three modes of attention:
@@ -33,6 +35,9 @@ The signature motion is a **signal lock sweep**. When a worker finds a better ca
 - Cipher leakage is shown through frequency bars, IoC gauges, and confidence readouts.
 - Terminal logs use structured forensic event tags instead of decorative typing noise.
 - Security conclusions are split into weakness, evidence, and repair bands.
+- Autokey keystream output is shown as a measurable cipher artifact, not hidden behind a generic form.
+- The class algorithm roster is visible: Caesar, Reverse, Monoalphabetic, Column, Vigenere, Autokey, RSA, and ElGamal.
+- Local history is visibly browser-owned and clearable, not an account feature.
 
 ## Color Science and Semantic Roles
 
@@ -165,6 +170,7 @@ The design is based on the current GhostKey brief and repo docs. Do not copy fam
 ## Implementation Notes for Future UI Tasks
 
 - Start with the Breach Workspace as the first screen, not a marketing landing page.
+- Keep Autokey Encrypt/Decrypt accessible in the first screen because it is the mandatory coursework path.
 - Use Web Worker progress events as the source of terminal state.
 - Build a stable state matrix before styling components.
 - Keep the main action clear: detect, run breach, inspect finding, read fix.

@@ -17,7 +17,9 @@
    - token shape detection for JWT
    - numeric shape detection for RSA or ElGamal examples
    - Caesar shift scoring
+   - Reverse variants
    - Vigenere and Autokey family hints from Index of Coincidence
+   - bounded columnar and monoalphabetic search where input length makes it practical
 6. GhostKey creates a worker job with a bounded iteration plan.
 7. The worker streams progress events:
    - current key candidate
@@ -34,6 +36,16 @@
    - evidence summary
    - security conclusion
    - recommended fix
+
+## Primary Flow: Autokey Coursework Lab
+
+1. The user enters plaintext or ciphertext.
+2. The user enters an alphabetic key.
+3. For encryption, GhostKey builds the Autokey stream from the key followed by plaintext letters.
+4. For decryption, GhostKey starts with the key and appends recovered plaintext letters to continue the stream.
+5. Non-letter characters remain visible for presentation readability and do not consume keystream positions.
+6. GhostKey returns the transformed text and the applied keystream.
+7. The user can move the output back into the input field to demonstrate round-trip correctness.
 
 ## Flow: Classical Cipher Detection
 
@@ -82,6 +94,15 @@
 4. Score with quadgrams.
 5. Explain that Autokey improves on repeated keys but is still unsafe against modern cryptanalysis and known-plaintext attacks.
 
+Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt path is mandatory and deterministic; breach mode is heuristic and should keep confidence caveats visible.
+
+## Flow: Reverse Cipher Breach
+
+1. Try whole-string reversal.
+2. Try per-word reversal.
+3. Score both candidates with natural-language fitness.
+4. Explain that reversal is obfuscation, not cryptographic security.
+
 ## Flow: Columnar Transposition Solver
 
 1. Validate length and allowed key-size range.
@@ -103,6 +124,13 @@
    - check whether the prime and generator are toy-sized
    - demonstrate why small groups are unsafe
 5. Refuse unbounded real-world key attempts with an educational explanation.
+
+## Flow: Browser-Local History
+
+1. After a worker job completes, store a compact local history entry in `localStorage`.
+2. Keep module, artifact preview, confidence, and timestamp only.
+3. Do not send history to a backend.
+4. Let the user clear the local history from the UI.
 
 ## Flow: JWT Debugger and Manipulator
 
