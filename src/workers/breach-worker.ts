@@ -48,6 +48,7 @@ workerScope.onmessage = (message: MessageEvent<WorkerJobRequest<ArtifactPayload>
       const solved = looksNumeric(artifact)
         ? solveNumericAutoDetect(artifact)
         : solveAutoDetectClassical(artifact);
+      const bestSolvedScore = solved.results[0]?.fitnessScore ?? solved.results[0]?.confidence ?? 0;
 
       solved.trace.slice(0, request.limits.maxCandidates * 2).forEach((trace, index) => {
         postEvent(request.jobId, "job.progress", {
@@ -55,7 +56,7 @@ workerScope.onmessage = (message: MessageEvent<WorkerJobRequest<ArtifactPayload>
           elapsedMs: Math.round(performance.now() - startedAt),
           currentKey: trace.key,
           currentFitness: trace.fitness,
-          bestFitness: solved.results[0]?.fitnessScore ?? solved.results[0]?.confidence,
+          bestFitness: bestSolvedScore,
           message: trace.message
         } satisfies ProgressData);
       });

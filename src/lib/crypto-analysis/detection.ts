@@ -58,6 +58,11 @@ export function detectArtifact(artifact: string): {
       reason: `Best Caesar shift has fitness ${bestCaesar.fitness.toFixed(2)} with gap ${caesarGap.toFixed(2)}.`
     },
     {
+      module: "classical-reverse",
+      confidence: 0.22,
+      reason: "Reverse is cheap to test and can be scored as a low-complexity candidate."
+    },
+    {
       module: "classical-vigenere",
       confidence: periodicConfidence,
       reason: `Best periodic key-length hint is ${bestKeyLength.keyLength} with average IoC ${bestKeyLength.averageIoc.toFixed(3)}.`
@@ -66,6 +71,16 @@ export function detectArtifact(artifact: string): {
       module: "classical-autokey",
       confidence: autokeyConfidence,
       reason: "Autokey remains a candidate when natural-language signal exists but periodic evidence is weaker."
+    },
+    {
+      module: "classical-substitution",
+      confidence: sourceMetrics.letterCount < 36 ? 0.2 : 0.38,
+      reason: "Monoalphabetic substitution is considered when text is long enough for frequency leakage."
+    },
+    {
+      module: "transposition-columnar",
+      confidence: sourceMetrics.letterCount < 24 ? 0.18 : 0.34,
+      reason: "Columnar transposition is considered because it preserves letter frequency."
     }
   ];
 

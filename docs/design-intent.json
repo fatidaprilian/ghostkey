@@ -8,14 +8,14 @@
     "runtimeConstraint": "Next.js, React, Tailwind CSS, Vercel, browser Web Workers",
     "architectureConstraint": "local-first single deployable until persistence or collaboration is approved"
   },
-  "designPhilosophy": "GhostKey should feel like a forensic instrument for measuring cryptographic leakage. The interface must show progress, evidence, confidence, and remediation instead of hiding analysis behind generic dashboard panels.",
-  "currentScopeDecision": "Autokey Cipher encrypt/decrypt is the grading-safe core. Automated Breach Mode is a bounded classroom attack suite for weak algorithms and toy asymmetric parameters. It must not claim to break modern cryptography.",
+  "designPhilosophy": "GhostKey should feel like a friendly cryptography learning web app first, with evidence-driven breach tooling second. The interface must teach Autokey visibly through characters, speech bubbles, formulas, and clear actions.",
+  "currentScopeDecision": "Autokey Cipher encrypt/decrypt is the grading-safe core and now owns an Encrypt & Send, Decrypt Message, and Reset Alice-Eve-Bob simulation. Bypass Tool is a bounded classroom attack suite for weak algorithms and toy asymmetric parameters. It must not claim to break modern cryptography.",
   "brandAdjectives": [
-    "forensic",
-    "precise",
-    "tense",
     "educational",
-    "instrumented"
+    "friendly",
+    "clear",
+    "interactive",
+    "trustworthy"
   ],
   "antiAdjectives": [
     "generic",
@@ -26,45 +26,53 @@
   ],
   "visualDirection": {
     "conceptualAnchor": {
-      "name": "forensic-spectrum-analyzer-console",
-      "anchorReference": "forensic spectrum analyzer console",
-      "agentResearchMode": "brief-derived-no-user-visual-reference",
-      "sourceDomain": "scientific instrumentation",
-      "specificReferencePoint": "lab bench spectrum analyzer with live signal traces, warning bands, and measurement readouts",
-      "rationale": "Cryptanalysis is pattern detection. A spectrum analyzer metaphor turns frequency, confidence, and key search into visible measurements.",
-      "signatureMotion": "signal lock sweep when a better candidate appears",
-      "typographicDecision": "monospaced display and data roles with clearer body copy for forensic explanations",
+      "name": "classroom-message-lab",
+      "anchorReference": "interactive classroom message lab",
+      "agentResearchMode": "user-requested-friendly-learning-redirection",
+      "sourceDomain": "educational interaction design",
+      "specificReferencePoint": "Alice sends a protected message, Eve sees unreadable ciphertext, and Bob reveals plaintext after decryption",
+      "rationale": "The Autokey coursework requirement needs a clear learning-first simulation before advanced breach tooling.",
+      "signatureMotion": "message handoff with Eve confusion and Bob reveal",
+      "typographicDecision": "readable sans for lesson copy, monospaced text only for keys, ciphertext, formulas, scores, and logs",
       "visualRiskBudget": "high distinctiveness with strict readability and reduced-motion fallbacks",
       "motionRiskBudget": "medium-high motion for progress and state changes only",
       "cohesionChecks": [
         "no-dashboard-mental-model",
-        "motion-derived-from-anchor",
-        "colors-map-to-measurement-states"
+        "motion-derived-from-learning-flow",
+        "colors-map-to-character-and-lesson-states"
       ]
     },
     "distinctiveMoves": [
-      "terminal events are structured forensic measurements",
-      "confidence updates use signal lock behavior",
+      "Autokey starts as a friendly lesson before Bypass Tool",
+      "Eve shows confusion after ciphertext interception",
+      "Bob reveals plaintext only after decryption",
       "conclusion panels are split into weakness, evidence, fix, and modern alternative"
+      ,
+      "Bypass panels keep the same light learning palette instead of falling back to gray forensic boxes",
+      "Short ciphertext produces capped confidence and caveats instead of overconfident magic"
     ],
     "copiedReferenceAllowed": false
   },
   "derivedTokenLogic": {
-    "anchorReference": "forensic spectrum analyzer console",
-    "colorDerivationSource": "Semantic colors derive from measurement states: green for confirmed lock, red for exploitable weakness, amber for uncertainty, cyan for detection and analysis status, and cool white for primary readings.",
-    "spacingDerivationSource": "Spacing follows instrument density: 8px bench rhythm with 4px internal grouping for terminal rows and compact readouts.",
-    "typographyDerivationSource": "Monospaced typography supports keys, hashes, scores, and logs; body explanations may use a more readable fallback when long text needs lower fatigue.",
-    "motionDerivationSource": "Motion derives from signal acquisition: accepted jobs arm the rail, progress pulses lightly, better candidates trigger a sweep, and reduced motion replaces sweeps with state changes.",
-    "validationRule": "Every token must support instrument measurement, breach progress, or remediation clarity. Decorative tokens without product function are invalid."
+    "anchorReference": "interactive classroom message lab",
+    "colorDerivationSource": "Semantic colors derive from lesson roles: blue for Alice/learning controls, coral for Eve/interception, green for Bob/recovered message, amber for caveats, and ink for readable text.",
+    "spacingDerivationSource": "Spacing follows lesson-board clarity: roomy character panels, compact formulas, and task-first action grouping.",
+    "typographyDerivationSource": "Readable sans supports classroom explanation; monospaced typography is reserved for keys, ciphertext, formulas, scores, hashes, and logs.",
+    "motionDerivationSource": "Motion derives from message handoff: encryption sends ciphertext toward Eve, decryption reveals Bob's message, and reduced motion replaces movement with state changes.",
+    "validationRule": "Every token must support classroom explanation, role clarity, local privacy, breach progress, or remediation clarity. Decorative tokens without product function are invalid."
   },
   "aiSafeUiAudit": {
     "status": "active",
-    "failureDefinition": "The UI fails if it becomes a generic dark dashboard, green terminal wallpaper, equal card grid, or decorative glow page without forensic measurement behavior.",
-    "interchangeabilityTest": "If GhostKey can be renamed to a generic analytics dashboard without changing composition, palette, event logs, and conclusion structure, the design must be revised.",
+    "failureDefinition": "The UI fails if it becomes a forced hacker console, generic dashboard, equal card grid, or decorative page without classroom explanation behavior.",
+    "interchangeabilityTest": "If GhostKey can be renamed to a generic analytics dashboard or hacker-themed toy without changing composition, palette, character roles, and formula behavior, the design must be revised.",
     "requiredProductSpecificSignals": [
       "IoC and frequency measurement surfaces",
       "worker progress terminal with candidate keys and fitness scores",
-      "security conclusion bands tied to exploit evidence and remediation"
+      "security conclusion bands tied to exploit evidence and remediation",
+      "Autokey sender-observer-receiver simulation with friendly CSS characters, Eve confusion, Bob reveal, reset, and formula rows for Pi, Ki, and Ci"
+      ,
+      "short-artifact confidence caps for complex heuristic solvers",
+      "light Bypass Tool panels, history rows, terminal feed, and finding blocks"
     ],
     "blockingByDefault": true
   },
@@ -143,14 +151,14 @@
     "allowHexDerivatives": true,
     "requirePerceptualLightnessCurve": true,
     "paletteRoles": [
-      "near-black instrument base",
-      "lifted panel black",
-      "cool white text",
-      "muted gray metadata",
-      "neon green success",
-      "red vulnerability",
+      "soft blue-white page",
+      "white and warm lesson panels",
+      "ink text",
+      "cool gray metadata",
+      "friendly green success",
+      "coral interception and vulnerability",
       "amber uncertainty",
-      "cyan detection"
+      "learning blue controls"
     ],
     "forbidAutopilotPalettesWithoutEvidence": true,
     "colorOnlyMeaningProhibited": true
@@ -183,8 +191,9 @@
     "requireStateBehaviorMatrix": true,
     "preserveIdentityAcrossViewports": true,
     "components": {
-      "terminal": "fixed-height forensic event stream with stable row dimensions",
+      "terminal": "fixed-height evidence event stream with stable row dimensions",
       "inputWell": "secure inspection tray with loaded, focused, invalid, and empty states",
+      "autokeySimulation": "two-action sender-observer-receiver lesson with CSS characters, Eve confusion, Bob reveal, reset, and formula rows from the active Autokey transform",
       "moduleSwitcher": "instrument selector with risk labels and input expectations",
       "findingRow": "ranked evidence row with confidence and key candidate",
       "conclusionBand": "weakness, evidence, fix, and modern alternative"
@@ -244,7 +253,7 @@
     "surfacePlan": [
       {
         "surfaceId": "autokey-lab",
-        "role": "mandatory coursework encryption and decryption path with visible keystream",
+        "role": "mandatory coursework encryption and decryption path with visible keystream, Encrypt & Send, Decrypt Message, Reset, and sender-observer-receiver simulation",
         "priority": "highest"
       },
       {
@@ -271,6 +280,7 @@
     "componentGraph": {
       "nodes": [
         { "id": "module-switcher", "role": "select attack vector" },
+        { "id": "autokey-simulation", "role": "explain Autokey encrypt, intercept, decrypt, sender, observed ciphertext, receiver, confusion state, reveal state, and formula values" },
         { "id": "input-well", "role": "artifact entry" },
         { "id": "worker-status", "role": "job state" },
         { "id": "terminal-log", "role": "progress events" },
@@ -290,6 +300,7 @@
         "Autokey encrypt/decrypt",
         "Autokey key",
         "generated keystream",
+        "Autokey interactive formula simulation",
         "class algorithm roster",
         "input artifact",
         "run breach",
@@ -315,6 +326,7 @@
         "primaryOperation": "task-sequence-stack",
         "requiredSurfaceActions": [
           "place Autokey controls before breach showcase",
+          "stack Autokey simulation below the active result",
           "place run action near input",
           "collapse advanced settings",
           "show latest status before full log"
@@ -377,7 +389,7 @@
       "Process: worker emits progress events while UI keeps controls responsive.",
       "Resolution: user inspects ranked findings and reads why the artifact is weak and how to fix it."
     ],
-    "signatureMoveRationale": "The signal lock sweep makes a better candidate feel like a measured acquisition event. A generic spinner would hide the actual analysis state."
+    "signatureMoveRationale": "The message handoff makes encryption and decryption visible: Eve receives unreadable ciphertext first, then Bob reveals plaintext only after decryption."
   },
   "reviewRubric": {
     "version": "ui-rubric-v1",
@@ -386,12 +398,12 @@
       {
         "key": "distinctiveness",
         "blockingByDefault": true,
-        "question": "Does the UI read as a cryptanalysis instrument rather than a generic dashboard?"
+        "question": "Does the UI read as a friendly cryptography learning app rather than a forced hacker console or generic dashboard?"
       },
       {
         "key": "contractFidelity",
         "blockingByDefault": true,
-        "question": "Do UI choices follow the forensic spectrum analyzer anchor and worker-flow contract?"
+        "question": "Do UI choices follow the classroom message lab anchor and local worker-flow contract?"
       },
       {
         "key": "accessibility",
@@ -407,14 +419,15 @@
     "genericitySignals": [
       "generic-card-grid",
       "decorative-terminal-wallpaper",
-      "green-black-only-palette",
+      "forced-hacker-palette",
       "spinner-instead-of-progress-evidence",
       "scale-only-responsive-layout",
       "conclusion-without-remediation"
     ],
     "validBoldSignals": [
-      "forensic-instrument-layout",
+      "classroom-message-lab-layout",
       "measurement-based-color-roles",
+      "Alice-Eve-Bob-role-clarity",
       "structured-terminal-events",
       "signal-lock-candidate-motion",
       "task-priority-responsive-recomposition"
@@ -436,10 +449,10 @@
     "repoEvidenceOverridesMemory": true
   },
   "experiencePrinciples": [
-    "Show progress as evidence, not theater.",
+    "Show learning state as evidence, not theater.",
     "Explain every successful breach with a fix.",
     "Keep sensitive artifacts local by default.",
-    "Use dense layouts only when they improve forensic scanning.",
+    "Use dense layouts only when they improve learning clarity or evidence scanning.",
     "Treat accessibility and reduced motion as part of the instrument design."
   ],
   "forbiddenPatterns": [
@@ -504,7 +517,11 @@
       "BreachWorkspace UI exists",
       "browser worker contract exists",
       "Caesar, JWT, and auto-detect MVP paths exist",
-      "Classroom breach paths now target Caesar, Reverse, Monoalphabetic, Column, Vigenere, Autokey, RSA toy keys, and ElGamal toy groups"
+      "Classroom breach paths now target Caesar, Reverse, Monoalphabetic, Column, Vigenere, Autokey, RSA toy keys, and ElGamal toy groups",
+      "Autokey coursework path includes a two-action sender-observer-receiver simulation with Eve confusion, Bob reveal, reset, and formula table",
+      "Text scoring uses a local English and Indonesian corpus pack in src/lib/crypto-analysis/language-corpora.ts",
+      "Auto Detect now accepts strong Caesar and Reverse evidence early, then caps complex solver confidence on short artifacts to reduce false certainty",
+      "Bypass Tool styling now uses explicit light learning surfaces for findings, history, terminal feed, meters, and spectrum bars"
     ]
   }
 }

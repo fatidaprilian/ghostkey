@@ -21,7 +21,7 @@ const sampleArtifacts: Record<WorkerModule, string> = {
   "classical-reverse": "TSRIF LACOL SI ENIGNE HCAERB EHT",
   "classical-substitution": "GSV YIVZXS VMTRMV RH OLXZO URIHG",
   "classical-vigenere": "ZOS TKKHQZ XTNWFX OZ ZGVGS TAKYA",
-  "classical-autokey": "CIWAEI EEIOWW QKMD XDNRV",
+  "classical-autokey": "CICAFY QRRXGE SRKT XSJAK",
   "transposition-columnar": "TEANHICEGINESLOCLFRSBTREEAHIAIT",
   "asymmetric-rsa": "n=3233 e=17 c=855",
   "asymmetric-elgamal": "p=467 g=2 y=32 c1=8 c2=254",
@@ -30,7 +30,7 @@ const sampleArtifacts: Record<WorkerModule, string> = {
 const historyStorageKey = "ghostkey.local-history.v1";
 
 type WorkspaceMode = "autokey" | "breach";
-type AutokeyAction = "encrypt" | "decrypt";
+type AutokeyScene = "idle" | "encrypted" | "decrypted";
 type JobStatus = "idle" | "running" | "complete" | "error";
 
 type TerminalLine = {
@@ -119,7 +119,7 @@ const moduleOptions: Array<{
 export function BreachWorkspace() {
   const workerRef = useRef<Worker | null>(null);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("autokey");
-  const [autokeyAction, setAutokeyAction] = useState<AutokeyAction>("encrypt");
+  const [autokeyScene, setAutokeyScene] = useState<AutokeyScene>("idle");
   const [autokeyInput, setAutokeyInput] = useState(sampleAutokeyPlain);
   const [autokeyKey, setAutokeyKey] = useState(sampleAutokeyKey);
   const [module, setModule] = useState<WorkerModule>("auto-detect");
@@ -137,24 +137,26 @@ export function BreachWorkspace() {
     [module]
   );
 
-  const autokeyResult = useMemo(() => {
+  const autokeyLesson = useMemo(() => {
     try {
-      const result =
-        autokeyAction === "encrypt"
-          ? encryptAutokey(autokeyInput, autokeyKey)
-          : decryptAutokey(autokeyInput, autokeyKey);
+      const encrypted = encryptAutokey(autokeyInput, autokeyKey);
+      const decrypted = decryptAutokey(encrypted.text, autokeyKey);
 
       return {
-        result,
+        encrypted,
+        decrypted,
+        rows: buildAutokeySimulation(autokeyInput, encrypted.text, encrypted.keystream),
         error: null
       };
     } catch (error) {
       return {
-        result: null,
+        encrypted: null,
+        decrypted: null,
+        rows: [],
         error: error instanceof Error ? error.message : "Autokey transform failed."
       };
     }
-  }, [autokeyAction, autokeyInput, autokeyKey]);
+  }, [autokeyInput, autokeyKey]);
 
   const activeResult = results[0];
   const confidence = activeResult ? Math.round(activeResult.confidence * 100) : 0;
@@ -275,21 +277,24 @@ export function BreachWorkspace() {
     setLogs([makeLog("MODULE", `${option.label} sample loaded.`)]);
   }
 
-  function useAutokeyOutputAsInput() {
-    if (!autokeyResult.result) {
+  function encryptAndSend() {
+    if (!autokeyLesson.encrypted) {
       return;
     }
-
-    setAutokeyInput(autokeyResult.result.text);
-    setAutokeyAction(autokeyAction === "encrypt" ? "decrypt" : "encrypt");
+    setAutokeyScene("encrypted");
   }
 
-  function loadAutokeyRoundTrip() {
-    const encrypted = encryptAutokey(sampleAutokeyPlain, sampleAutokeyKey);
+  function decryptMessage() {
+    if (!autokeyLesson.decrypted || autokeyScene === "idle") {
+      return;
+    }
+    setAutokeyScene("decrypted");
+  }
+
+  function resetAutokeyLesson() {
+    setAutokeyInput(sampleAutokeyPlain);
     setAutokeyKey(sampleAutokeyKey);
-    setAutokeyInput(encrypted.text);
-    setAutokeyAction("decrypt");
-    setWorkspaceMode("autokey");
+    setAutokeyScene("idle");
   }
 
   function rememberRun(result: BreachResult | undefined, currentModule: WorkerModule, currentArtifact: string) {
@@ -319,17 +324,31 @@ export function BreachWorkspace() {
     window.localStorage.removeItem(historyStorageKey);
   }
 
+  function switchWorkspaceMode(nextMode: WorkspaceMode) {
+    setWorkspaceMode(nextMode);
+    setProblem(null);
+    if (nextMode === "breach") {
+      setStatus("idle");
+      setResults([]);
+      setLogs([makeLog("READY", "Bypass Tool ready. Run a fresh local analysis when the artifact is set.")]);
+    }
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
+  }
+
   return (
     <main className="min-h-screen text-[var(--text-primary)]">
       <section className="bench-shell">
         <header className="command-ribbon">
           <div>
-            <p className="eyebrow">GhostKey // BreachEngine Suite</p>
-            <h1>Autokey Core + Breach Mode</h1>
+            <p className="eyebrow">GhostKey // Cryptography Learning Lab</p>
+            <h1>Autokey Cipher Learning Studio</h1>
           </div>
           <div className="ribbon-readouts" aria-label="Project status">
             <Readout label="Core" value="Autokey ready" tone="success" />
-            <Readout label="Engine" value="local worker" tone="info" />
+            <Readout label="Mode" value="learning first" tone="info" />
             <Readout label="Scope" value="no backend" tone="warning" />
           </div>
         </header>
@@ -339,45 +358,31 @@ export function BreachWorkspace() {
             type="button"
             role="tab"
             aria-selected={workspaceMode === "autokey"}
-            onClick={() => setWorkspaceMode("autokey")}
+            onClick={() => switchWorkspaceMode("autokey")}
             className={workspaceMode === "autokey" ? "is-active" : ""}
           >
-            Autokey Lab
+            Autokey Cipher
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={workspaceMode === "breach"}
-            onClick={() => setWorkspaceMode("breach")}
+            onClick={() => switchWorkspaceMode("breach")}
             className={workspaceMode === "breach" ? "is-active" : ""}
           >
-            Breach Console
+            Bypass Tool
           </button>
         </div>
 
-        <section className="workspace-grid">
-          <section className="instrument-panel autokey-panel" aria-labelledby="autokey-title">
+        <section key={workspaceMode} className={`workspace-grid workspace-${workspaceMode}`}>
+          {workspaceMode === "autokey" ? (
+            <section className="instrument-panel autokey-panel" aria-labelledby="autokey-title">
             <div className="panel-heading">
               <div>
-                <p className="panel-kicker">grading-safe path</p>
-                <h2 id="autokey-title">Autokey Cipher</h2>
+                <p className="panel-kicker">interactive lesson</p>
+                <h2 id="autokey-title">Alice &amp; Bob&apos;s Secret Message</h2>
               </div>
-              <div className="segmented-control" aria-label="Autokey action">
-                <button
-                  type="button"
-                  onClick={() => setAutokeyAction("encrypt")}
-                  className={autokeyAction === "encrypt" ? "is-active" : ""}
-                >
-                  Encrypt
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAutokeyAction("decrypt")}
-                  className={autokeyAction === "decrypt" ? "is-active" : ""}
-                >
-                  Decrypt
-                </button>
-              </div>
+              <span className="lesson-status">{autokeyScene === "idle" ? "Ready" : autokeyScene}</span>
             </div>
 
             <label className="field-label" htmlFor="autokey-key">
@@ -386,49 +391,122 @@ export function BreachWorkspace() {
             <input
               id="autokey-key"
               value={autokeyKey}
-              onChange={(event) => setAutokeyKey(event.target.value)}
+              onChange={(event) => {
+                setAutokeyKey(event.target.value);
+                setAutokeyScene("idle");
+              }}
               spellCheck={false}
               className="key-input"
             />
 
             <label className="field-label" htmlFor="autokey-input">
-              {autokeyAction === "encrypt" ? "Plaintext" : "Ciphertext"}
+              Message
             </label>
             <textarea
               id="autokey-input"
               value={autokeyInput}
-              onChange={(event) => setAutokeyInput(event.target.value)}
+              onChange={(event) => {
+                setAutokeyInput(event.target.value);
+                setAutokeyScene("idle");
+              }}
               spellCheck={false}
               className="artifact-well"
             />
 
             <div className="autokey-actions">
-              <button type="button" className="primary-action" onClick={useAutokeyOutputAsInput}>
-                Round Trip
+              <button type="button" className="primary-action" onClick={encryptAndSend}>
+                Encrypt & Send
               </button>
-              <button type="button" className="ghost-action" onClick={loadAutokeyRoundTrip}>
-                Decrypt Sample
+              <button
+                type="button"
+                className="ghost-action"
+                onClick={decryptMessage}
+                disabled={autokeyScene === "idle"}
+              >
+                Decrypt Message
+              </button>
+              <button type="button" className="soft-action" onClick={resetAutokeyLesson}>
+                Reset
               </button>
             </div>
 
             <div className="result-slab" aria-live="polite">
               <div className="slab-topline">
-                <span>{autokeyAction === "encrypt" ? "Ciphertext" : "Plaintext"}</span>
-                <span>{autokeyResult.result?.normalizedKey.toUpperCase() ?? "KEY ERROR"}</span>
+                <span>Ciphertext</span>
+                <span>{autokeyLesson.encrypted?.normalizedKey.toUpperCase() ?? "KEY ERROR"}</span>
               </div>
-              {autokeyResult.error ? (
-                <p className="error-copy">{autokeyResult.error}</p>
+              {autokeyLesson.error ? (
+                <p className="error-copy">{autokeyLesson.error}</p>
               ) : (
-                <pre>{autokeyResult.result?.text}</pre>
+                <pre>{autokeyScene === "idle" ? "Click Encrypt & Send to create ciphertext." : autokeyLesson.encrypted?.text}</pre>
               )}
             </div>
 
             <div className="keystream-strip">
               <span>Keystream</span>
-              <code>{autokeyResult.result?.keystream || "waiting for alphabetic input"}</code>
+              <code>{autokeyScene === "idle" ? "waiting for encryption" : autokeyLesson.encrypted?.keystream}</code>
+            </div>
+
+            <div className={`autokey-simulation simulation-${autokeyScene}`} aria-label="Autokey cipher simulation">
+              <div className="message-route">
+                <ParticipantCard
+                  label="Alice"
+                  role="Sender"
+                  tone="info"
+                  active
+                  value={autokeyInput}
+                  speech="I have a secret message."
+                />
+                <div
+                  className={`wire-line ${autokeyScene !== "idle" ? "is-active" : ""}`}
+                  aria-hidden="true"
+                >
+                  <span />
+                </div>
+                <ParticipantCard
+                  label="Eve"
+                  role="Spy"
+                  tone="danger"
+                  active={autokeyScene !== "idle"}
+                  value={autokeyScene === "idle" ? "..." : autokeyLesson.encrypted?.text ?? ""}
+                  speech={autokeyScene === "idle" ? "..." : "😵 I only see random letters."}
+                />
+                <div
+                  className={`wire-line ${autokeyScene === "decrypted" ? "is-active" : ""}`}
+                  aria-hidden="true"
+                >
+                  <span />
+                </div>
+                <ParticipantCard
+                  label="Bob"
+                  role="Receiver"
+                  tone="success"
+                  active={autokeyScene === "decrypted"}
+                  value={autokeyScene === "decrypted" ? autokeyLesson.decrypted?.text ?? "" : "..."}
+                  speech={autokeyScene === "decrypted" ? "Message recovered." : "Waiting for the key."}
+                />
+              </div>
+
+              <div className="formula-panels">
+                <FormulaPanel
+                  title="Encryption Formula"
+                  formula="Ci = (Pi + Ki) mod 26"
+                  rows={autokeyScene === "idle" ? [] : autokeyLesson.rows}
+                  mode="encrypt"
+                  active={autokeyScene !== "idle"}
+                />
+                <FormulaPanel
+                  title="Decryption Formula"
+                  formula="Pi = (Ci - Ki) mod 26"
+                  rows={autokeyScene === "decrypted" ? autokeyLesson.rows : []}
+                  mode="decrypt"
+                  active={autokeyScene === "decrypted"}
+                />
+              </div>
             </div>
           </section>
-
+          ) : (
+          <>
           <section className="instrument-panel breach-panel" aria-labelledby="breach-title">
             <div className="panel-heading">
               <div>
@@ -534,7 +612,7 @@ export function BreachWorkspace() {
             {!activeResult ? (
               <div className="empty-state">
                 <span>Awaiting worker output</span>
-                <p>Caesar, JWT, and family detection are active. Autokey breach remains roadmap.</p>
+                <p>Auto Detect, Autokey breach, classical solvers, toy asymmetric auditors, and JWT checks are active.</p>
               </div>
             ) : (
               <div className="finding-stack">
@@ -591,7 +669,7 @@ export function BreachWorkspace() {
                       onClick={() => {
                         setModule(entry.module);
                         setArtifact(entry.artifactPreview);
-                        setWorkspaceMode("breach");
+                        switchWorkspaceMode("breach");
                       }}
                     >
                       <strong>{entry.label}</strong>
@@ -603,9 +681,127 @@ export function BreachWorkspace() {
               )}
             </div>
           </aside>
+          </>
+          )}
         </section>
       </section>
     </main>
+  );
+}
+
+type AutokeyStep = {
+  index: number;
+  inputLetter: string;
+  inputValue: number;
+  keyLetter: string;
+  keyValue: number;
+  outputLetter: string;
+  outputValue: number;
+};
+
+function buildAutokeySimulation(input: string, output: string, keystream: string): AutokeyStep[] {
+  const inputLetters = input.replace(/[^a-z]/gi, "").toUpperCase();
+  const outputLetters = output.replace(/[^a-z]/gi, "").toUpperCase();
+  const keyLetters = keystream.replace(/[^a-z]/gi, "").toUpperCase();
+  const length = Math.min(inputLetters.length, outputLetters.length, keyLetters.length, 28);
+
+  return Array.from({ length }, (_, index) => ({
+    index,
+    inputLetter: inputLetters[index],
+    inputValue: alphabetValue(inputLetters[index]),
+    keyLetter: keyLetters[index],
+    keyValue: alphabetValue(keyLetters[index]),
+    outputLetter: outputLetters[index],
+    outputValue: alphabetValue(outputLetters[index])
+  }));
+}
+
+function alphabetValue(letter: string) {
+  return letter.toUpperCase().charCodeAt(0) - 65;
+}
+
+function ParticipantCard({
+  label,
+  role,
+  tone,
+  active,
+  speech,
+  value
+}: {
+  label: string;
+  role: string;
+  tone: "info" | "success" | "danger";
+  active: boolean;
+  speech: string;
+  value: string;
+}) {
+  return (
+    <div className={`participant-card participant-${tone} ${active ? "is-active" : ""}`}>
+      <div className="speech-bubble">{speech}</div>
+      <div className="person-figure" aria-hidden="true">
+        <span className="person-hair" />
+        <span className="person-head" />
+        <span className="person-body" />
+        <span className="person-device" />
+      </div>
+      <strong>{label}</strong>
+      <span>{role}</span>
+      <code>{value || "waiting"}</code>
+    </div>
+  );
+}
+
+function FormulaPanel({
+  title,
+  formula,
+  rows,
+  mode,
+  active
+}: {
+  title: string;
+  formula: string;
+  rows: AutokeyStep[];
+  mode: "encrypt" | "decrypt";
+  active: boolean;
+}) {
+  return (
+    <div className={`formula-panel ${active ? "is-active" : "is-locked"}`}>
+      <div className="formula-heading">
+        <strong>{title}</strong>
+        <code>{formula}</code>
+      </div>
+      <div className="formula-scroll">
+        {rows.length === 0 ? <p className="formula-placeholder">Waiting for this stage.</p> : null}
+        <div className="formula-row formula-row-primary">
+          <span>{mode === "encrypt" ? "Pi" : "Ci"}</span>
+          {rows.map((row) => (
+            <b key={`${mode}-input-${row.index}`}>
+              {mode === "encrypt"
+                ? `${row.inputLetter} (${row.inputValue})`
+                : `${row.outputLetter} (${row.outputValue})`}
+            </b>
+          ))}
+        </div>
+        <div className="formula-row formula-row-key">
+          <span>Ki</span>
+          {rows.map((row) => (
+            <b key={`${mode}-key-${row.index}`}>
+              {row.keyLetter} ({row.keyValue})
+            </b>
+          ))}
+        </div>
+        <div className="formula-row formula-row-result">
+          <span>{mode === "encrypt" ? "Ci" : "Pi"}</span>
+          {rows.map((row) => (
+            <b key={`${mode}-output-${row.index}`}>
+              {mode === "encrypt"
+                ? `${row.outputLetter} (${row.outputValue})`
+                : `${row.inputLetter} (${row.inputValue})`}
+            </b>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 

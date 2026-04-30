@@ -1,109 +1,10 @@
-const englishFrequencies: Record<string, number> = {
-  a: 0.0812,
-  b: 0.0149,
-  c: 0.0271,
-  d: 0.0432,
-  e: 0.1202,
-  f: 0.023,
-  g: 0.0203,
-  h: 0.0592,
-  i: 0.0731,
-  j: 0.001,
-  k: 0.0069,
-  l: 0.0398,
-  m: 0.0261,
-  n: 0.0695,
-  o: 0.0768,
-  p: 0.0182,
-  q: 0.0011,
-  r: 0.0602,
-  s: 0.0628,
-  t: 0.091,
-  u: 0.0288,
-  v: 0.0111,
-  w: 0.0209,
-  x: 0.0017,
-  y: 0.0211,
-  z: 0.0007
+import { languageCorpora, type LanguageCode } from "@/lib/crypto-analysis/language-corpora";
+
+const alphabet = "abcdefghijklmnopqrstuvwxyz";
+const naturalIocByLanguage: Record<LanguageCode, number> = {
+  en: 0.066,
+  id: 0.074
 };
-
-const indonesianMarkers = [
-  "yang",
-  "dan",
-  "ini",
-  "itu",
-  "dengan",
-  "untuk",
-  "tidak",
-  "dari",
-  "keamanan",
-  "kata",
-  "kunci"
-];
-
-const englishMarkers = [
-  "the",
-  "and",
-  "that",
-  "have",
-  "for",
-  "not",
-  "with",
-  "you",
-  "this",
-  "breach",
-  "engine",
-  "local",
-  "first",
-  "security",
-  "cipher"
-];
-
-const commonTrigrams = [
-  "the",
-  "and",
-  "ing",
-  "ion",
-  "ent",
-  "her",
-  "tha",
-  "nth",
-  "ati",
-  "ere",
-  "ter",
-  "est",
-  "ers",
-  "ati",
-  "hat",
-  "ver",
-  "for",
-  "all",
-  "eth"
-];
-
-const commonQuadgrams = [
-  "tion",
-  "ther",
-  "that",
-  "with",
-  "ment",
-  "ions",
-  "here",
-  "ould",
-  "ight",
-  "have",
-  "hich",
-  "whic",
-  "this",
-  "thin",
-  "they",
-  "atio",
-  "ever",
-  "from",
-  "ough",
-  "were",
-  "hing"
-];
 
 export type TextMetrics = {
   lettersOnly: string;
@@ -113,30 +14,64 @@ export type TextMetrics = {
   ngramScore: number;
   wordScore: number;
   symbolPenalty: number;
-  language: "en" | "id" | "unknown";
+  language: LanguageCode | "unknown";
   languageConfidence: number;
   fitness: number;
+  modelScores: Record<LanguageCode, number>;
+  bestLanguageScore: number;
+  gibberishPenalty: number;
 };
 
+type LanguageModel = {
+  language: LanguageCode;
+  frequencies: Record<string, number>;
+  logNgrams: Record<number, Record<string, number>>;
+  floor: Record<number, number>;
+  commonWords: string[];
+};
+
+const languageModels = Object.fromEntries(
+  (Object.keys(languageCorpora) as LanguageCode[]).map((language) => [
+    language,
+    buildLanguageModel(language, languageCorpora[language])
+  ])
+) as Record<LanguageCode, LanguageModel>;
+
 export function analyzeTextFitness(value: string): TextMetrics {
-  const normalized = value.toLowerCase();
+  const normalized = normalizeDisplayText(value);
   const lettersOnly = normalized.replace(/[^a-z]/g, "");
   const letterCount = lettersOnly.length;
   const indexOfCoincidence = calculateIndexOfCoincidence(lettersOnly);
-  const chiSquare = calculateChiSquare(lettersOnly);
-  const ngramScore = scoreNgrams(normalized);
-  const wordSignal = scoreWords(normalized);
+  const modelScores = {
+    en: scoreAgainstLanguageModel(normalized, languageModels.en),
+    id: scoreAgainstLanguageModel(normalized, languageModels.id)
+  };
+  const bestLanguage = modelScores.id > modelScores.en ? "id" : "en";
+  const bestLanguageScore = modelScores[bestLanguage];
+  const secondLanguageScore = bestLanguage === "id" ? modelScores.en : modelScores.id;
+  const languageConfidence = calculateModelConfidence(bestLanguageScore, secondLanguageScore);
+  const language = languageConfidence < 0.08 || letterCount < 8 ? "unknown" : bestLanguage;
+  const chiSquare = Math.min(
+    calculateChiSquareForLanguage(lettersOnly, languageModels.en.frequencies),
+    calculateChiSquareForLanguage(lettersOnly, languageModels.id.frequencies)
+  );
+  const ngramScore = Math.max(modelScores.en, modelScores.id);
+  const wordScore = scoreWordShape(normalized);
   const symbolPenalty = (normalized.match(/[^a-z\s.,!?'"()-]/g)?.length ?? 0) * 0.85;
-  const language = detectLanguage(wordSignal.english, wordSignal.indonesian);
-  const languageConfidence = calculateLanguageConfidence(wordSignal.english, wordSignal.indonesian);
-  const frequencyScore = Math.max(0, 12 - Math.min(12, chiSquare / 18));
-  const iocScore = Math.max(0, 8 - Math.abs(indexOfCoincidence - 0.066) * 95);
+  const gibberishPenalty = calculateGibberishPenalty(lettersOnly);
+  const naturalIoc = language === "id" ? naturalIocByLanguage.id : naturalIocByLanguage.en;
+  const frequencyScore = Math.max(0, 14 - Math.min(14, chiSquare / 14));
+  const iocScore = Math.max(0, 8 - Math.abs(indexOfCoincidence - naturalIoc) * 90);
+  const lengthConfidence = Math.min(1, letterCount / 28);
   const fitness =
     frequencyScore +
     iocScore +
     ngramScore +
-    Math.max(wordSignal.english, wordSignal.indonesian) -
-    symbolPenalty;
+    wordScore +
+    languageConfidence * 5 +
+    lengthConfidence * 2 -
+    symbolPenalty -
+    gibberishPenalty;
 
   return {
     lettersOnly,
@@ -144,12 +79,38 @@ export function analyzeTextFitness(value: string): TextMetrics {
     indexOfCoincidence,
     chiSquare,
     ngramScore,
-    wordScore: Math.max(wordSignal.english, wordSignal.indonesian),
+    wordScore,
     symbolPenalty,
     language,
     languageConfidence,
-    fitness
+    fitness,
+    modelScores,
+    bestLanguageScore,
+    gibberishPenalty
   };
+}
+
+export function rankCandidateResults<T extends { plaintextPreview?: string; fitnessScore?: number; confidence: number; module: string }>(
+  results: T[]
+) {
+  return results
+    .map((result) => {
+      const metrics = analyzeTextFitness(result.plaintextPreview ?? "");
+      const complexityPenalty = moduleComplexityPenalty(result.module, metrics.letterCount);
+      const calibratedScore =
+        metrics.fitness +
+        metrics.languageConfidence * 4 +
+        (result.fitnessScore ?? 0) * 0.28 +
+        result.confidence * 8 -
+        complexityPenalty;
+
+      return {
+        result,
+        metrics,
+        calibratedScore
+      };
+    })
+    .sort((left, right) => right.calibratedScore - left.calibratedScore);
 }
 
 export function calculateIndexOfCoincidence(lettersOnly: string) {
@@ -179,7 +140,10 @@ export function estimateVigenereKeyLengths(text: string, maxKeyLength = 12) {
     return {
       keyLength,
       averageIoc,
-      distanceFromNaturalLanguage: Math.abs(averageIoc - 0.066)
+      distanceFromNaturalLanguage: Math.min(
+        Math.abs(averageIoc - naturalIocByLanguage.en),
+        Math.abs(averageIoc - naturalIocByLanguage.id)
+      )
     };
   });
 
@@ -188,70 +152,157 @@ export function estimateVigenereKeyLengths(text: string, maxKeyLength = 12) {
   );
 }
 
-function calculateChiSquare(lettersOnly: string) {
+function buildLanguageModel(language: LanguageCode, corpus: string): LanguageModel {
+  const normalized = normalizeDisplayText(corpus);
+  const lettersOnly = normalized.replace(/[^a-z]/g, "");
+  const frequencies = buildFrequencies(lettersOnly);
+  const logNgrams = {
+    2: buildNgramLogProbabilities(lettersOnly, 2),
+    3: buildNgramLogProbabilities(lettersOnly, 3),
+    4: buildNgramLogProbabilities(lettersOnly, 4)
+  };
+  const floor = {
+    2: Math.log10(0.01 / Math.max(1, lettersOnly.length - 1)),
+    3: Math.log10(0.01 / Math.max(1, lettersOnly.length - 2)),
+    4: Math.log10(0.01 / Math.max(1, lettersOnly.length - 3))
+  };
+  const commonWords = Array.from(new Set(normalized.match(/\b[a-z]{3,}\b/g) ?? []));
+
+  return {
+    language,
+    frequencies,
+    logNgrams,
+    floor,
+    commonWords
+  };
+}
+
+function scoreAgainstLanguageModel(value: string, model: LanguageModel) {
+  const compact = value.replace(/[^a-z]/g, "");
+  if (compact.length < 3) {
+    return 0;
+  }
+
+  const bigramScore = averageNgramScore(compact, model, 2) * 1.4;
+  const trigramScore = averageNgramScore(compact, model, 3) * 2.4;
+  const quadgramScore = averageNgramScore(compact, model, 4) * 3.4;
+  const wordScore = model.commonWords.reduce((score, word) => {
+    return value.includes(word) ? score + Math.min(2.4, word.length * 0.32) : score;
+  }, 0);
+
+  return bigramScore + trigramScore + quadgramScore + Math.min(14, wordScore);
+}
+
+function averageNgramScore(value: string, model: LanguageModel, size: 2 | 3 | 4) {
+  if (value.length < size) {
+    return model.floor[size];
+  }
+
+  let total = 0;
+  let count = 0;
+  for (let index = 0; index <= value.length - size; index += 1) {
+    const gram = value.slice(index, index + size);
+    total += model.logNgrams[size][gram] ?? model.floor[size];
+    count += 1;
+  }
+
+  return total / count + 4;
+}
+
+function buildNgramLogProbabilities(value: string, size: number) {
+  const counts: Record<string, number> = {};
+  for (let index = 0; index <= value.length - size; index += 1) {
+    const gram = value.slice(index, index + size);
+    counts[gram] = (counts[gram] ?? 0) + 1;
+  }
+
+  const uniqueCount = Math.max(1, Object.keys(counts).length);
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0) + uniqueCount;
+  return Object.fromEntries(
+    Object.entries(counts).map(([gram, count]) => [gram, Math.log10((count + 1) / total)])
+  );
+}
+
+function buildFrequencies(lettersOnly: string) {
+  const counts = countLetters(lettersOnly);
+  const total = Math.max(1, lettersOnly.length);
+  return Object.fromEntries(
+    alphabet.split("").map((letter) => [letter, Math.max(0.0001, (counts[letter] ?? 0) / total)])
+  );
+}
+
+function calculateChiSquareForLanguage(lettersOnly: string, frequencies: Record<string, number>) {
   const total = lettersOnly.length;
   if (total === 0) {
     return 999;
   }
 
   const counts = countLetters(lettersOnly);
-  return Object.entries(englishFrequencies).reduce((sum, [letter, expectedRatio]) => {
+  return Object.entries(frequencies).reduce((sum, [letter, expectedRatio]) => {
     const observed = counts[letter] ?? 0;
     const expected = expectedRatio * total;
     return sum + (observed - expected) ** 2 / Math.max(expected, 0.001);
   }, 0);
 }
 
-function scoreNgrams(normalized: string) {
-  const compact = normalized.replace(/[^a-z]/g, "");
-  const trigramScore = commonTrigrams.reduce((score, trigram) => {
-    return score + countOccurrences(compact, trigram) * 1.35;
-  }, 0);
-  const quadgramScore = commonQuadgrams.reduce((score, quadgram) => {
-    return score + countOccurrences(compact, quadgram) * 2.2;
-  }, 0);
-
-  return trigramScore + quadgramScore;
-}
-
-function scoreWords(normalized: string) {
-  const english = englishMarkers.reduce((score, word) => {
-    return normalized.includes(word) ? score + Math.min(7, word.length) : score;
-  }, 0);
-  const indonesian = indonesianMarkers.reduce((score, word) => {
-    return normalized.includes(word) ? score + Math.min(7, word.length) : score;
-  }, 0);
-
-  return { english, indonesian };
-}
-
-function detectLanguage(english: number, indonesian: number): TextMetrics["language"] {
-  if (Math.max(english, indonesian) < 4) {
-    return "unknown";
-  }
-
-  return indonesian > english ? "id" : "en";
-}
-
-function calculateLanguageConfidence(english: number, indonesian: number) {
-  const total = english + indonesian;
-  if (total === 0) {
+function scoreWordShape(normalized: string) {
+  const words = normalized.match(/\b[a-z]{2,}\b/g) ?? [];
+  if (words.length === 0) {
     return 0;
   }
 
-  return Math.abs(english - indonesian) / total;
+  const shaped = words.reduce((score, word) => {
+    const vowelRatio = (word.match(/[aeiou]/g)?.length ?? 0) / word.length;
+    const hasBadRun = /[^aeiou]{5,}|[aeiou]{4,}/.test(word);
+    return score + (vowelRatio >= 0.25 && vowelRatio <= 0.68 ? 0.9 : -0.8) + (hasBadRun ? -1.4 : 0.25);
+  }, 0);
+
+  return Math.max(-8, Math.min(10, shaped));
 }
 
-function countOccurrences(value: string, pattern: string) {
-  let count = 0;
-  let index = value.indexOf(pattern);
-
-  while (index !== -1) {
-    count += 1;
-    index = value.indexOf(pattern, index + 1);
+function calculateGibberishPenalty(lettersOnly: string) {
+  if (lettersOnly.length < 6) {
+    return 0;
   }
 
-  return count;
+  const rareLetters = (lettersOnly.match(/[qxz]/g)?.length ?? 0) / lettersOnly.length;
+  const consonantRuns = lettersOnly.match(/[^aeiou]{5,}/g)?.length ?? 0;
+  const repeatedRuns = lettersOnly.match(/([a-z])\1{3,}/g)?.length ?? 0;
+  return rareLetters * 8 + consonantRuns * 1.8 + repeatedRuns * 2.2;
+}
+
+function calculateModelConfidence(bestScore: number, secondScore: number) {
+  const spread = Math.abs(bestScore - secondScore);
+  const scale = Math.max(8, Math.abs(bestScore), Math.abs(secondScore));
+  return Math.min(1, spread / scale);
+}
+
+function moduleComplexityPenalty(module: string, letterCount: number) {
+  const shortTextPenalty = letterCount < 28 ? (28 - letterCount) / 8 : 0;
+  const complexShortTextPenalty =
+    letterCount < 18 &&
+    [
+      "classical-autokey",
+      "classical-vigenere",
+      "classical-substitution",
+      "transposition-columnar"
+    ].includes(module)
+      ? (18 - letterCount) * 1.2 + 4
+      : 0;
+  const complexityByModule: Record<string, number> = {
+    "classical-caesar": 0,
+    "classical-reverse": 0.35,
+    "classical-vigenere": 1.2,
+    "classical-autokey": 1.8,
+    "classical-substitution": 2.4,
+    "transposition-columnar": 1.6
+  };
+
+  return (complexityByModule[module] ?? 0.8) + shortTextPenalty + complexShortTextPenalty;
+}
+
+function normalizeDisplayText(value: string) {
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function countLetters(lettersOnly: string) {

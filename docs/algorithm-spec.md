@@ -7,11 +7,14 @@ This document describes the first algorithm plan for GhostKey. It is not a claim
 ## Shared Scoring Pipeline
 
 1. Normalize text for scoring while preserving the original input for display.
-2. Detect likely language with Index of Coincidence, character distribution, and common word hints.
-3. Score plaintext candidates with frequency distance, Index of Coincidence, common trigram or quadgram hints, and language markers.
-4. Blend score signals:
+2. Score every candidate against multiple language models.
+3. Detect likely language from model-score spread, not from a fixed manual mode.
+4. Score plaintext candidates with frequency distance, Index of Coincidence, corpus-built n-gram probabilities, word-shape plausibility, and symbol penalties.
+5. Apply an auto-ranker that penalizes high-complexity solvers on short ciphertext so Auto Detect does not over-trust fancy attacks.
+6. Blend score signals:
    - quadgram score
-   - word hit score
+   - model language score
+   - word-shape score
    - symbol penalty
    - length confidence
    - language confidence
@@ -19,29 +22,32 @@ This document describes the first algorithm plan for GhostKey. It is not a claim
 
 ## Fitness Function
 
-The fitness function should prefer text that resembles natural language.
+The fitness function should prefer text that resembles natural language without being tied to one hand-written phrase list.
 
 ```text
-fitness = quadgramScore
-        + commonWordBonus
+fitness = modelNgramScore
+        + frequencyScore
+        + wordShapeScore
         - rareSequencePenalty
         - invalidCharacterPenalty
         + languageConfidenceAdjustment
 ```
 
-The score must be normalized for display. Internal scores can use log probabilities.
+The score must be normalized for display. Internal scores can use log probabilities from corpus-built n-gram models.
 
 ## Current Implementation Note
 
-The first implementation no longer relies on common-word matching alone. It now combines:
+The current implementation no longer relies on common-word matching alone. It now combines:
 
 - Index of Coincidence
-- English letter-frequency chi-square distance
-- common trigram and quadgram hints
-- English and Indonesian marker words
+- English and Indonesian corpus-derived letter-frequency chi-square distance
+- English and Indonesian corpus-derived bigram, trigram, and quadgram scoring
+- word-shape plausibility
+- language model confidence
+- auto-ranker complexity penalties
 - symbol penalties
 
-This is still a lightweight heuristic scorer, not the final corpus-backed quadgram model. The next upgrade should replace the small built-in ngram hints with licensed quadgram tables for English and Indonesian.
+This is still a lightweight embedded-corpus scorer, not a large production language model. The corpus pack now lives in `src/lib/crypto-analysis/language-corpora.ts` so it can grow without crowding the scoring logic. The next upgrade should move the corpora into licensed JSON model assets and add a language detector such as `franc` when dependency policy allows it.
 
 ## Auto-Detection
 
@@ -130,7 +136,7 @@ Output:
 
 ## Autokey Solver
 
-The Autokey solver should be implemented after Vigenere. It needs clearer caveats because the search space is larger and confidence may be lower.
+The Autokey solver needs clearer caveats because the search space is larger and confidence may be lower, especially for short ciphertext.
 
 Output:
 
@@ -138,6 +144,14 @@ Output:
 - candidate plaintext
 - confidence caveats
 - explanation that known plaintext can expose the key stream
+
+Current MVP approach:
+
+- Rank seed-key prefixes with beam search instead of shallow local mutation.
+- Exhaustively score short Autokey seed keys before beam refinement so brief classroom phrases do not get buried by weak prefix evidence.
+- Refine complete seed keys with coordinate search.
+- Score Indonesian and English natural-language candidates separately enough that Indonesian classroom phrases do not lose to English-looking false positives.
+- Keep confidence caveats visible because short ciphertext can still produce plausible wrong candidates.
 
 ## Autokey Encrypt and Decrypt
 

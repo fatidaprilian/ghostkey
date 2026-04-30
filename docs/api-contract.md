@@ -102,6 +102,8 @@ The first auto-detect pass must inspect:
 
 Auto-detect results must include ranked family hints in `evidence[]`. If a full solver is not implemented for the top family yet, the worker must say so safely rather than pretending it recovered a key.
 
+Auto-detect ranking must evaluate recovered plaintext candidates across active solvers. The final rank should use calibrated plaintext quality, detected language confidence, solver complexity, and ciphertext length rather than a static algorithm order.
+
 Example terminal message:
 
 ```text

@@ -12,6 +12,19 @@ These principles are mandatory for backend and shared core modules.
 - Keep transport, application, domain, and infrastructure concerns separated.
 - Favor explicit module boundaries over hidden cross-layer shortcuts.
 
+## Complexity Budget (Mandatory)
+
+Prefer the smallest clear implementation that fully preserves behavior, safety, and maintainability.
+
+- If two implementations are equivalent in behavior and quality, choose the one with fewer moving parts.
+- Remove code that does not carry behavior, safety, clarity, maintainability, or test value.
+- Prefer direct logic over extra wrappers, layers, classes, config, or state when the abstraction does not reduce real complexity.
+- Keep validation, error handling, fallback paths, accessibility, tests, security boundaries, and observability when they protect real behavior.
+- Run a final simplification pass before completion.
+- Do not optimize for line count alone.
+- Do not replace clear code with clever, dense, or surprising code.
+- Do not remove safeguards just because the happy path works.
+
 ## Universal SOP Baseline (Mandatory)
 
 The `.agent-context/rules/` directory is the default guidance source for implementation and review.
@@ -91,6 +104,7 @@ Service separation only makes sense when multiple signals are true, such as:
 - Cross-cutting utilities belong in explicit shared locations, not scattered feature internals.
 - Files above roughly 1000 lines are a refactor trigger, not a success signal.
 - Preserve one clear public entrypoint per module when helpful, but move implementation into smaller focused files.
+- Keep code compact because the design is understood, not because safeguards were removed.
 
 ## Module Communication
 

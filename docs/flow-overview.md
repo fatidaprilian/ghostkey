@@ -1,6 +1,12 @@
 # GhostKey Flow Overview
 
-## Primary Flow: Breach Mode
+## Primary Flow: Workspace Tabs
+
+1. The user starts on the Autokey Cipher tab because it is the required coursework path.
+2. The user can switch to the Bypass Tool tab for advanced classroom cryptanalysis demos.
+3. The tabs are separate task surfaces. Autokey Cipher teaches deterministic encryption and decryption; Bypass Tool runs heuristic or mathematical attacks against weak examples.
+
+## Primary Flow: Bypass Tool
 
 1. The user opens the Breach Workspace.
 2. The user selects an input type:
@@ -18,8 +24,10 @@
    - numeric shape detection for RSA or ElGamal examples
    - Caesar shift scoring
    - Reverse variants
+   - early acceptance for strong Caesar or Reverse hits
    - Vigenere and Autokey family hints from Index of Coincidence
    - bounded columnar and monoalphabetic search where input length makes it practical
+   - confidence caps for short artifacts where language evidence is weak
 6. GhostKey creates a worker job with a bounded iteration plan.
 7. The worker streams progress events:
    - current key candidate
@@ -39,13 +47,17 @@
 
 ## Primary Flow: Autokey Coursework Lab
 
-1. The user enters plaintext or ciphertext.
+1. The user enters a plaintext message.
 2. The user enters an alphabetic key.
 3. For encryption, GhostKey builds the Autokey stream from the key followed by plaintext letters.
-4. For decryption, GhostKey starts with the key and appends recovered plaintext letters to continue the stream.
-5. Non-letter characters remain visible for presentation readability and do not consume keystream positions.
-6. GhostKey returns the transformed text and the applied keystream.
-7. The user can move the output back into the input field to demonstrate round-trip correctness.
+4. The user clicks Encrypt & Send.
+5. Eve receives the ciphertext and shows a confused speech bubble because the message is unreadable.
+6. The encryption table fills from plaintext plus keystream.
+7. The user clicks Decrypt Message.
+8. Bob's message box reveals the plaintext.
+9. The decryption table shows how ciphertext minus keystream recovers `Pi`.
+10. The user can click Reset to return to the default classroom sample.
+11. Non-letter characters remain visible for presentation readability and do not consume keystream positions.
 
 ## Flow: Classical Cipher Detection
 
@@ -83,7 +95,7 @@
 2. Split text by key position.
 3. Estimate Caesar shifts per position.
 4. Refine the key through local search.
-5. Score candidates with quadgrams and dictionary hints.
+5. Score candidates with local n-gram corpus fitness and language markers.
 6. Explain that repeated-key polyalphabetic ciphers leak periodic structure.
 
 ## Flow: Autokey Breach
@@ -91,7 +103,7 @@
 1. Detect whether Vigenere-style key length confidence is low.
 2. Use likely starting key candidates.
 3. Generate plaintext candidates by feeding recovered text into later key positions.
-4. Score with quadgrams.
+4. Score with local n-gram corpus fitness and language markers.
 5. Explain that Autokey improves on repeated keys but is still unsafe against modern cryptanalysis and known-plaintext attacks.
 
 Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt path is mandatory and deterministic; breach mode is heuristic and should keep confidence caveats visible.

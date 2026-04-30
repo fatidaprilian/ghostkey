@@ -15,6 +15,7 @@ Before editing:
 7. Enforce backend universal principles: no clever hacks, no premature abstraction, readability over brevity.
 8. For backend/API scope, enforce layered boundaries, zero-trust input validation, safe centralized error responses, bounded list reads, transaction safety for multi-write mutations, idempotency for sensitive mutations, and behavior-focused API tests.
 9. Backend/API governance is global and stack-agnostic. Do not create stack-specific adapters or framework-specific rule branches; apply the global rules through the framework already present in the target project.
+10. Enforce the complexity budget: choose fewer moving parts only when behavior, safety, clarity, and maintainability stay intact.
 
 Refactor rules:
 - Improve clarity, boundaries, naming, validation, error handling, tests, and docs.
@@ -23,6 +24,9 @@ Refactor rules:
 - Keep module boundaries explicit and project-specific.
 - Split large files when the split makes the flow easier to understand.
 - Do not introduce abstractions before the repeated pattern is real.
+- Remove code that does not carry behavior, safety, clarity, maintainability, or test value.
+- Prefer the shorter implementation only when it keeps the same guarantees.
+- Run a final simplification pass before completion.
 - Update tests and docs whenever behavior contracts, public APIs, data shape, or UI contracts change.
 
 For every meaningful change, explain:

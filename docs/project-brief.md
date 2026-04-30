@@ -10,9 +10,9 @@ The product must explain what it is doing while it works. A user should see the 
 
 - Project name: GhostKey.
 - Product suite name: The BreachEngine Suite.
-- Primary goal: build a web dashboard for automatic cryptanalysis and forensic reasoning.
+- Primary goal: build a friendly web learning lab for Autokey Cipher plus an advanced local cryptanalysis showcase.
 - Required stack from the user brief: Next.js with React, Tailwind CSS, Vercel deployment, and Web Workers for heavy algorithms.
-- Required experience: high-contrast dark mode, monospaced typography, neon green success states, red vulnerability warnings, and real-time terminal logs.
+- Required experience: friendly classroom-first Autokey UI, readable formula simulation, character-based message flow, and a separate evidence-focused Bypass Tool.
 - Required attack modules:
   - Classical Breach Engine for Caesar, monoalphabetic substitution, Vigenere, and Autokey ciphers.
   - Transposition Solver for columnar transposition.
@@ -22,8 +22,9 @@ The product must explain what it is doing while it works. A user should see the 
   - Quadgram fitness scoring for English and Indonesian text.
   - Hill climbing search for key optimization.
   - Index of Coincidence analysis for language and cipher hints.
+  - Meta-ranking across solver outputs so Auto Detect chooses by recovered plaintext quality, not by a fixed algorithm priority.
 - Current implementation evidence: the repo now contains a Next.js application scaffold, TypeScript cryptanalysis modules, worker contracts, and an MVP Breach Workspace.
-- Coursework safety requirement: GhostKey must keep correct Autokey Cipher encryption and decryption with a user-provided key as a first-class path while Breach Mode demonstrates bounded ciphertext-only attacks against classroom-sized weak algorithms.
+- Coursework safety requirement: GhostKey must keep correct Autokey Cipher encryption and decryption with a user-provided key as a first-class path while Bypass Tool demonstrates bounded ciphertext-only attacks against classroom-sized weak algorithms.
 - Current product direction: GhostKey is a hybrid cryptography platform. It implements the required Autokey Cipher curriculum path and also provides a local automated cryptanalysis engine for dynamic classroom demos.
 
 ## User Outcomes
@@ -80,8 +81,12 @@ The mandatory classroom path must support:
 - decrypting Autokey ciphertext with the same key
 - preserving readable spacing and punctuation while applying the keystream only to letters
 - showing the generated keystream so the implementation can be explained during presentation
+- simulating the sender, observed ciphertext, receiver output, and per-letter formula values for classroom explanation
+- using clear Encrypt & Send, Decrypt Message, and Reset controls with Alice, Eve, and Bob character states
+- showing Eve's confusion after encryption because the observed ciphertext is unreadable
+- revealing Bob's message only after decryption
 
-This path is the grading-safe foundation. Breach Mode is the deeper showcase layered beside it.
+This path is the grading-safe foundation. Bypass Tool is the deeper showcase layered beside it.
 
 ### Classical Breach Engine
 
@@ -118,7 +123,7 @@ The first implementation should support:
 
 ## Content and Language Scope
 
-The first scoring models must support English and Indonesian. English can start with known quadgram frequency tables. Indonesian needs a documented corpus source before production use, or it must be marked as experimental.
+The first scoring models must support English and Indonesian. The MVP now uses a larger local corpus pack to build n-gram models at runtime in the browser worker. Production-grade accuracy should still move these into documented, licensed model assets and may add a browser-compatible language detector.
 
 ## Runtime Recommendation
 

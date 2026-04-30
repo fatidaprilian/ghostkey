@@ -1,7 +1,11 @@
 import type { BreachResult, WorkerModule } from "@/lib/worker-contracts";
 import { decryptAutokey } from "@/lib/crypto-analysis/autokey";
 import { solveCaesar, toCaesarResult } from "@/lib/crypto-analysis/caesar";
-import { analyzeTextFitness, estimateVigenereKeyLengths } from "@/lib/crypto-analysis/text-metrics";
+import {
+  analyzeTextFitness,
+  estimateVigenereKeyLengths,
+  rankCandidateResults
+} from "@/lib/crypto-analysis/text-metrics";
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz";
 const frequencyOrder = "etaoinshrdlcumwfgypbvkjxqz";
@@ -52,25 +56,57 @@ export function solveClassicalModule(module: WorkerModule, artifact: string): So
 }
 
 export function solveAutoDetectClassical(artifact: string): SolverOutput {
+  const cheapModules: WorkerModule[] = ["classical-caesar", "classical-reverse"];
+  const cheapOutputs = cheapModules.map((module) => solveClassicalModule(module, artifact));
+  const cheapRanked = rankCandidateResults(cheapOutputs.flatMap((output) => output.results));
+  const strongCheapHit = cheapRanked[0];
+
+  if (
+    strongCheapHit &&
+    strongCheapHit.metrics.letterCount >= 18 &&
+    strongCheapHit.result.confidence >= 0.78 &&
+    strongCheapHit.calibratedScore >= 30
+  ) {
+    return {
+      results: formatAutoRankedResults(cheapRanked.slice(0, 5)),
+      trace: cheapOutputs.flatMap((output) => output.trace.slice(0, 2))
+    };
+  }
+
   const modules: WorkerModule[] = [
-    "classical-caesar",
-    "classical-reverse",
     "classical-vigenere",
     "classical-autokey",
     "transposition-columnar",
     "classical-substitution"
   ];
-  const outputs = modules.map((module) => solveClassicalModule(module, artifact));
-  const ranked = outputs
-    .flatMap((output) => output.results)
-    .sort((left, right) => right.confidence - left.confidence)
-    .slice(0, 5)
-    .map((result, index) => ({ ...result, rank: index + 1 }));
+  const outputs = [...cheapOutputs, ...modules.map((module) => solveClassicalModule(module, artifact))];
+  const ranked = formatAutoRankedResults(
+    rankCandidateResults(outputs.flatMap((output) => output.results)).slice(0, 5)
+  );
 
   return {
     results: ranked,
     trace: outputs.flatMap((output) => output.trace.slice(0, 2))
   };
+}
+
+function formatAutoRankedResults(
+  ranked: Array<{
+    result: BreachResult;
+    metrics: ReturnType<typeof analyzeTextFitness>;
+    calibratedScore: number;
+  }>
+): BreachResult[] {
+  return ranked.map(({ result, metrics, calibratedScore }, index) => ({
+    ...result,
+    rank: index + 1,
+    confidence: calibrateConfidence(calibratedScore, metrics.letterCount, result.module),
+    evidence: [
+      `Auto-ranker language: ${metrics.language}.`,
+      `Auto-ranker score: ${calibratedScore.toFixed(2)}.`,
+      ...result.evidence
+    ]
+  }));
 }
 
 export function solveReverse(ciphertext: string): SolverOutput {
@@ -146,10 +182,11 @@ export function solveVigenere(ciphertext: string): SolverOutput {
         key: candidate.key.toUpperCase(),
         plaintext: candidate.plaintext,
         fitness: candidate.fitness,
-        confidence: confidenceFromFitness(candidate.fitness, 34),
+        confidence: confidenceFromFitness(candidate.fitness, 34, "classical-vigenere", candidate.plaintext),
         evidence: [
           `Estimated key length: ${candidate.key.length}.`,
           `Average bucket IoC: ${candidate.ioc.toFixed(3)}.`,
+          ...shortCipherEvidence(candidate.plaintext, "Vigenere key search"),
           "Each key position was solved as a Caesar frequency problem."
         ],
         whyWeak: "Repeated-key Vigenere leaks periodic letter-frequency structure.",
@@ -166,40 +203,8 @@ export function solveVigenere(ciphertext: string): SolverOutput {
 }
 
 export function solveAutokey(ciphertext: string): SolverOutput {
-  const candidates: Array<{
-    key: string;
-    plaintext: string;
-    fitness: number;
-  }> = [];
-  const seedLetters = ["a", "e", "t", "o", "n"];
-
-  for (let keyLength = 1; keyLength <= 7; keyLength += 1) {
-    for (const seed of seedLetters) {
-      let key = seed.repeat(keyLength);
-      let best = scoreAutokeyCandidate(ciphertext, key);
-
-      for (let pass = 0; pass < 3; pass += 1) {
-        for (let position = 0; position < keyLength; position += 1) {
-          let bestPosition = best;
-          let bestKey = key;
-
-          for (const letter of alphabet) {
-            const candidateKey = replaceAt(key, position, letter);
-            const candidate = scoreAutokeyCandidate(ciphertext, candidateKey);
-            if (candidate.fitness > bestPosition.fitness) {
-              bestPosition = candidate;
-              bestKey = candidateKey;
-            }
-          }
-
-          key = bestKey;
-          best = bestPosition;
-        }
-      }
-
-      candidates.push(best);
-    }
-  }
+  const seedKeys = generateAutokeySeedKeys(ciphertext);
+  const candidates = seedKeys.map((key) => refineAutokeyKey(ciphertext, key));
 
   candidates.sort((left, right) => right.fitness - left.fitness);
 
@@ -213,10 +218,11 @@ export function solveAutokey(ciphertext: string): SolverOutput {
           key: candidate.key.toUpperCase(),
           plaintext: candidate.plaintext,
           fitness: candidate.fitness,
-          confidence: Math.min(0.88, confidenceFromFitness(candidate.fitness, 38)),
+          confidence: confidenceFromFitness(candidate.fitness, 38, "classical-autokey", candidate.plaintext),
           evidence: [
             `Seed key length searched: ${candidate.key.length}.`,
-            "Coordinate search optimized seed letters against n-gram fitness.",
+            "Beam search ranked seed-key prefixes before coordinate refinement.",
+            ...shortCipherEvidence(candidate.plaintext, "Autokey seed search"),
             "Autokey confidence is heuristic because the key stream depends on recovered plaintext."
           ],
           whyWeak: "Autokey hides periodicity better than Vigenere, but short seed keys still leak language structure in classroom-sized text.",
@@ -229,7 +235,7 @@ export function solveAutokey(ciphertext: string): SolverOutput {
       .map((candidate) => ({
         key: candidate.key.toUpperCase(),
         fitness: candidate.fitness,
-        message: "Autokey seed optimized by coordinate search."
+        message: "Autokey seed ranked by beam search and n-gram fitness."
       }))
   };
 }
@@ -285,7 +291,7 @@ export function solveMonoalphabetic(ciphertext: string): SolverOutput {
         key: candidate.key,
         plaintext: candidate.plaintext,
         fitness: candidate.fitness,
-        confidence: Math.min(0.82, confidenceFromFitness(candidate.fitness, 42)),
+        confidence: confidenceFromFitness(candidate.fitness, 42, "classical-substitution", candidate.plaintext),
         evidence: [
           "Frequency mapping created the starting substitution key.",
           `${restarts} deterministic hill-climbing restarts refined letter swaps.`,
@@ -334,7 +340,7 @@ export function solveColumnarTransposition(ciphertext: string): SolverOutput {
         key: candidate.key,
         plaintext: candidate.plaintext,
         fitness: candidate.fitness,
-        confidence: Math.min(0.78, confidenceFromFitness(candidate.fitness, 36)),
+        confidence: confidenceFromFitness(candidate.fitness, 36, "transposition-columnar", candidate.plaintext),
         evidence: [
           "Column counts 2-7 were searched with all column orders.",
           "Letter frequency is preserved, so natural-language scoring can still rank candidates.",
@@ -396,6 +402,125 @@ function scoreAutokeyCandidate(ciphertext: string, key: string) {
     plaintext,
     fitness: analyzeTextFitness(plaintext).fitness
   };
+}
+
+function generateAutokeySeedKeys(ciphertext: string) {
+  const letterCount = ciphertext.replace(/[^a-z]/gi, "").length;
+  const beamWidth = letterCount < 18 ? 60 : 96;
+  const maxKeyLength = letterCount < 28 ? 5 : 6;
+  const finalKeys: string[] = generateShortAutokeyKeys(ciphertext, letterCount);
+
+  for (let keyLength = 1; keyLength <= maxKeyLength; keyLength += 1) {
+    let beam = [{ key: "", score: 0 }];
+
+    for (let position = 0; position < keyLength; position += 1) {
+      const nextBeam = beam.flatMap((entry) =>
+        alphabet.split("").map((letter) => {
+          const key = `${entry.key}${letter}`;
+          const prefix = decryptAutokeyPrefix(ciphertext, key);
+          const metrics = analyzeTextFitness(prefix);
+          const score =
+            metrics.fitness +
+            metrics.ngramScore * 1.8 +
+            metrics.wordScore * 1.3 +
+            metrics.languageConfidence * 2 -
+            Math.max(0, keyLength - key.length) * 0.05;
+
+          return { key, score };
+        })
+      );
+
+      nextBeam.sort((left, right) => right.score - left.score);
+      beam = nextBeam.slice(0, beamWidth);
+    }
+
+    finalKeys.push(...beam.slice(0, letterCount < 18 ? 12 : 16).map((entry) => entry.key));
+  }
+
+  return Array.from(new Set(finalKeys));
+}
+
+function generateShortAutokeyKeys(ciphertext: string, letterCount: number) {
+  const maxExhaustiveLength = letterCount < 24 ? 3 : 2;
+  const candidates: Array<{ key: string; score: number }> = [];
+
+  for (let keyLength = 1; keyLength <= maxExhaustiveLength; keyLength += 1) {
+    visitKeys(keyLength, "", (key) => {
+      const candidate = scoreAutokeyCandidate(ciphertext, key);
+      const metrics = analyzeTextFitness(candidate.plaintext);
+      const score =
+        candidate.fitness +
+        metrics.languageConfidence * 4 +
+        metrics.wordScore * 1.6 -
+        keyLength * 0.15;
+
+      candidates.push({ key, score });
+    });
+  }
+
+  candidates.sort((left, right) => right.score - left.score);
+  return candidates.slice(0, letterCount < 18 ? 72 : 48).map((candidate) => candidate.key);
+}
+
+function visitKeys(targetLength: number, prefix: string, onKey: (key: string) => void) {
+  if (prefix.length === targetLength) {
+    onKey(prefix);
+    return;
+  }
+
+  for (const letter of alphabet) {
+    visitKeys(targetLength, `${prefix}${letter}`, onKey);
+  }
+}
+
+function refineAutokeyKey(ciphertext: string, initialKey: string) {
+  let key = initialKey;
+  let best = scoreAutokeyCandidate(ciphertext, key);
+
+  for (let pass = 0; pass < 2; pass += 1) {
+    for (let position = 0; position < key.length; position += 1) {
+      let bestPosition = best;
+      let bestKey = key;
+
+      for (const letter of alphabet) {
+        const candidateKey = replaceAt(key, position, letter);
+        const candidate = scoreAutokeyCandidate(ciphertext, candidateKey);
+        if (candidate.fitness > bestPosition.fitness) {
+          bestPosition = candidate;
+          bestKey = candidateKey;
+        }
+      }
+
+      key = bestKey;
+      best = bestPosition;
+    }
+  }
+
+  return best;
+}
+
+function decryptAutokeyPrefix(ciphertext: string, partialKey: string) {
+  let keyIndex = 0;
+  let plaintext = "";
+
+  for (const character of ciphertext) {
+    if (!/[a-z]/i.test(character)) {
+      if (plaintext.length > 0) {
+        plaintext += character;
+      }
+      continue;
+    }
+
+    if (keyIndex >= partialKey.length) {
+      break;
+    }
+
+    const shift = alphabet.indexOf(partialKey[keyIndex]);
+    plaintext += shiftCharacter(character, -shift);
+    keyIndex += 1;
+  }
+
+  return plaintext;
 }
 
 function decryptColumnar(ciphertext: string, readOrder: number[]) {
@@ -512,8 +637,64 @@ function textResult(input: {
   };
 }
 
-function confidenceFromFitness(fitness: number, divisor: number) {
-  return Math.max(0.12, Math.min(0.96, fitness / divisor));
+function confidenceFromFitness(fitness: number, divisor: number, module?: string, plaintext = "") {
+  const letterCount = plaintext.replace(/[^a-z]/gi, "").length;
+  const moduleCeiling = module ? confidenceCeilingForLength(module, letterCount) : 0.96;
+  return Math.max(0.12, Math.min(moduleCeiling, fitness / divisor));
+}
+
+function calibrateConfidence(score: number, letterCount: number, module: string) {
+  const lengthFactor = Math.min(1, letterCount / 32);
+  const moduleCeiling: Record<string, number> = {
+    "classical-caesar": 0.96,
+    "classical-reverse": 0.94,
+    "classical-vigenere": 0.9,
+    "classical-autokey": 0.88,
+    "classical-substitution": 0.82,
+    "transposition-columnar": 0.8
+  };
+  const raw = 1 / (1 + Math.exp(-(score - 14) / 7));
+  const ceiling = Math.min(moduleCeiling[module] ?? 0.8, confidenceCeilingForLength(module, letterCount));
+  return Math.max(0.12, Math.min(ceiling, raw * (0.55 + lengthFactor * 0.45)));
+}
+
+function confidenceCeilingForLength(module: string, letterCount: number) {
+  const complexModules = new Set([
+    "classical-autokey",
+    "classical-vigenere",
+    "classical-substitution",
+    "transposition-columnar"
+  ]);
+
+  if (!complexModules.has(module)) {
+    return letterCount < 8 ? 0.72 : 0.96;
+  }
+
+  if (letterCount < 14) {
+    return 0.32;
+  }
+
+  if (letterCount < 20) {
+    return 0.48;
+  }
+
+  if (letterCount < 28) {
+    return 0.68;
+  }
+
+  return module === "classical-autokey" ? 0.88 : 0.82;
+}
+
+function shortCipherEvidence(plaintext: string, solverName: string) {
+  const letterCount = plaintext.replace(/[^a-z]/gi, "").length;
+  if (letterCount >= 20) {
+    return [];
+  }
+
+  return [
+    `${solverName} has limited evidence because this artifact has only ${letterCount} letters.`,
+    "Use a longer ciphertext or a known classroom fixture before treating this candidate as reliable."
+  ];
 }
 
 function dedupeByKey<T extends { key: string }>(values: T[]) {
