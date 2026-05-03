@@ -44,6 +44,7 @@ The signature interaction is an **evidence lock-in**. When a worker finds a stro
 - Bypass Tool defaults to ciphertext-only attack mode. Optional crib controls are available only as a separate attack evidence mode so users do not think "bypass" requires knowing the plaintext.
 - Bypass is visibly multi-method: Auto Detect, Caesar, Reverse, Vigenere, Autokey, Monoalphabetic, Column, toy RSA, toy ElGamal, and JWT all belong to the same main concept.
 - Gemini AI decision runs after local plaintext candidates and must be visually framed as language decision support, not proof. It can accept, mark ambiguous, or reject local plaintext candidates before the final finding is shown.
+- Toy RSA, toy ElGamal, and JWT results bypass Gemini language decision because their outputs are structured audit findings, not natural-language plaintext.
 
 ## Color Science and Semantic Roles
 
@@ -195,7 +196,7 @@ The design is based on the current GhostKey brief and repo docs. Do not copy fam
 - Keep tab switches clean by resetting transient Bypass findings/log state when entering the Bypass Tool, so stale result boxes do not flash between Autokey and Bypass views.
 - Keep Auto Detect conservative: accept strong Caesar/Reverse hits early, and cap complex solver confidence on short artifacts instead of overclaiming a classroom breach.
 - Treat corpus details as supporting evidence, not as a visible promise of authoritative language detection; current language scoring uses documented self-authored assets.
-- Keep AI decision support bounded by local solver candidates and confidence caps. Gemini may promote, cap, reject, or cautiously refine plaintext candidates, but cannot prove ciphertext-only recovery. Any refinement is an unverified language guess. When Gemini is unavailable, show a calm local-scoring fallback instead of setup jargon.
+- Keep AI decision support bounded by local classical and transposition solver candidates and confidence caps. Gemini may promote, cap, reject, or cautiously refine plaintext candidates, but cannot prove ciphertext-only recovery. Any refinement is an unverified language guess. Toy RSA, toy ElGamal, and JWT findings should stay local because language plausibility does not apply to those structured outputs. When Gemini is unavailable, show a calm local-scoring fallback instead of setup jargon.
 - Use Web Worker progress events as the source of terminal state.
 - Build a stable state matrix before styling components.
 - Keep the main action clear: detect, run bypass, inspect finding, read fix.

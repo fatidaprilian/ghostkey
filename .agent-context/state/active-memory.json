@@ -24,6 +24,7 @@
       "Classical family scoring is centralized in src/lib/crypto-analysis/family-scorer.ts and shared by detection plus Auto Detect solver dispatch.",
       "Language scoring now uses documented self-authored corpus assets with metadata in src/lib/crypto-analysis/language-corpora.ts and docs/corpus-assets.md.",
       "Gemini AI Evidence Rerank now runs automatically after local plaintext candidates, uses POST /api/ai-rerank through Vertex AI / Gemini Enterprise Agent Platform by default, returns accept/ambiguous/reject decision support plus cautious refinement attempts, keeps service account credentials server-side, and falls back to local scoring when unavailable.",
+      "Gemini language decision support is scoped to classical and transposition plaintext candidates; toy RSA, toy ElGamal, and JWT findings stay local because they are structured audit outputs.",
       "Autokey coursework UI includes Encrypt & Send, Decrypt Message, Reset, Eve confusion, Bob reveal, CSS characters, and formula rows for Pi, Ki, and Ci, and is considered enough for the current coursework requirement.",
       "Auto Detect prefers strong cheap Caesar or Reverse evidence before expensive heuristic solvers and caps complex solver confidence on short artifacts.",
       "Bypass Tool defaults to ciphertext-only attack mode. Optional crib attack mode can pass local known plaintext, probable words, and max key length hints for separate known-plaintext lessons."
@@ -43,6 +44,7 @@
       "Changed Gemini Evidence Rerank from a side review panel into a final decision layer that accepts, caps as ambiguous, or rejects local plaintext candidates before the finding is promoted.",
       "Kept rejected local plaintext candidates visible in the Gemini decision panel so users can inspect what was rejected without mistaking it for the final answer.",
       "Added Gemini refinement attempts as unverified language guesses so Gemini can try to make a candidate less nonsensical without claiming cryptographic recovery.",
+      "Fixed Gemini gating so toy RSA, toy ElGamal, and JWT examples no longer get rejected by language scoring when the local audit result is correct.",
       "Improved Autokey breach so the sample ciphertext CICAFY QRRXGE SRKT XSJAK ranks KELAS -> SERANG MARKAS SAAT FAJAR first.",
       "Replaced fixed phrase-heavy text metrics with corpus-built language scoring and Auto Detect meta-ranking across active solver results.",
       "Added a live Autokey sender-observer-receiver simulation with formula tables to strengthen the mandatory coursework path.",
@@ -93,7 +95,8 @@
       "npm.cmd run typecheck, npm.cmd run lint, npm.cmd run test:bypass, and escalated npm.cmd run validate passed on 2026-05-03 after migrating Gemini rerank to Vertex AI service-account auth; sandboxed build still failed with spawn EPERM after compilation.",
       "npm.cmd run typecheck, npm.cmd run lint, npm.cmd run test:bypass, and escalated npm.cmd run validate passed on 2026-05-03 after changing Gemini rerank into the accept/ambiguous/reject final decision layer; sandboxed build still failed with spawn EPERM after compilation.",
       "npm.cmd run typecheck and npm.cmd run lint passed on 2026-05-03 after adding rejected plaintext candidate previews to the Gemini decision panel.",
-      "npm.cmd run typecheck and npm.cmd run lint passed on 2026-05-03 after adding Gemini refinement attempts to the AI rerank contract and UI."
+      "npm.cmd run typecheck and npm.cmd run lint passed on 2026-05-03 after adding Gemini refinement attempts to the AI rerank contract and UI.",
+      "npm.cmd run typecheck, npm.cmd run lint, and npm.cmd run test:bypass passed on 2026-05-03 after restricting Gemini language decision support to classical/transposition candidates."
     ]
   },
   "designContinuity": {
@@ -111,5 +114,5 @@
     "redactSensitiveTextBeforeWriting": true
   },
   "generatedAt": "2026-04-27T12:38:41.841Z",
-  "lastUpdatedAt": "2026-05-03T16:14:00+07:00"
+  "lastUpdatedAt": "2026-05-03T16:27:00+07:00"
 }

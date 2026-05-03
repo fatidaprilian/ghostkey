@@ -375,10 +375,10 @@ export function BreachWorkspace() {
       return;
     }
 
-    if (!candidateResults.some((candidate) => candidate.plaintextPreview)) {
+    if (!shouldUseAiLanguageDecision(candidateResults, currentModule)) {
       promoteLocalResults(candidateResults, currentModule, currentArtifact);
       setAiStatus("idle");
-      appendLog("AI", "Gemini language decision skipped for non-plaintext artifact output.");
+      appendLog("AI", "Gemini language decision skipped for non-language artifact output.");
       return;
     }
 
@@ -1092,6 +1092,22 @@ function buildAttackHints(
     cribs,
     maxKeyLength: Math.max(1, Math.min(12, Math.floor(maxKeyLength || 6)))
   };
+}
+
+function shouldUseAiLanguageDecision(candidateResults: BreachResult[], currentModule: WorkerModule) {
+  if (currentModule === "asymmetric-rsa" || currentModule === "asymmetric-elgamal" || currentModule === "jwt-debugger") {
+    return false;
+  }
+
+  return candidateResults.some((candidate) => isLanguageCandidate(candidate));
+}
+
+function isLanguageCandidate(candidate: BreachResult) {
+  if (!candidate.plaintextPreview) {
+    return false;
+  }
+
+  return candidate.module.startsWith("classical-") || candidate.module === "transposition-columnar";
 }
 
 function applyAiDecision(review: AiRerankResponse, candidates: BreachResult[]): BreachResult[] {

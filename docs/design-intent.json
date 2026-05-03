@@ -53,6 +53,8 @@
       "Bypass defaults to ciphertext-only attack mode, with optional crib evidence separated into its own control state",
       "Autokey stays available as a sufficient coursework simulator instead of the whole product identity",
       "Gemini AI decision runs after local plaintext candidates and can accept, mark ambiguous, or reject the final plaintext promotion without claiming proof"
+      ,
+      "Toy RSA, toy ElGamal, and JWT findings skip Gemini language decision because they are structured audit outputs"
     ],
     "copiedReferenceAllowed": false
   },
@@ -83,6 +85,8 @@
       "Rejected plaintext candidates remain visible as reviewed candidates without being promoted as final results"
       ,
       "AI refinement attempts are labeled as unverified language guesses, not recovered plaintext"
+      ,
+      "Structured audit outputs are not sent to Gemini language scoring even when they expose a plaintextPreview display field"
     ],
     "blockingByDefault": true
   },
@@ -207,7 +211,7 @@
       "autokeySimulation": "two-action sender-observer-receiver lesson with CSS characters, Eve confusion, Bob reveal, reset, and formula rows from the active Autokey transform",
       "moduleSwitcher": "instrument selector with risk labels and input expectations",
       "findingRow": "ranked evidence row with confidence and key candidate",
-      "aiRerankPanel": "Gemini language decision support that accepts, marks ambiguous, rejects, or cautiously refines local plaintext candidates while keeping refinement labeled as an unverified language guess",
+      "aiRerankPanel": "Gemini language decision support that accepts, marks ambiguous, rejects, or cautiously refines local classical/transposition plaintext candidates while structured audit outputs stay local",
       "conclusionBand": "weakness, evidence, fix, and modern alternative"
     },
     "stateKeys": [

@@ -44,7 +44,7 @@
    - elapsed time
 12. The UI updates the terminal log while keeping final findings pending.
 13. The worker completes, fails safely, or is cancelled by the user.
-14. The UI sends only bounded local candidate summaries to `POST /api/ai-rerank` for Gemini language decision support when the candidates contain plaintext previews.
+14. The UI sends only bounded local candidate summaries to `POST /api/ai-rerank` for Gemini language decision support when the candidates are classical or transposition plaintext guesses.
 15. Gemini returns one of three decisions:
    - `accept`: promote the preferred local candidate as the final result.
    - `ambiguous`: promote the preferred candidate with reduced confidence and visible ambiguity.
@@ -57,7 +57,7 @@
    - evidence summary
    - security conclusion
    - recommended fix
-18. Non-plaintext outputs such as JWT decode or toy asymmetric audits bypass Gemini language decision and use the local result directly.
+18. Non-language outputs such as JWT decode or toy asymmetric audits bypass Gemini language decision and use the local result directly, even when the local result includes a field named `plaintextPreview`.
 
 Bypass is a multi-method concept. Auto Detect should not privilege Autokey over the rest of the suite unless the evidence supports it.
 
@@ -169,7 +169,7 @@ Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt pat
 ## Flow: Gemini Evidence Rerank
 
 1. The user runs a local Bypass analysis first.
-2. The UI gathers the top bounded candidates, including rank, module, key candidate, plaintext preview, confidence, fitness, and evidence.
+2. If the result family is classical or transposition, the UI gathers the top bounded candidates, including rank, module, key candidate, plaintext preview, confidence, fitness, and evidence.
 3. The UI sends those candidate summaries to `POST /api/ai-rerank`.
 4. The route reads Vertex AI service account credentials server-side and calls Gemini through `aiplatform.googleapis.com`.
 5. Gemini reviews language plausibility only; it does not decrypt, brute force, or prove correctness.
@@ -181,6 +181,8 @@ Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt pat
 8. Gemini may include a cautious language refinement attempt. If shown, it is labeled as an unverified AI guess and does not replace solver evidence.
 9. The AI summary stays beside the final finding with a caveat that ciphertext-only recovery may remain ambiguous.
 10. If service account credentials are missing, quota is exhausted, or the request fails, the local solver result remains usable and the UI falls back to local scoring.
+
+Toy RSA, toy ElGamal, and JWT outputs must skip this flow. Their output is structured audit data, not natural-language plaintext, so Gemini language plausibility would incorrectly reject valid local findings.
 
 ## Flow: JWT Debugger and Manipulator
 

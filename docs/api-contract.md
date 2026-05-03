@@ -174,7 +174,7 @@ Language model evidence is generated from local corpus assets documented in `doc
 
 ## AI Rerank Contract
 
-AI rerank runs after local solvers complete. The route accepts bounded candidate summaries:
+AI rerank runs after local classical or transposition solvers complete. The UI must not send JWT decode output, toy RSA findings, or toy ElGamal findings to this route for language scoring, even when those findings use `plaintextPreview` for display.
 
 ```ts
 type AiRerankRequest = {
