@@ -537,7 +537,7 @@
       "Text scoring uses documented self-authored English and Indonesian corpus assets in src/lib/crypto-analysis/language-corpora.ts and docs/corpus-assets.md",
       "Auto Detect now accepts strong Caesar and Reverse evidence early, then caps complex solver confidence on short artifacts to reduce false certainty",
       "Bypass Tool styling now uses explicit light learning surfaces for findings, history, terminal feed, meters, and spectrum bars",
-      "Gemini AI rerank uses POST /api/ai-rerank, keeps the API key server-side, and falls back to local scoring"
+      "Gemini AI rerank uses POST /api/ai-rerank, calls Vertex AI with server-side service account credentials, and falls back to local scoring"
     ]
   }
 }

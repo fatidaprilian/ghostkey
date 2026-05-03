@@ -20,7 +20,7 @@ Do not adopt unverified numeric claims as product truth. Indonesian IoC values, 
 - Keep known plaintext, cribs, and max key length behind an explicit optional crib attack mode.
 - Do not add a custom backend for artifact analysis. The only approved server route is Gemini candidate rerank; it is not a solver and must fall back to local scoring when unavailable.
 - Do not add WebAssembly, IndexedDB persistence, or new dependencies until there is a measured need and documented approval.
-- AI evidence rerank may use a server-side Gemini proxy, but it must not replace local solver evidence or confidence caps.
+- AI evidence rerank uses a server-side Gemini proxy through Vertex AI / Gemini Enterprise Agent Platform, but it must not replace local solver evidence or confidence caps.
 - Do not claim GhostKey can break modern cryptography.
 
 ## Supported Bypass Families

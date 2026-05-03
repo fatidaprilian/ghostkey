@@ -167,10 +167,10 @@ Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt pat
 1. The user runs a local Bypass analysis first.
 2. The UI gathers the top bounded candidates, including rank, module, key candidate, plaintext preview, confidence, fitness, and evidence.
 3. The UI sends those candidate summaries to `POST /api/ai-rerank`.
-4. The route reads `GEMINI_API_KEY` server-side and calls Gemini through the standard `generateContent` endpoint.
+4. The route reads Vertex AI service account credentials server-side and calls Gemini through `aiplatform.googleapis.com`.
 5. Gemini reviews language plausibility only; it does not decrypt, brute force, or prove correctness.
 6. The UI shows the AI summary beside the local findings with a caveat that ciphertext-only recovery may remain ambiguous.
-7. If the API key is missing, quota is exhausted, or the request fails, the local solver result remains usable and the UI falls back to local scoring.
+7. If service account credentials are missing, quota is exhausted, or the request fails, the local solver result remains usable and the UI falls back to local scoring.
 
 ## Flow: JWT Debugger and Manipulator
 

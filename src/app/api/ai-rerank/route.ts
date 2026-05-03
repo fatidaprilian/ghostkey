@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createSign } from "node:crypto";
 import type {
   AiCandidateReview,
   AiRerankApiResponse,
@@ -10,18 +11,15 @@ export const runtime = "nodejs";
 
 const maxCandidates = 6;
 const maxPlaintextPreviewLength = 420;
+const vertexScope = "https://www.googleapis.com/auth/cloud-platform";
+const tokenAudience = "https://oauth2.googleapis.com/token";
+
+let cachedAccessToken: {
+  token: string;
+  expiresAt: number;
+} | null = null;
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
-  const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
-
-  if (!apiKey) {
-    return jsonProblem(
-      "Gemini review is unavailable.",
-      "Local scoring remains active."
-    );
-  }
-
   let payload: AiRerankRequest;
   try {
     payload = normalizePayload(await request.json());
@@ -33,27 +31,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: buildPrompt(payload) }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            responseMimeType: "application/json"
-          }
-        })
-      }
-    );
+    const config = getGeminiConfig();
+    const response = await callGemini(config, payload);
 
     if (!response.ok) {
       return jsonProblem(
@@ -64,7 +43,7 @@ export async function POST(request: Request) {
 
     const generated = await response.json();
     const text = extractText(generated);
-    const parsed = normalizeModelResponse(JSON.parse(stripJsonFence(text)), model, payload);
+    const parsed = normalizeModelResponse(JSON.parse(stripJsonFence(text)), config.model, payload);
 
     return NextResponse.json({ ok: true, data: parsed } satisfies AiRerankApiResponse);
   } catch {
@@ -73,6 +52,187 @@ export async function POST(request: Request) {
       "Local scoring remains active."
     );
   }
+}
+
+type GeminiConfig =
+  | {
+      provider: "vertex";
+      project: string;
+      location: string;
+      model: string;
+      clientEmail: string;
+      privateKey: string;
+    }
+  | {
+      provider: "developer";
+      model: string;
+      apiKey: string;
+    };
+
+function getGeminiConfig(): GeminiConfig {
+  const provider = (process.env.GEMINI_PROVIDER ?? "vertex").toLowerCase();
+
+  if (provider === "developer") {
+    const apiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      throw new Error("Gemini review is unavailable.");
+    }
+
+    return {
+      provider: "developer",
+      model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+      apiKey
+    };
+  }
+
+  const serviceAccount = readServiceAccount();
+  return {
+    provider: "vertex",
+    project: process.env.GOOGLE_CLOUD_PROJECT ?? serviceAccount.project_id ?? "",
+    location: process.env.GOOGLE_CLOUD_LOCATION ?? "global",
+    model: process.env.GEMINI_MODEL ?? "gemini-3.1-pro-preview",
+    clientEmail: process.env.GOOGLE_CLIENT_EMAIL ?? serviceAccount.client_email ?? "",
+    privateKey: normalizePrivateKey(process.env.GOOGLE_PRIVATE_KEY ?? serviceAccount.private_key ?? "")
+  };
+}
+
+async function callGemini(config: GeminiConfig, payload: AiRerankRequest) {
+  const body = JSON.stringify({
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: buildPrompt(payload) }]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.1,
+      responseMimeType: "application/json"
+    }
+  });
+
+  if (config.provider === "developer") {
+    return fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.model)}:generateContent?key=${encodeURIComponent(config.apiKey)}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body
+      }
+    );
+  }
+
+  if (!config.project || !config.clientEmail || !config.privateKey) {
+    throw new Error("Vertex AI credentials are not configured.");
+  }
+
+  const token = await getVertexAccessToken(config.clientEmail, config.privateKey);
+  const host = config.location === "global"
+    ? "aiplatform.googleapis.com"
+    : `${config.location}-aiplatform.googleapis.com`;
+
+  return fetch(
+    `https://${host}/v1/projects/${encodeURIComponent(config.project)}/locations/${encodeURIComponent(config.location)}/publishers/google/models/${encodeURIComponent(config.model)}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body
+    }
+  );
+}
+
+function readServiceAccount() {
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!raw) {
+    return {} as Partial<{
+      project_id: string;
+      client_email: string;
+      private_key: string;
+    }>;
+  }
+
+  try {
+    return JSON.parse(raw) as Partial<{
+      project_id: string;
+      client_email: string;
+      private_key: string;
+    }>;
+  } catch {
+    return {};
+  }
+}
+
+async function getVertexAccessToken(clientEmail: string, privateKey: string) {
+  const now = Math.floor(Date.now() / 1000);
+  if (cachedAccessToken && cachedAccessToken.expiresAt > now + 60) {
+    return cachedAccessToken.token;
+  }
+
+  const assertion = signServiceAccountJwt(clientEmail, privateKey, now);
+  const response = await fetch(tokenAudience, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error("Vertex AI access token request failed.");
+  }
+
+  const token = await response.json() as {
+    access_token?: string;
+    expires_in?: number;
+  };
+
+  if (!token.access_token) {
+    throw new Error("Vertex AI access token response was empty.");
+  }
+
+  cachedAccessToken = {
+    token: token.access_token,
+    expiresAt: now + Math.max(60, token.expires_in ?? 3600)
+  };
+
+  return token.access_token;
+}
+
+function signServiceAccountJwt(clientEmail: string, privateKey: string, now: number) {
+  const header = base64UrlJson({
+    alg: "RS256",
+    typ: "JWT"
+  });
+  const claims = base64UrlJson({
+    iss: clientEmail,
+    scope: vertexScope,
+    aud: tokenAudience,
+    exp: now + 3600,
+    iat: now
+  });
+  const unsigned = `${header}.${claims}`;
+  const signature = createSign("RSA-SHA256").update(unsigned).sign(privateKey);
+
+  return `${unsigned}.${base64Url(signature)}`;
+}
+
+function base64UrlJson(value: unknown) {
+  return base64Url(Buffer.from(JSON.stringify(value), "utf8"));
+}
+
+function base64Url(value: Buffer) {
+  return value.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function normalizePrivateKey(value: string) {
+  return value.replace(/\\n/g, "\n");
 }
 
 function normalizePayload(raw: unknown): AiRerankRequest {

@@ -134,7 +134,7 @@ Do not implement a custom backend for core cryptanalysis in the MVP. Build Ghost
 
 Next.js is still the application framework and deployment target. In this decision, "no backend" means no application-owned API surface for processing user artifacts as solver input, no database, no auth service, no queue, and no server-side cracking jobs.
 
-The approved exception is `POST /api/ai-rerank`, a narrow server-side Gemini proxy. It receives bounded local solver candidate summaries, calls Gemini with a server-side API key, and returns language-plausibility review. It is not allowed to decrypt, brute force, persist artifacts, or replace local confidence caps. If Gemini is unavailable, the app must fall back to local scoring.
+The approved exception is `POST /api/ai-rerank`, a narrow server-side Gemini proxy. It receives bounded local solver candidate summaries, calls Gemini through Vertex AI / Gemini Enterprise Agent Platform with a server-side service account, and returns language-plausibility review. It is not allowed to decrypt, brute force, persist artifacts, or replace local confidence caps. If Gemini is unavailable, the app must fall back to local scoring.
 
 ### Rationale
 
@@ -144,7 +144,7 @@ This decision protects user privacy and keeps the first release focused. It also
 
 - Frontend and worker architecture rules are active for MVP implementation.
 - Backend rules stay as future guardrails for API, auth, persistence, and server job work.
-- The Gemini API key must stay in `.env.local` or deployment secrets and must never be exposed to client-side code.
+- Vertex AI service account credentials must stay in `.env.local` or deployment secrets and must never be exposed to client-side code.
 - Any future backend feature needs a new ADR or ADR update before implementation.
 - API docs describe worker contracts first and server routes only as optional future boundaries.
 

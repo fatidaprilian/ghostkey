@@ -26,7 +26,7 @@ The MVP should not expose a public HTTP attack API. Sending ciphertext, tokens, 
 
 If future server routes are added, use Next.js Route Handlers under `app/api/**/route.ts`, validate every request at the route boundary, and return safe problem responses.
 
-The current allowed route is `POST /api/ai-rerank`. It calls Gemini server-side using `GEMINI_API_KEY` and reviews local solver candidates for language plausibility. It must not receive full secrets, private keys, wordlists, or remote target data.
+The current allowed route is `POST /api/ai-rerank`. It calls Gemini through Vertex AI / Gemini Enterprise Agent Platform by default using a server-side service account and reviews local solver candidates for language plausibility. It must not receive full secrets, private keys, wordlists, or remote target data.
 
 ## Worker Request Contract
 
@@ -218,6 +218,22 @@ type AiRerankResponse = {
 
 AI rerank must never replace local confidence caps. The UI must label it as language-plausibility review, not proof of decryption. If Gemini is unavailable because of quota, network, malformed response, or missing server secret, the UI must silently preserve local scoring as the usable result.
 
+### Gemini Runtime Environment
+
+Production uses Vertex AI / Gemini Enterprise Agent Platform:
+
+```env
+GEMINI_PROVIDER=vertex
+GOOGLE_CLOUD_PROJECT=astute-surge-416622
+GOOGLE_CLOUD_LOCATION=global
+GEMINI_MODEL=gemini-3.1-pro-preview
+GOOGLE_SERVICE_ACCOUNT_JSON={...}
+```
+
+The service account needs permission to call Vertex AI generative models, such as the Vertex AI User role for the project. `GOOGLE_SERVICE_ACCOUNT_JSON` must live in Vercel environment variables or `.env.local`; it must never be committed.
+
+The route keeps a compatibility path for `GEMINI_PROVIDER=developer`, but production should use Vertex AI rather than the Google AI Studio API-key endpoint.
+
 ## Error Contract
 
 ```ts
@@ -300,7 +316,7 @@ History must be clearable and must not require login, cookies, or a database.
 - Use synthetic demo tokens and keys only.
 - Do not include remote attack automation.
 - Do not frame Bypass as bypassing real accounts, authentication, CAPTCHA, payment, access control, or live systems.
-- Keep Gemini API keys server-side. Do not expose them in client bundles, logs, screenshots, docs, or committed env files.
+- Keep Vertex service account credentials server-side. Do not expose them in client bundles, logs, screenshots, docs, or committed env files.
 
 ## Official Research Notes
 
@@ -309,8 +325,8 @@ Fetched on 2026-04-27.
 - Next.js Route Handlers use Web Request and Response APIs: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
 - RFC 7519 defines JWT as a compact claims format carried as JSON Web Signature or JSON Web Encryption data: https://www.rfc-editor.org/rfc/rfc7519
 - OWASP documents `none` algorithm and weak HMAC secret risks for JWT implementations: https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
-- Gemini API key docs warn not to commit API keys or expose them in client-side code: https://ai.google.dev/gemini-api/docs/api-key
-- Gemini `generateContent` is the standard REST endpoint used by the AI rerank proxy: https://ai.google.dev/api
+- Vertex AI authentication uses Google Cloud credentials such as service accounts: https://cloud.google.com/vertex-ai/docs/authentication
+- Vertex AI Gemini calls use `aiplatform.googleapis.com` model endpoints: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference
 
 ## Next Validation Action
 

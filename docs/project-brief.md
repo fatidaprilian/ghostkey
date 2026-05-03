@@ -79,7 +79,7 @@ The default module should be Auto Detect. A user should not need to know whether
 
 Gemini integration runs by default after local solvers generate candidates. It may judge language plausibility, estimate language, explain ambiguity, and suggest whether confidence should stay conservative. It must not replace IoC, frequency analysis, key search, confidence caps, or solver evidence. If Gemini is unavailable because of quota, network, or missing deployment secret, GhostKey falls back to local scoring without blocking results.
 
-The browser must never contain the Gemini API key. Local development uses `.env.local`; production deployments must keep the key server-side. The AI route should receive only bounded candidate summaries and plaintext previews from local solver output, not full JWT secrets, private keys, wordlists, or remote target data.
+The browser must never contain Gemini credentials. Local development uses `.env.local`; production deployments must keep the Vertex AI service account JSON server-side in Vercel environment variables. The AI route should receive only bounded candidate summaries and plaintext previews from local solver output, not full JWT secrets, private keys, wordlists, or remote target data.
 
 ### Autokey Coursework Lab
 
