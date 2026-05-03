@@ -1,5 +1,15 @@
 import type { BreachResult } from "@/lib/worker-contracts";
 import { analyzeTextFitness, type TextMetrics } from "@/lib/crypto-analysis/text-metrics";
+import {
+  capConfidence,
+  confidenceLimitEvidence
+} from "@/lib/crypto-analysis/confidence-caps";
+import {
+  chiSquareEvidenceSignal,
+  confidenceCapEvidenceSignal,
+  iocEvidenceSignal,
+  languageEvidenceSignal
+} from "@/lib/crypto-analysis/evidence-builder";
 
 export type CaesarCandidate = {
   shift: number;
@@ -25,7 +35,8 @@ export function solveCaesar(ciphertext: string): CaesarCandidate[] {
 }
 
 export function toCaesarResult(candidate: CaesarCandidate): BreachResult {
-  const confidence = Math.max(0.08, Math.min(0.98, candidate.fitness / 26));
+  const rawConfidence = Math.max(0.08, Math.min(0.98, candidate.fitness / 26));
+  const confidence = capConfidence("classical-caesar", rawConfidence, candidate.metrics.letterCount);
 
   return {
     rank: 1,
@@ -38,7 +49,14 @@ export function toCaesarResult(candidate: CaesarCandidate): BreachResult {
       "All 26 Caesar shifts were tested locally.",
       `Index of Coincidence: ${candidate.metrics.indexOfCoincidence.toFixed(3)}.`,
       `Frequency chi-square: ${candidate.metrics.chiSquare.toFixed(2)}.`,
-      `Detected language hint: ${candidate.metrics.language}.`
+      `Detected language hint: ${candidate.metrics.language}.`,
+      ...confidenceLimitEvidence("classical-caesar", candidate.metrics.letterCount, rawConfidence)
+    ],
+    evidenceSignals: [
+      iocEvidenceSignal(candidate.metrics.indexOfCoincidence),
+      chiSquareEvidenceSignal(candidate.metrics.chiSquare),
+      languageEvidenceSignal(candidate.metrics.language, candidate.metrics.languageConfidence),
+      confidenceCapEvidenceSignal("classical-caesar", candidate.metrics.letterCount, rawConfidence)
     ],
     conclusion: {
       whyWeak: "Caesar is weak because the entire keyspace has only 26 shifts.",

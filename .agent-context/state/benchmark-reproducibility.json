@@ -59,12 +59,12 @@
       "inputReferences": [
         "scripts/release-gate.mjs",
         "scripts/benchmark-intelligence.mjs",
-        ".agent-context/state/benchmark-watchlist.json"
+        "scripts/benchmark-gate.mjs"
       ],
       "expectedSignals": [
         "release readiness",
-        "competitive coverage",
-        "SLA freshness"
+        "static external watchlist retirement",
+        "no stale benchmark research dependency"
       ],
       "primaryCommand": "npm run benchmark:intelligence"
     }
@@ -72,7 +72,7 @@
   "rerunInstructions": [
     "Run npm run benchmark:detection to regenerate detection benchmark output.",
     "Run npm run benchmark:gate to validate benchmark anti-regression thresholds.",
-    "Run npm run benchmark:intelligence to validate benchmark watchlist freshness.",
+    "Run npm run benchmark:intelligence to confirm static external benchmark watchlists stay retired.",
     "Run npm run benchmark:bundle to emit a reproducible benchmark evidence bundle.",
     "Run npm run benchmark:writer-judge to emit writer-judge side-by-side matrix output."
   ],

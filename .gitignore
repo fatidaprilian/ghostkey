@@ -3,10 +3,13 @@ node_modules/
 out/
 dist/
 coverage/
+.ghostkey-test-build/
 
 .env
+.env.local
 .env.*
 !.env.example
+!.env.local.example
 
 .agentic-backup/
 

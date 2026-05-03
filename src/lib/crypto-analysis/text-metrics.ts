@@ -1,4 +1,5 @@
 import { languageCorpora, type LanguageCode } from "@/lib/crypto-analysis/language-corpora";
+import { moduleComplexityPenalty } from "@/lib/crypto-analysis/confidence-caps";
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz";
 const naturalIocByLanguage: Record<LanguageCode, number> = {
@@ -275,30 +276,6 @@ function calculateModelConfidence(bestScore: number, secondScore: number) {
   const spread = Math.abs(bestScore - secondScore);
   const scale = Math.max(8, Math.abs(bestScore), Math.abs(secondScore));
   return Math.min(1, spread / scale);
-}
-
-function moduleComplexityPenalty(module: string, letterCount: number) {
-  const shortTextPenalty = letterCount < 28 ? (28 - letterCount) / 8 : 0;
-  const complexShortTextPenalty =
-    letterCount < 18 &&
-    [
-      "classical-autokey",
-      "classical-vigenere",
-      "classical-substitution",
-      "transposition-columnar"
-    ].includes(module)
-      ? (18 - letterCount) * 1.2 + 4
-      : 0;
-  const complexityByModule: Record<string, number> = {
-    "classical-caesar": 0,
-    "classical-reverse": 0.35,
-    "classical-vigenere": 1.2,
-    "classical-autokey": 1.8,
-    "classical-substitution": 2.4,
-    "transposition-columnar": 1.6
-  };
-
-  return (complexityByModule[module] ?? 0.8) + shortTextPenalty + complexShortTextPenalty;
 }
 
 function normalizeDisplayText(value: string) {

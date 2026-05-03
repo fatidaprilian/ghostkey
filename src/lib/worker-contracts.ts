@@ -53,6 +53,15 @@ export type ProgressData = {
   message: string;
 };
 
+export type EvidenceSignal = {
+  signalName: string;
+  observedValue: string;
+  expectedRange: string;
+  interpretation: string;
+  weight: number;
+  trustLevel: "high" | "medium" | "low";
+};
+
 export type BreachResult = {
   rank: number;
   module: string;
@@ -64,6 +73,7 @@ export type BreachResult = {
   confidence: number;
   fitnessScore?: number;
   evidence: string[];
+  evidenceSignals?: EvidenceSignal[];
   conclusion: {
     whyWeak: string;
     howToFix: string;

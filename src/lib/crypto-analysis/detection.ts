@@ -1,7 +1,11 @@
 import type { BreachResult, WorkerModule } from "@/lib/worker-contracts";
-import { solveCaesar, toCaesarResult } from "@/lib/crypto-analysis/caesar";
-import { estimateVigenereKeyLengths, analyzeTextFitness } from "@/lib/crypto-analysis/text-metrics";
+import { toCaesarResult } from "@/lib/crypto-analysis/caesar";
 import { analyzeJwt } from "@/lib/crypto-analysis/jwt";
+import {
+  confidenceCapEvidenceSignal,
+  iocEvidenceSignal
+} from "@/lib/crypto-analysis/evidence-builder";
+import { analyzeClassicalFamilies } from "@/lib/crypto-analysis/family-scorer";
 
 export type DetectionFinding = {
   module: WorkerModule;
@@ -35,57 +39,9 @@ export function detectArtifact(artifact: string): {
     };
   }
 
-  const caesarCandidates = solveCaesar(artifact);
-  const bestCaesar = caesarCandidates[0];
-  const sourceMetrics = analyzeTextFitness(artifact);
-  const keyLengthEstimates = estimateVigenereKeyLengths(artifact, 12);
-  const bestKeyLength = keyLengthEstimates[0];
-  const caesarGap = bestCaesar.fitness - (caesarCandidates[1]?.fitness ?? 0);
-  const caesarConfidence = Math.max(0.1, Math.min(0.94, (bestCaesar.fitness + caesarGap) / 32));
-  const periodicConfidence =
-    sourceMetrics.letterCount < 24
-      ? 0.24
-      : Math.max(0.2, Math.min(0.78, 1 - bestKeyLength.distanceFromNaturalLanguage * 16));
-  const autokeyConfidence =
-    sourceMetrics.letterCount < 36
-      ? 0.18
-      : Math.max(0.16, Math.min(0.62, periodicConfidence - 0.12));
-
-  const findings: DetectionFinding[] = [
-    {
-      module: "classical-caesar",
-      confidence: caesarConfidence,
-      reason: `Best Caesar shift has fitness ${bestCaesar.fitness.toFixed(2)} with gap ${caesarGap.toFixed(2)}.`
-    },
-    {
-      module: "classical-reverse",
-      confidence: 0.22,
-      reason: "Reverse is cheap to test and can be scored as a low-complexity candidate."
-    },
-    {
-      module: "classical-vigenere",
-      confidence: periodicConfidence,
-      reason: `Best periodic key-length hint is ${bestKeyLength.keyLength} with average IoC ${bestKeyLength.averageIoc.toFixed(3)}.`
-    },
-    {
-      module: "classical-autokey",
-      confidence: autokeyConfidence,
-      reason: "Autokey remains a candidate when natural-language signal exists but periodic evidence is weaker."
-    },
-    {
-      module: "classical-substitution",
-      confidence: sourceMetrics.letterCount < 36 ? 0.2 : 0.38,
-      reason: "Monoalphabetic substitution is considered when text is long enough for frequency leakage."
-    },
-    {
-      module: "transposition-columnar",
-      confidence: sourceMetrics.letterCount < 24 ? 0.18 : 0.34,
-      reason: "Columnar transposition is considered because it preserves letter frequency."
-    }
-  ];
-
-  findings.sort((left, right) => right.confidence - left.confidence);
-
+  const analysis = analyzeClassicalFamilies(artifact);
+  const { findings, sourceMetrics } = analysis;
+  const bestCaesar = analysis.caesarCandidates[0];
   const caesarResult = toCaesarResult(bestCaesar);
   const detectionSummary: BreachResult = {
     rank: 1,
@@ -98,6 +54,10 @@ export function detectArtifact(artifact: string): {
       `Source IoC: ${sourceMetrics.indexOfCoincidence.toFixed(3)}.`,
       `Best family: ${findings[0].module}.`,
       ...findings.map((finding) => `${finding.module}: ${Math.round(finding.confidence * 100)}% - ${finding.reason}`)
+    ],
+    evidenceSignals: [
+      iocEvidenceSignal(sourceMetrics.indexOfCoincidence),
+      confidenceCapEvidenceSignal(findings[0].module, sourceMetrics.letterCount, findings[0].confidence)
     ],
     conclusion: {
       whyWeak:

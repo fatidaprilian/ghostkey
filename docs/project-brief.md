@@ -2,17 +2,17 @@
 
 ## Product Summary
 
-GhostKey is a web-based cryptanalysis dashboard for education and defensive security learning. The first product name for the main suite is **The BreachEngine Suite**. It helps students and security learners test weak or classical cryptography through controlled local analysis.
+GhostKey is a web-based cryptanalysis dashboard for education and defensive security learning. The first product name for the main suite is **The BreachEngine Suite**. The product direction is now a multi-method **Bypass Tool** first: users paste an artifact, run local ciphertext-only analysis by default, and inspect ranked evidence across weak classical ciphers, toy asymmetric examples, and JWT checks.
 
-The product must explain what it is doing while it works. A user should see the suspected cipher, the attack method, the candidate key, the confidence score, and the security lesson behind the result.
+The product must explain what it is doing while it works. A user should see the suspected method family, the attack path, the candidate key or weak parameter, the confidence estimate, and the security lesson behind the result.
 
 ## Confirmed Facts
 
 - Project name: GhostKey.
 - Product suite name: The BreachEngine Suite.
-- Primary goal: build a friendly web learning lab for Autokey Cipher plus an advanced local cryptanalysis showcase.
+- Primary goal: build a friendly local Bypass Tool for multiple weak cryptography methods, with Autokey Cipher simulation retained as the coursework support path.
 - Required stack from the user brief: Next.js with React, Tailwind CSS, Vercel deployment, and Web Workers for heavy algorithms.
-- Required experience: friendly classroom-first Autokey UI, readable formula simulation, character-based message flow, and a separate evidence-focused Bypass Tool.
+- Required experience: evidence-focused Bypass Tool as the main product concept, plus a compact friendly Autokey UI with readable formula simulation and character-based message flow for coursework explanation.
 - Required attack modules:
   - Classical Breach Engine for Caesar, monoalphabetic substitution, Vigenere, and Autokey ciphers.
   - Transposition Solver for columnar transposition.
@@ -24,8 +24,8 @@ The product must explain what it is doing while it works. A user should see the 
   - Index of Coincidence analysis for language and cipher hints.
   - Meta-ranking across solver outputs so Auto Detect chooses by recovered plaintext quality, not by a fixed algorithm priority.
 - Current implementation evidence: the repo now contains a Next.js application scaffold, TypeScript cryptanalysis modules, worker contracts, and an MVP Breach Workspace.
-- Coursework safety requirement: GhostKey must keep correct Autokey Cipher encryption and decryption with a user-provided key as a first-class path while Bypass Tool demonstrates bounded ciphertext-only attacks against classroom-sized weak algorithms.
-- Current product direction: GhostKey is a hybrid cryptography platform. It implements the required Autokey Cipher curriculum path and also provides a local automated cryptanalysis engine for dynamic classroom demos.
+- Coursework safety requirement: GhostKey must keep correct Autokey Cipher encryption and decryption with a user-provided key as an available simulator while Bypass Tool becomes the primary concept for bounded ciphertext-only attacks against classroom-sized weak algorithms.
+- Current product direction: GhostKey is a multi-method local bypass suite. It keeps the required Autokey Cipher curriculum path, but the product identity should emphasize dynamic analysis across all supported weak methods rather than centering one cipher.
 
 ## User Outcomes
 
@@ -36,6 +36,7 @@ The product must explain what it is doing while it works. A user should see the 
 5. A learner can test a JWT against a small local wordlist to show why weak secrets fail.
 6. A learner receives a conclusion that answers "Why is this weak?" and "How do I fix it?"
 7. A learner can keep a small browser-local run history without accounts, login, or server persistence.
+8. A learner can optionally ask Gemini to review local solver candidates for language plausibility without replacing the cryptographic evidence.
 
 ## Non-Goals
 
@@ -44,6 +45,7 @@ The product must explain what it is doing while it works. A user should see the 
 - GhostKey must not ship large public cracking wordlists by default.
 - GhostKey must not claim to break modern cryptography such as AES, Ed25519, or properly sized RSA keys.
 - GhostKey must not send user-provided tokens, ciphertext, secrets, or wordlists to third-party services.
+- GhostKey must not treat AI output as proof that ciphertext-only recovery is correct.
 
 ## Ethical and Safety Boundary
 
@@ -67,11 +69,17 @@ Needs a fast way to explain why classical ciphers, weak RSA examples, and weak J
 
 ## Feature Scope for MVP
 
-### Breach Workspace
+### Multi-Method Bypass Workspace
 
-The main workspace accepts an input artifact, selects an attack module, and streams progress events into a terminal-style log. It returns ranked findings with candidate plaintext, key material when found, confidence score, and reasoning.
+The main workspace accepts an input artifact, selects an attack module, and streams progress events into a terminal-style log. It returns ranked findings with candidate plaintext, key material, weak parameters, decoded JWT structure, confidence estimate, and reasoning.
 
-The default module should be Auto Detect. A user should not need to know whether an artifact is Caesar, Reverse, Monoalphabetic, Column, Vigenere, Autokey, RSA, ElGamal, or JWT before starting. Manual module selection remains useful for demos and controlled labs.
+The default module should be Auto Detect. A user should not need to know whether an artifact is Caesar, Reverse, Monoalphabetic, Column, Vigenere, Autokey, RSA, ElGamal, or JWT before starting. Manual module selection remains useful for demos and controlled labs, but the product should communicate that every supported module is part of the Bypass concept.
+
+### Optional AI Evidence Rerank
+
+Gemini integration is allowed only as an optional review layer after local solvers generate candidates. It may judge language plausibility, estimate language, explain ambiguity, and suggest whether confidence should stay conservative. It must not replace IoC, frequency analysis, key search, confidence caps, or solver evidence.
+
+The browser must never contain the Gemini API key. Local development uses `.env.local`; production deployments must keep the key server-side. The AI route should receive only bounded candidate summaries and plaintext previews from local solver output, not full JWT secrets, private keys, wordlists, or remote target data.
 
 ### Autokey Coursework Lab
 
@@ -86,7 +94,7 @@ The mandatory classroom path must support:
 - showing Eve's confusion after encryption because the observed ciphertext is unreadable
 - revealing Bob's message only after decryption
 
-This path is the grading-safe foundation. Bypass Tool is the deeper showcase layered beside it.
+This path is the grading-safe simulator. It is sufficient for the Autokey coursework requirement and should not crowd out the broader Bypass Tool concept.
 
 ### Classical Breach Engine
 
@@ -123,19 +131,19 @@ The first implementation should support:
 
 ## Content and Language Scope
 
-The first scoring models must support English and Indonesian. The MVP now uses a larger local corpus pack to build n-gram models at runtime in the browser worker. Production-grade accuracy should still move these into documented, licensed model assets and may add a browser-compatible language detector.
+The first scoring models must support English and Indonesian. The MVP uses documented, self-authored local corpus assets to build n-gram models at runtime in the browser worker. Production-grade accuracy should still move to larger externally sourced model assets only after redistribution license review, attribution requirements, and browser-worker impact are documented.
 
 ## Runtime Recommendation
 
-Use a single Next.js application with the App Router. Keep cryptanalysis engines as pure TypeScript modules and run heavy search tasks in browser Web Workers. Use route handlers only for lightweight utility endpoints or future saved-lab features. This keeps sensitive material local for the MVP and fits Vercel's deployment model.
+Use a single Next.js application with the App Router. Keep cryptanalysis engines as pure TypeScript modules and run heavy search tasks in browser Web Workers. Use route handlers only for lightweight utility endpoints, optional Gemini evidence rerank, or future saved-lab features. This keeps core cryptographic analysis local for the MVP and fits Vercel's deployment model.
 
 ## Backend Scope Decision
 
-Do not build a custom backend for the MVP.
+Do not build a custom backend for core cryptanalysis in the MVP.
 
 GhostKey should start as a frontend-heavy Next.js application. The browser owns the active breach workflow, and Web Workers own expensive cryptanalysis jobs. This means ciphertext, JWTs, candidate secrets, and local wordlists stay on the user's device by default.
 
-Next.js may still provide the application shell, static assets, and deployment runtime. That does not mean GhostKey needs application backend features such as database writes, authentication, server-side cracking jobs, queues, or remote analysis endpoints in the first release.
+Next.js may still provide the application shell, static assets, deployment runtime, and a narrow optional Gemini rerank proxy. That does not mean GhostKey needs application backend features such as database writes, authentication, server-side cracking jobs, queues, or remote analysis endpoints in the first release.
 
 Backend rules remain useful as guardrails, not as implementation scope. They become active only if a future feature adds one of these needs:
 
@@ -145,6 +153,7 @@ Backend rules remain useful as guardrails, not as implementation scope. They bec
 - report export that must be stored or shared
 - external integrations
 - API endpoints that process user artifacts
+- AI review features that send candidate summaries to a third-party model
 
 ## Database Recommendation
 
@@ -170,10 +179,11 @@ Fetched on 2026-04-27.
 
 - The project is for coursework or a controlled demo, not a production security product.
 - The user wants English formal docs even though the brief is in Indonesian, because local governance requires English by default.
-- Indonesian quadgram data will need a documented corpus source before it is treated as reliable.
+- Indonesian quadgram data remains educational because the current corpus is self-authored and small. Treat it as a local scoring aid, not authoritative language statistics.
 - Vercel is the target deploy platform, but the first algorithm-heavy tasks should run in the browser to avoid serverless time and resource limits.
 - The practical project story should present Autokey correctness first, then explain automated cryptanalysis as a bounded classroom attack suite for weak/toy algorithms.
+- Gemini AI rerank can improve multilingual plausibility review, but it remains optional and cannot prove the original plaintext when ciphertext evidence is insufficient.
 
 ## Next Validation Action
 
-Proceed with the MVP boundary: local-first Next.js dashboard, no custom backend, no database, no auth, browser Web Workers for heavy analysis, and API route handlers only for future extension points.
+Proceed with the MVP boundary: local-first Next.js dashboard, no custom backend for cryptanalysis, no database, no auth, browser Web Workers for heavy analysis, and a narrow optional Gemini rerank route only for candidate language review.

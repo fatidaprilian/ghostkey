@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { decryptAutokey, encryptAutokey } from "@/lib/crypto-analysis/autokey";
+import type { AiRerankApiResponse, AiRerankResponse } from "@/lib/ai-rerank-contracts";
 import type {
   BreachResult,
   ClassicalAttackHints,
@@ -34,6 +35,7 @@ type WorkspaceMode = "autokey" | "breach";
 type AutokeyScene = "idle" | "encrypted" | "decrypted";
 type JobStatus = "idle" | "running" | "complete" | "error";
 type AttackEvidenceMode = "ciphertext-only" | "crib-assisted";
+type AiAssistStatus = "idle" | "running" | "complete" | "error";
 
 type TerminalLine = {
   id: string;
@@ -82,7 +84,7 @@ const moduleOptions: Array<{
   },
   {
     id: "classical-autokey",
-    label: "Autokey Breach",
+    label: "Autokey",
     risk: "seed search",
     ready: true
   },
@@ -120,7 +122,7 @@ const moduleOptions: Array<{
 
 export function BreachWorkspace() {
   const workerRef = useRef<Worker | null>(null);
-  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("autokey");
+  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("breach");
   const [autokeyScene, setAutokeyScene] = useState<AutokeyScene>("idle");
   const [autokeyInput, setAutokeyInput] = useState(sampleAutokeyPlain);
   const [autokeyKey, setAutokeyKey] = useState(sampleAutokeyKey);
@@ -132,8 +134,12 @@ export function BreachWorkspace() {
   const [cribText, setCribText] = useState("");
   const [maxKeyLength, setMaxKeyLength] = useState(6);
   const [status, setStatus] = useState<JobStatus>("idle");
+  const [aiAssistEnabled, setAiAssistEnabled] = useState(false);
+  const [aiStatus, setAiStatus] = useState<AiAssistStatus>("idle");
+  const [aiReview, setAiReview] = useState<AiRerankResponse | null>(null);
+  const [aiProblem, setAiProblem] = useState<string | null>(null);
   const [logs, setLogs] = useState<TerminalLine[]>([
-    makeLog("SYSTEM", "Workspace armed. Autokey lab is the primary coursework path.")
+    makeLog("SYSTEM", "Bypass suite armed. Auto Detect can rank every local method.")
   ]);
   const [results, setResults] = useState<BreachResult[]>([]);
   const [problem, setProblem] = useState<string | null>(null);
@@ -224,7 +230,10 @@ export function BreachWorkspace() {
         setStatus("complete");
         setResults(completed.results);
         rememberRun(completed.results[0], module, artifact);
-        appendLog("COMPLETE", "Local breach analysis finished.");
+        appendLog("COMPLETE", "Local bypass analysis finished.");
+        if (aiAssistEnabled) {
+          void requestAiRerank(completed.results, module, artifact);
+        }
       }
 
       if (event.type === "job.failed") {
@@ -244,6 +253,9 @@ export function BreachWorkspace() {
     setStatus("running");
     setProblem(null);
     setResults([]);
+    setAiStatus("idle");
+    setAiReview(null);
+    setAiProblem(null);
     setLogs([makeLog("LOCAL", "Starting browser worker. Artifact stays on this device.")]);
 
     const worker = createWorker();
@@ -288,6 +300,9 @@ export function BreachWorkspace() {
     setMaxKeyLength(6);
     setResults([]);
     setProblem(null);
+    setAiStatus("idle");
+    setAiReview(null);
+    setAiProblem(null);
     setStatus("idle");
     setLogs([makeLog("MODULE", `${option.label} sample loaded.`)]);
   }
@@ -339,12 +354,71 @@ export function BreachWorkspace() {
     window.localStorage.removeItem(historyStorageKey);
   }
 
+  async function requestAiRerank(
+    candidateResults = results,
+    currentModule = module,
+    currentArtifact = artifact
+  ) {
+    if (candidateResults.length === 0) {
+      return;
+    }
+
+    setAiStatus("running");
+    setAiProblem(null);
+    appendLog("AI", "Submitting local candidates to Gemini for language plausibility review.");
+
+    try {
+      const response = await fetch("/api/ai-rerank", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          context: {
+            module: currentModule,
+            artifactLetterCount: countLatinLetters(currentArtifact),
+            candidateCount: candidateResults.length,
+            evidenceMode: "local-solver-candidates"
+          },
+          candidates: candidateResults.slice(0, 6).map((candidate) => ({
+            rank: candidate.rank,
+            module: candidate.module,
+            keyCandidate: candidate.keyCandidate,
+            plaintextPreview: candidate.plaintextPreview,
+            confidence: candidate.confidence,
+            fitnessScore: candidate.fitnessScore,
+            evidence: candidate.evidence
+          }))
+        })
+      });
+      const body = await response.json() as AiRerankApiResponse;
+
+      if (!body.ok) {
+        setAiStatus("error");
+        setAiProblem(`${body.problem.message} ${body.problem.recovery}`);
+        appendLog("AI", body.problem.message);
+        return;
+      }
+
+      setAiStatus("complete");
+      setAiReview(body.data);
+      appendLog("AI", `Gemini reviewed candidates. Preferred rank: ${body.data.bestRank}.`);
+    } catch {
+      setAiStatus("error");
+      setAiProblem("AI rerank failed. Keep the local solver result as the source of truth.");
+      appendLog("AI", "AI rerank request failed.");
+    }
+  }
+
   function switchWorkspaceMode(nextMode: WorkspaceMode) {
     setWorkspaceMode(nextMode);
     setProblem(null);
     if (nextMode === "breach") {
       setStatus("idle");
       setResults([]);
+      setAiStatus("idle");
+      setAiReview(null);
+      setAiProblem(null);
       setLogs([makeLog("READY", "Bypass Tool ready. Run a fresh local analysis when the artifact is set.")]);
     }
 
@@ -359,25 +433,16 @@ export function BreachWorkspace() {
         <header className="command-ribbon">
           <div>
             <p className="eyebrow">GhostKey // Cryptography Learning Lab</p>
-            <h1>Autokey Cipher Learning Studio</h1>
+            <h1>Multi-Method Bypass Suite</h1>
           </div>
           <div className="ribbon-readouts" aria-label="Project status">
-            <Readout label="Core" value="Autokey ready" tone="success" />
-            <Readout label="Mode" value="learning first" tone="info" />
-            <Readout label="Scope" value="no backend" tone="warning" />
+            <Readout label="Core" value="Bypass first" tone="success" />
+            <Readout label="Mode" value="multi-method" tone="info" />
+            <Readout label="Scope" value="local core" tone="warning" />
           </div>
         </header>
 
         <div className="mode-rail" role="tablist" aria-label="Workspace mode">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={workspaceMode === "autokey"}
-            onClick={() => switchWorkspaceMode("autokey")}
-            className={workspaceMode === "autokey" ? "is-active" : ""}
-          >
-            Autokey Cipher
-          </button>
           <button
             type="button"
             role="tab"
@@ -387,6 +452,15 @@ export function BreachWorkspace() {
           >
             Bypass Tool
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={workspaceMode === "autokey"}
+            onClick={() => switchWorkspaceMode("autokey")}
+            className={workspaceMode === "autokey" ? "is-active" : ""}
+          >
+            Autokey Simulator
+          </button>
         </div>
 
         <section key={workspaceMode} className={`workspace-grid workspace-${workspaceMode}`}>
@@ -394,7 +468,7 @@ export function BreachWorkspace() {
             <section className="instrument-panel autokey-panel" aria-labelledby="autokey-title">
             <div className="panel-heading">
               <div>
-                <p className="panel-kicker">interactive lesson</p>
+                <p className="panel-kicker">coursework simulator</p>
                 <h2 id="autokey-title">Alice &amp; Bob&apos;s Secret Message</h2>
               </div>
               <span className="lesson-status">{autokeyScene === "idle" ? "Ready" : autokeyScene}</span>
@@ -484,7 +558,7 @@ export function BreachWorkspace() {
                   tone="danger"
                   active={autokeyScene !== "idle"}
                   value={autokeyScene === "idle" ? "..." : autokeyLesson.encrypted?.text ?? ""}
-                  speech={autokeyScene === "idle" ? "..." : "😵 I only see random letters."}
+                  speech={autokeyScene === "idle" ? "..." : "I only see unreadable ciphertext."}
                 />
                 <div
                   className={`wire-line ${autokeyScene === "decrypted" ? "is-active" : ""}`}
@@ -525,8 +599,8 @@ export function BreachWorkspace() {
           <section className="instrument-panel breach-panel" aria-labelledby="breach-title">
             <div className="panel-heading">
               <div>
-                <p className="panel-kicker">automated showcase</p>
-                <h2 id="breach-title">Breach Console</h2>
+                <p className="panel-kicker">multi-method bypass</p>
+                <h2 id="breach-title">Bypass Bench</h2>
               </div>
               <StatusBadge status={status} />
             </div>
@@ -615,9 +689,22 @@ export function BreachWorkspace() {
               </div>
             ) : (
               <p className="ciphertext-only-note">
-                Real bypass mode. No key, plaintext, or cribs are supplied to the worker.
+                Default bypass mode. No key, plaintext, or cribs are supplied to the worker.
               </p>
             )}
+
+            <label className="ai-assist-toggle">
+              <input
+                type="checkbox"
+                checked={aiAssistEnabled}
+                onChange={(event) => setAiAssistEnabled(event.target.checked)}
+              />
+              <span>
+                <strong>Gemini AI Evidence Rerank</strong>
+                Review local solver candidates for language plausibility. Requires server-side
+                <code> GEMINI_API_KEY</code>.
+              </span>
+            </label>
 
             <div className="breach-actions">
               <button
@@ -626,7 +713,7 @@ export function BreachWorkspace() {
                 disabled={status === "running" || artifact.trim().length === 0}
                 className="primary-action"
               >
-                Run Breach
+                Run Bypass
               </button>
               <button
                 type="button"
@@ -689,7 +776,7 @@ export function BreachWorkspace() {
             {!activeResult ? (
               <div className="empty-state">
                 <span>Awaiting worker output</span>
-                <p>Auto Detect, Autokey breach, classical solvers, toy asymmetric auditors, and JWT checks are active.</p>
+                <p>Auto Detect, Caesar, Reverse, Vigenere, Autokey, Monoalphabetic, Column, toy RSA, toy ElGamal, and JWT checks are active.</p>
               </div>
             ) : (
               <div className="finding-stack">
@@ -724,6 +811,42 @@ export function BreachWorkspace() {
                     title="Modern alternative"
                     value={activeResult.conclusion.safeModernAlternative}
                   />
+                </div>
+                <div className="ai-review-panel">
+                  <div className="ai-review-heading">
+                    <span>AI evidence rerank</span>
+                    <button
+                      type="button"
+                      onClick={() => void requestAiRerank()}
+                      disabled={aiStatus === "running"}
+                    >
+                      {aiStatus === "running" ? "Reviewing" : "Review with Gemini"}
+                    </button>
+                  </div>
+                  {aiProblem ? <p className="ai-problem">{aiProblem}</p> : null}
+                  {aiReview ? (
+                    <div className="ai-review-body">
+                      <p>{aiReview.summary}</p>
+                      <small>{aiReview.caveat}</small>
+                      <div className="ai-review-list">
+                        {aiReview.reviews.slice(0, 3).map((review) => (
+                          <div key={`${review.candidateRank}-${review.languageEstimate}`}>
+                            <strong>
+                              Rank {review.candidateRank} - {Math.round(review.plausibilityScore * 100)}%
+                            </strong>
+                            <span>{review.languageEstimate} · {review.confidenceAdjustment}</span>
+                            <p>{review.explanation}</p>
+                            <small>{review.ambiguityWarning}</small>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p>
+                      Local solvers stay authoritative. Gemini only reviews candidate language
+                      plausibility after a result exists.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -906,6 +1029,10 @@ function buildAttackHints(
     cribs,
     maxKeyLength: Math.max(1, Math.min(12, Math.floor(maxKeyLength || 6)))
   };
+}
+
+function countLatinLetters(value: string) {
+  return value.replace(/[^a-z]/gi, "").length;
 }
 
 function Readout({

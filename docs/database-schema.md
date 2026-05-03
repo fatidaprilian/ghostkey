@@ -12,7 +12,7 @@ The first version is a local-first educational dashboard. It can run analysis in
 | --- | --- | --- | --- |
 | User input | ciphertext, JWT, numeric weak-key parameters | Browser memory only | Must not be logged or sent to a server by default. |
 | Candidate secrets | JWT dictionary entries | Browser memory only | User-provided or tiny synthetic demo list only. |
-| Scoring data | quadgram tables, language frequency tables | Static bundled assets | Must document source and language coverage. |
+| Scoring data | corpus-derived frequency and n-gram tables | Static bundled assets | Source and limitations documented in `docs/corpus-assets.md`. |
 | Demo fixtures | toy ciphers, toy JWTs, weak RSA examples | Static bundled assets | Must be synthetic and safe. |
 | Analysis result | plaintext candidates, confidence, explanation | Browser memory, optional local export | Export must be user-initiated. |
 | Local run history | module, artifact preview, confidence, timestamp | Browser `localStorage` only | Must be clearable and must not require login or server sync. |

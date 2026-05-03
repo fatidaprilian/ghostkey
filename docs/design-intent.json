@@ -6,10 +6,10 @@
     "suiteName": "The BreachEngine Suite",
     "domain": "fullstack educational cybersecurity product",
     "runtimeConstraint": "Next.js, React, Tailwind CSS, Vercel, browser Web Workers",
-    "architectureConstraint": "local-first single deployable until persistence or collaboration is approved"
+    "architectureConstraint": "local-first core with optional server-side Gemini candidate-rerank proxy"
   },
-  "designPhilosophy": "GhostKey should feel like a friendly cryptography learning web app first, with evidence-driven breach tooling second. The interface must teach Autokey visibly through characters, speech bubbles, formulas, and clear actions.",
-  "currentScopeDecision": "Autokey Cipher encrypt/decrypt is the grading-safe core and now owns an Encrypt & Send, Decrypt Message, and Reset Alice-Eve-Bob simulation. Bypass Tool is a bounded classroom attack suite for weak algorithms and toy asymmetric parameters. It must not claim to break modern cryptography.",
+  "designPhilosophy": "GhostKey should feel like a friendly multi-method cryptanalysis web app first, with the Autokey simulator available as the coursework support path. The interface must make Bypass evidence visible without becoming a forced hacker console.",
+  "currentScopeDecision": "Bypass Tool is now the primary product concept for Auto Detect, classical ciphers, toy asymmetric parameters, and JWT checks. Autokey Cipher encrypt/decrypt remains a sufficient grading-safe simulator with Encrypt & Send, Decrypt Message, Reset, Alice-Eve-Bob states, and formula rows.",
   "brandAdjectives": [
     "educational",
     "friendly",
@@ -26,13 +26,13 @@
   ],
   "visualDirection": {
     "conceptualAnchor": {
-      "name": "classroom-message-lab",
-      "anchorReference": "interactive classroom message lab",
-      "agentResearchMode": "user-requested-friendly-learning-redirection",
+      "name": "classroom-evidence-bench",
+      "anchorReference": "interactive classroom evidence bench",
+      "agentResearchMode": "user-requested-bypass-first-redirection",
       "sourceDomain": "educational interaction design",
-      "specificReferencePoint": "Alice sends a protected message, Eve sees unreadable ciphertext, and Bob reveals plaintext after decryption",
-      "rationale": "The Autokey coursework requirement needs a clear learning-first simulation before advanced breach tooling.",
-      "signatureMotion": "message handoff with Eve confusion and Bob reveal",
+      "specificReferencePoint": "A teacher demonstrates an unknown artifact by measuring signals, routing methods, and locking evidence to the strongest candidate",
+      "rationale": "The Bypass Tool must handle multiple weak methods without turning into generic dashboard chrome or offensive-console theater.",
+      "signatureMotion": "evidence lock-in with method, trace, confidence, and finding aligned to the current best candidate",
       "typographicDecision": "readable sans for lesson copy, monospaced text only for keys, ciphertext, formulas, scores, and logs",
       "visualRiskBudget": "high distinctiveness with strict readability and reduced-motion fallbacks",
       "motionRiskBudget": "medium-high motion for progress and state changes only",
@@ -43,29 +43,31 @@
       ]
     },
     "distinctiveMoves": [
-      "Autokey starts as a friendly lesson before Bypass Tool",
+      "Bypass Tool starts as the main multi-method bench",
       "Eve shows confusion after ciphertext interception",
       "Bob reveals plaintext only after decryption",
       "conclusion panels are split into weakness, evidence, fix, and modern alternative"
       ,
       "Bypass panels keep the same light learning palette instead of falling back to gray forensic boxes",
       "Short ciphertext produces capped confidence and caveats instead of overconfident magic",
-      "Bypass defaults to ciphertext-only attack mode, with optional crib evidence separated into its own control state"
+      "Bypass defaults to ciphertext-only attack mode, with optional crib evidence separated into its own control state",
+      "Autokey stays available as a sufficient coursework simulator instead of the whole product identity",
+      "Gemini AI review is optional and framed as candidate language plausibility, not decryption proof"
     ],
     "copiedReferenceAllowed": false
   },
   "derivedTokenLogic": {
-    "anchorReference": "interactive classroom message lab",
-    "colorDerivationSource": "Semantic colors derive from lesson roles: blue for Alice/learning controls, coral for Eve/interception, green for Bob/recovered message, amber for caveats, and ink for readable text.",
-    "spacingDerivationSource": "Spacing follows lesson-board clarity: roomy character panels, compact formulas, and task-first action grouping.",
+    "anchorReference": "interactive classroom evidence bench",
+    "colorDerivationSource": "Semantic colors derive from evidence roles: blue for active method and learning controls, coral for weak or intercepted artifacts, green for recovered or verified candidates, amber for caveats, and ink for readable text.",
+    "spacingDerivationSource": "Spacing follows evidence-bench clarity: input, method selector, trace, finding, and simulator controls stay grouped by task.",
     "typographyDerivationSource": "Readable sans supports classroom explanation; monospaced typography is reserved for keys, ciphertext, formulas, scores, hashes, and logs.",
-    "motionDerivationSource": "Motion derives from message handoff: encryption sends ciphertext toward Eve, decryption reveals Bob's message, and reduced motion replaces movement with state changes.",
-    "validationRule": "Every token must support classroom explanation, role clarity, local privacy, breach progress, or remediation clarity. Decorative tokens without product function are invalid."
+    "motionDerivationSource": "Motion derives from evidence lock-in: better candidates align method state, trace log, confidence, and findings; Autokey handoff remains a secondary simulator motion.",
+    "validationRule": "Every token must support method selection, classroom explanation, role clarity, local privacy, breach progress, or remediation clarity. Decorative tokens without product function are invalid."
   },
   "aiSafeUiAudit": {
     "status": "active",
-    "failureDefinition": "The UI fails if it becomes a forced hacker console, generic dashboard, equal card grid, or decorative page without classroom explanation behavior.",
-    "interchangeabilityTest": "If GhostKey can be renamed to a generic analytics dashboard or hacker-themed toy without changing composition, palette, character roles, and formula behavior, the design must be revised.",
+    "failureDefinition": "The UI fails if it becomes a forced hacker console, generic dashboard, equal card grid, or decorative page without multi-method evidence behavior.",
+    "interchangeabilityTest": "If GhostKey can be renamed to a generic analytics dashboard or hacker-themed toy without changing composition, palette, method evidence, confidence caveats, and simulator behavior, the design must be revised.",
     "requiredProductSpecificSignals": [
       "IoC and frequency measurement surfaces",
       "worker progress terminal with candidate keys and fitness scores",
@@ -74,7 +76,9 @@
       ,
       "short-artifact confidence caps for complex heuristic solvers",
       "light Bypass Tool panels, history rows, terminal feed, and finding blocks",
-      "ciphertext-only mode marker plus optional crib controls only when explicitly selected"
+      "ciphertext-only mode marker plus optional crib controls only when explicitly selected",
+      "multi-method Bypass roster visible as the main product surface",
+      "AI rerank caveat visible when Gemini reviews local candidates"
     ],
     "blockingByDefault": true
   },
@@ -177,7 +181,7 @@
   "motionSystem": {
     "allowMeaningfulMotion": true,
     "density": "medium-high",
-    "signature": "signal lock sweep",
+    "signature": "evidence lock-in sweep",
     "stateBehaviors": {
       "jobAccepted": "status rail arms",
       "progress": "terminal append and subtle module pulse",
@@ -199,6 +203,7 @@
       "autokeySimulation": "two-action sender-observer-receiver lesson with CSS characters, Eve confusion, Bob reveal, reset, and formula rows from the active Autokey transform",
       "moduleSwitcher": "instrument selector with risk labels and input expectations",
       "findingRow": "ranked evidence row with confidence and key candidate",
+      "aiRerankPanel": "optional Gemini language-plausibility review that stays secondary to local solver evidence",
       "conclusionBand": "weakness, evidence, fix, and modern alternative"
     },
     "stateKeys": [
@@ -252,16 +257,16 @@
   "designExecutionHandoff": {
     "version": "ui-handoff-v1",
     "status": "ready-for-implementation-after-user-approval",
-    "primaryExperienceGoal": "Run a controlled breach analysis, inspect live progress, and understand the weakness and fix.",
+    "primaryExperienceGoal": "Run a controlled multi-method Bypass analysis, inspect live progress, and understand the weakness and fix.",
     "surfacePlan": [
       {
-        "surfaceId": "autokey-lab",
-        "role": "mandatory coursework encryption and decryption path with visible keystream, Encrypt & Send, Decrypt Message, Reset, and sender-observer-receiver simulation",
+        "surfaceId": "artifact-input",
+        "role": "primary Bypass artifact entry",
         "priority": "highest"
       },
       {
-        "surfaceId": "artifact-input",
-        "role": "capture and validate user-provided artifact",
+        "surfaceId": "module-selector",
+        "role": "multi-method Bypass roster and Auto Detect entry",
         "priority": "high"
       },
       {
@@ -278,6 +283,11 @@
         "surfaceId": "security-conclusion",
         "role": "teach weakness and remediation",
         "priority": "high"
+      },
+      {
+        "surfaceId": "autokey-lab",
+        "role": "coursework encryption and decryption simulator with visible keystream, Encrypt & Send, Decrypt Message, Reset, and sender-observer-receiver simulation",
+        "priority": "medium"
       }
     ],
     "componentGraph": {
@@ -300,19 +310,19 @@
     },
     "contentPriorityMap": {
       "primary": [
-        "Autokey encrypt/decrypt",
-        "Autokey key",
-        "generated keystream",
-        "Autokey interactive formula simulation",
         "class algorithm roster",
         "input artifact",
-        "run breach",
+        "run bypass",
         "current worker status",
         "best finding",
         "security conclusion",
         "browser-local history"
       ],
       "secondary": [
+        "Autokey encrypt/decrypt",
+        "Autokey key",
+        "generated keystream",
+        "Autokey interactive formula simulation",
         "language detection",
         "IoC score",
         "fitness trace",
@@ -321,15 +331,15 @@
       "deferred": [
         "advanced limits",
         "export report",
-        "corpus details"
+        "external corpus replacement criteria"
       ]
     },
     "viewportMutationPlan": {
       "mobile": {
         "primaryOperation": "task-sequence-stack",
         "requiredSurfaceActions": [
-          "place Autokey controls before breach showcase",
-          "stack Autokey simulation below the active result",
+          "place Bypass input and run action first",
+          "keep Autokey simulator behind its tab",
           "place run action near input",
           "collapse advanced settings",
           "show latest status before full log"
@@ -406,7 +416,7 @@
       {
         "key": "contractFidelity",
         "blockingByDefault": true,
-        "question": "Do UI choices follow the classroom message lab anchor and local worker-flow contract?"
+        "question": "Do UI choices follow the classroom evidence bench anchor and local worker-flow contract?"
       },
       {
         "key": "accessibility",
@@ -426,9 +436,11 @@
       "spinner-instead-of-progress-evidence",
       "scale-only-responsive-layout",
       "conclusion-without-remediation"
+      ,
+      "ai-rerank-presented-as-proof"
     ],
     "validBoldSignals": [
-      "classroom-message-lab-layout",
+      "classroom-evidence-bench-layout",
       "measurement-based-color-roles",
       "Alice-Eve-Bob-role-clarity",
       "structured-terminal-events",
@@ -522,9 +534,10 @@
       "Caesar, JWT, and auto-detect MVP paths exist",
       "Classroom breach paths now target Caesar, Reverse, Monoalphabetic, Column, Vigenere, Autokey, RSA toy keys, and ElGamal toy groups",
       "Autokey coursework path includes a two-action sender-observer-receiver simulation with Eve confusion, Bob reveal, reset, and formula table",
-      "Text scoring uses a local English and Indonesian corpus pack in src/lib/crypto-analysis/language-corpora.ts",
+      "Text scoring uses documented self-authored English and Indonesian corpus assets in src/lib/crypto-analysis/language-corpora.ts and docs/corpus-assets.md",
       "Auto Detect now accepts strong Caesar and Reverse evidence early, then caps complex solver confidence on short artifacts to reduce false certainty",
-      "Bypass Tool styling now uses explicit light learning surfaces for findings, history, terminal feed, meters, and spectrum bars"
+      "Bypass Tool styling now uses explicit light learning surfaces for findings, history, terminal feed, meters, and spectrum bars",
+      "Optional Gemini AI rerank uses POST /api/ai-rerank and keeps the API key server-side"
     ]
   }
 }

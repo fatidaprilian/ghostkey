@@ -1,6 +1,6 @@
 {
-  "cliVersion": "3.0.40",
-  "generatedAt": "2026-04-30T11:54:15.887Z",
+  "cliVersion": "3.0.41",
+  "generatedAt": "2026-05-03T01:49:13.253Z",
   "operationMode": "upgrade",
   "selectedProfile": "balanced",
   "projectScope": {
@@ -33,7 +33,7 @@
     "agentDecisionRequired": true
   },
   "ciGuardrailsEnabled": true,
-  "setupDurationMs": 149,
+  "setupDurationMs": 127,
   "runtimeEnvironment": {
     "selected": "windows",
     "selectedLabel": "Windows",
@@ -199,7 +199,7 @@
       "tsconfig.json"
     ],
     "detectionTransparency": {
-      "declaredAt": "2026-04-30T11:54:15.791Z",
+      "declaredAt": "2026-05-03T01:49:13.178Z",
       "declarationType": "existing-project",
       "declarationShown": true,
       "detectionSummary": "This folder looks like Typescript with high confidence based on package.json, tsconfig.json. Confidence gap: 0.94.",
@@ -265,15 +265,15 @@
         }
       ],
       "frontendEvidenceMetrics": {
-        "scannedFileCount": 13,
-        "hardcodedColorCount": 48,
+        "scannedFileCount": 15,
+        "hardcodedColorCount": 119,
         "propDrillingCandidateCount": 0,
         "mediaQueryCount": 3,
         "tailwindBreakpointUsageCount": 0,
         "arbitraryBreakpointCount": 0,
         "uniqueMediaWidthCount": 2,
-        "structuredClassAttributeCount": 55,
-        "boundClassExpressionCount": 9,
+        "structuredClassAttributeCount": 84,
+        "boundClassExpressionCount": 15,
         "inlineStyleObjectCount": 2,
         "inlineStyleBindingCount": 0,
         "inlineStyleTokenBypassCount": 0
@@ -284,10 +284,10 @@
         "scanRootRelativePaths": [
           "src"
         ],
-        "scannedFileCount": 13,
+        "scannedFileCount": 15,
         "cssVariables": {
-          "definitionCount": 15,
-          "referenceCount": 65,
+          "definitionCount": 19,
+          "referenceCount": 83,
           "sampleNames": [
             "background",
             "surface-panel",
@@ -309,35 +309,35 @@
             "shadow": 0,
             "typography": 0,
             "motion": 0,
-            "other": 7
+            "other": 11
           }
         },
         "colors": {
-          "hardcodedCount": 48,
+          "hardcodedCount": 119,
           "kindCounts": {
-            "hex": 13,
-            "rgb": 35,
+            "hex": 37,
+            "rgb": 82,
             "hsl": 0,
             "oklch": 0,
             "other": 0
           },
           "sampleValues": [
-            "#040807",
-            "#09130f",
-            "#101c17",
-            "#020504",
-            "#62ff93",
-            "#ffc857",
-            "#ff5a67",
-            "#5ce1ff",
-            "#b8d8ca",
-            "#f4fff9",
-            "#94aa9f",
-            "#61776c"
+            "#f7fbff",
+            "#ffffff",
+            "#edf7ff",
+            "#168a5b",
+            "#c77810",
+            "#d84b4b",
+            "#2878c8",
+            "#607083",
+            "#1f2b3a",
+            "#5e6c7d",
+            "#8a98a9",
+            "rgba(40, 120, 200, 0.24)"
           ]
         },
         "spacing": {
-          "rawValueCount": 75,
+          "rawValueCount": 134,
           "sampleValues": [
             "100vh",
             "24px",
@@ -354,31 +354,46 @@
           ]
         },
         "radius": {
-          "rawValueCount": 13,
+          "rawValueCount": 30,
           "sampleValues": [
-            "8px",
-            "6px",
-            "999px"
+            "12px",
+            "999px",
+            "18px",
+            "14px",
+            "16px",
+            "7px",
+            "3px",
+            "10px",
+            "6px"
           ]
         },
         "shadow": {
-          "rawValueCount": 2,
+          "rawValueCount": 11,
           "sampleValues": [
-            "inset 0 1px 0 rgba(255, 255, 255, 0.04)",
-            "0 0 14px rgba(92, 225, 255, 0.28)"
+            "0 14px 40px rgba(31, 43, 58, 0.07)",
+            "0 12px 32px rgba(31, 43, 58, 0.08)",
+            "0 18px 50px rgba(31, 43, 58, 0.08)",
+            "inset 0 1px 0 rgba(31, 43, 58, 0.03)",
+            "0 12px 28px rgba(40, 120, 200, 0.18)",
+            "none",
+            "0 16px 36px rgba(31, 43, 58, 0.11)",
+            "inset 0 -2px 0 rgba(0, 0, 0, 0.12)",
+            "0 0 16px rgba(40, 120, 200, 0.32)",
+            "0 10px 24px rgba(31, 43, 58, 0.04)",
+            "0 6px 16px rgba(40, 120, 200, 0.16)"
           ]
         },
         "typography": {
           "fontFamilyCount": 1,
-          "fontSizeCount": 22,
-          "lineHeightCount": 10,
-          "letterSpacingCount": 4,
+          "fontSizeCount": 33,
+          "lineHeightCount": 13,
+          "letterSpacingCount": 5,
           "fontFamilySamples": [
-            "JetBrains Mono\","
+            "Inter,"
           ],
           "fontSizeSamples": [
             "11px",
-            "46px",
+            "42px",
             "10px",
             "13px",
             "12px",
@@ -387,24 +402,29 @@
             "32px"
           ],
           "lineHeightSamples": [
-            "0.98",
+            "1.05",
             "1.1",
             "1.7",
+            "1.5",
+            "1.45",
             "1.6",
+            "1.3",
             "1.35"
           ],
           "letterSpacingSamples": [
-            "0.18em",
+            "0.08em",
             "0.14em",
             "0.12em"
           ]
         },
         "motion": {
-          "transitionCount": 2,
-          "animationCount": 3,
-          "durationCount": 7,
+          "transitionCount": 3,
+          "animationCount": 5,
+          "durationCount": 13,
           "durationSamples": [
             "160ms",
+            "120ms",
+            "1.8s",
             "1.4s",
             "0.001ms"
           ]
@@ -420,31 +440,43 @@
             "eyebrow": 1,
             "ribbon": 1,
             "mode": 1,
-            "workspace": 1,
+            "workspace": 2,
             "instrument": 4,
-            "autokey": 2,
+            "autokey": 3,
             "panel": 8,
-            "segmented": 1,
-            "field": 3,
-            "key": 1,
+            "lesson": 1,
+            "field": 6,
+            "key": 3,
             "artifact": 2,
             "primary": 2,
             "ghost": 1,
+            "soft": 1,
             "result": 1,
             "slab": 1,
             "error": 1,
             "keystream": 1,
+            "simulation": 1,
+            "message": 1,
+            "wire": 2,
+            "${autokeyScene": 2,
+            "==": 1,
+            "\"idle\"": 1,
+            "?": 5,
+            "\"is": 6,
+            "\"\"}": 4,
+            "===": 2,
+            "\"decrypted\"": 1,
+            "formula": 11,
             "breach": 3,
             "module": 1,
+            "attack": 2,
+            "hint": 1,
+            "ciphertext": 1,
             "danger": 1,
             "spectrum": 2,
             "signal": 1,
             "${status": 1,
-            "===": 1,
             "\"running\"": 1,
-            "?": 1,
-            "\"is": 1,
-            "\"\"}": 1,
             "terminal": 3,
             "micro": 1,
             "findings": 1,
@@ -454,6 +486,10 @@
             "finding": 2,
             "conclusion": 1,
             "history": 3,
+            "participant": 2,
+            "${active": 2,
+            "speech": 1,
+            "person": 5,
             "readout": 2,
             "status": 2
           },
@@ -469,7 +505,7 @@
             "instrument",
             "autokey",
             "panel",
-            "segmented"
+            "lesson"
           ]
         },
         "componentInventory": {
@@ -485,8 +521,8 @@
         },
         "structuredInspection": {
           "mode": "attribute-aware-static-scan",
-          "classAttributeCount": 55,
-          "boundClassExpressionCount": 9,
+          "classAttributeCount": 84,
+          "boundClassExpressionCount": 15,
           "inlineStyleObjectCount": 2,
           "inlineStyleBindingCount": 0,
           "classAttributeSamples": [
@@ -496,11 +532,11 @@
             "eyebrow",
             "ribbon-readouts",
             "mode-rail",
-            "workspace-grid",
+            "workspace-grid workspace-${workspaceMode}",
             "instrument-panel autokey-panel",
             "panel-heading",
             "panel-kicker",
-            "segmented-control",
+            "lesson-status",
             "field-label"
           ],
           "inlineStyleSamples": [
@@ -515,31 +551,43 @@
             "eyebrow": 1,
             "ribbon": 1,
             "mode": 1,
-            "workspace": 1,
+            "workspace": 2,
             "instrument": 4,
-            "autokey": 2,
+            "autokey": 3,
             "panel": 8,
-            "segmented": 1,
-            "field": 3,
-            "key": 1,
+            "lesson": 1,
+            "field": 6,
+            "key": 3,
             "artifact": 2,
             "primary": 2,
             "ghost": 1,
+            "soft": 1,
             "result": 1,
             "slab": 1,
             "error": 1,
             "keystream": 1,
+            "simulation": 1,
+            "message": 1,
+            "wire": 2,
+            "${autokeyScene": 2,
+            "==": 1,
+            "\"idle\"": 1,
+            "?": 5,
+            "\"is": 6,
+            "\"\"}": 4,
+            "===": 2,
+            "\"decrypted\"": 1,
+            "formula": 11,
             "breach": 3,
             "module": 1,
+            "attack": 2,
+            "hint": 1,
+            "ciphertext": 1,
             "danger": 1,
             "spectrum": 2,
             "signal": 1,
             "${status": 1,
-            "===": 1,
             "\"running\"": 1,
-            "?": 1,
-            "\"is": 1,
-            "\"\"}": 1,
             "terminal": 3,
             "micro": 1,
             "findings": 1,
@@ -549,6 +597,10 @@
             "finding": 2,
             "conclusion": 1,
             "history": 3,
+            "participant": 2,
+            "${active": 2,
+            "speech": 1,
+            "person": 5,
             "readout": 2,
             "status": 2
           },
@@ -564,7 +616,7 @@
             "instrument",
             "autokey",
             "panel",
-            "segmented"
+            "lesson"
           ],
           "inlineTokenBypassSignals": {
             "hardcodedColorCount": 0,
@@ -575,10 +627,10 @@
           }
         },
         "tokenBypassSignals": {
-          "hardcodedColorCount": 48,
-          "rawSpacingCount": 75,
-          "rawRadiusCount": 13,
-          "rawShadowCount": 2,
+          "hardcodedColorCount": 119,
+          "rawSpacingCount": 134,
+          "rawRadiusCount": 30,
+          "rawShadowCount": 11,
           "inlineHardcodedColorCount": 0,
           "inlineRawSpacingCount": 0,
           "inlineRawRadiusCount": 0,

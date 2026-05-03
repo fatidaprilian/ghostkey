@@ -9,10 +9,21 @@ import {
 } from "@/lib/crypto-analysis/attack-hints";
 import { solveCaesar, toCaesarResult } from "@/lib/crypto-analysis/caesar";
 import {
+  capConfidence,
+  confidenceCeilingForLength,
+  confidenceLimitEvidence,
+  countLatinLetters
+} from "@/lib/crypto-analysis/confidence-caps";
+import {
   analyzeTextFitness,
   estimateVigenereKeyLengths,
   rankCandidateResults
 } from "@/lib/crypto-analysis/text-metrics";
+import {
+  confidenceCapEvidenceSignal,
+  fitnessEvidenceSignal
+} from "@/lib/crypto-analysis/evidence-builder";
+import { analyzeClassicalFamilies } from "@/lib/crypto-analysis/family-scorer";
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz";
 const frequencyOrder = "etaoinshrdlcumwfgypbvkjxqz";
@@ -70,10 +81,16 @@ export function solveClassicalModule(
 }
 
 export function solveAutoDetectClassical(artifact: string, attackHints?: ClassicalAttackHints): SolverOutput {
+  const familyAnalysis = analyzeClassicalFamilies(artifact);
   const cheapModules: WorkerModule[] = ["classical-caesar", "classical-reverse"];
   const cheapOutputs = cheapModules.map((module) => solveClassicalModule(module, artifact, attackHints));
   const cheapRanked = rankCandidateResults(cheapOutputs.flatMap((output) => output.results));
   const strongCheapHit = cheapRanked[0];
+  const familyTrace = familyAnalysis.findings.map((finding) => ({
+    key: finding.module,
+    fitness: finding.confidence,
+    message: `Family score ${Math.round(finding.confidence * 100)}%: ${finding.reason}`
+  }));
 
   if (
     strongCheapHit &&
@@ -83,16 +100,14 @@ export function solveAutoDetectClassical(artifact: string, attackHints?: Classic
   ) {
     return {
       results: formatAutoRankedResults(cheapRanked.slice(0, 5)),
-      trace: cheapOutputs.flatMap((output) => output.trace.slice(0, 2))
+      trace: [
+        ...familyTrace,
+        ...cheapOutputs.flatMap((output) => output.trace.slice(0, 2))
+      ]
     };
   }
 
-  const modules: WorkerModule[] = [
-    "classical-vigenere",
-    "classical-autokey",
-    "transposition-columnar",
-    "classical-substitution"
-  ];
+  const modules = familyAnalysis.solverModules;
   const outputs = [
     ...cheapOutputs,
     ...modules.map((module) => solveClassicalModule(module, artifact, attackHints))
@@ -103,7 +118,10 @@ export function solveAutoDetectClassical(artifact: string, attackHints?: Classic
 
   return {
     results: ranked,
-    trace: outputs.flatMap((output) => output.trace.slice(0, 2))
+    trace: [
+      ...familyTrace,
+      ...outputs.flatMap((output) => output.trace.slice(0, 2))
+    ]
   };
 }
 
@@ -117,11 +135,20 @@ function formatAutoRankedResults(
   return ranked.map(({ result, metrics, calibratedScore }, index) => ({
     ...result,
     rank: index + 1,
-    confidence: Math.max(result.confidence, calibrateConfidence(calibratedScore, metrics.letterCount, result.module)),
+    confidence: capConfidence(
+      result.module,
+      Math.max(result.confidence, calibrateConfidence(calibratedScore, metrics.letterCount, result.module)),
+      metrics.letterCount
+    ),
     evidence: [
       `Auto-ranker language: ${metrics.language}.`,
       `Auto-ranker score: ${calibratedScore.toFixed(2)}.`,
       ...result.evidence
+    ],
+    evidenceSignals: [
+      ...(result.evidenceSignals ?? []),
+      fitnessEvidenceSignal(calibratedScore),
+      confidenceCapEvidenceSignal(result.module, metrics.letterCount, result.confidence)
     ]
   }));
 }
@@ -767,14 +794,23 @@ function textResult(input: {
   fix: string;
   alternative: string;
 }): BreachResult {
+  const letterCount = countLatinLetters(input.plaintext);
+  const confidence = capConfidence(input.module, input.confidence, letterCount);
   return {
     rank: input.rank,
     module: input.module,
     plaintextPreview: input.plaintext,
     keyCandidate: input.key,
-    confidence: input.confidence,
+    confidence,
     fitnessScore: input.fitness,
-    evidence: input.evidence,
+    evidence: [
+      ...input.evidence,
+      ...confidenceLimitEvidence(input.module, letterCount, input.confidence)
+    ],
+    evidenceSignals: [
+      fitnessEvidenceSignal(input.fitness),
+      confidenceCapEvidenceSignal(input.module, letterCount, input.confidence)
+    ],
     conclusion: {
       whyWeak: input.whyWeak,
       howToFix: input.fix,
@@ -784,55 +820,20 @@ function textResult(input: {
 }
 
 function confidenceFromFitness(fitness: number, divisor: number, module?: string, plaintext = "") {
-  const letterCount = plaintext.replace(/[^a-z]/gi, "").length;
+  const letterCount = countLatinLetters(plaintext);
   const moduleCeiling = module ? confidenceCeilingForLength(module, letterCount) : 0.96;
   return Math.max(0.12, Math.min(moduleCeiling, fitness / divisor));
 }
 
 function calibrateConfidence(score: number, letterCount: number, module: string) {
   const lengthFactor = Math.min(1, letterCount / 32);
-  const moduleCeiling: Record<string, number> = {
-    "classical-caesar": 0.96,
-    "classical-reverse": 0.94,
-    "classical-vigenere": 0.9,
-    "classical-autokey": 0.88,
-    "classical-substitution": 0.82,
-    "transposition-columnar": 0.8
-  };
   const raw = 1 / (1 + Math.exp(-(score - 14) / 7));
-  const ceiling = Math.min(moduleCeiling[module] ?? 0.8, confidenceCeilingForLength(module, letterCount));
+  const ceiling = confidenceCeilingForLength(module, letterCount);
   return Math.max(0.12, Math.min(ceiling, raw * (0.55 + lengthFactor * 0.45)));
 }
 
-function confidenceCeilingForLength(module: string, letterCount: number) {
-  const complexModules = new Set([
-    "classical-autokey",
-    "classical-vigenere",
-    "classical-substitution",
-    "transposition-columnar"
-  ]);
-
-  if (!complexModules.has(module)) {
-    return letterCount < 8 ? 0.72 : 0.96;
-  }
-
-  if (letterCount < 14) {
-    return 0.32;
-  }
-
-  if (letterCount < 20) {
-    return 0.48;
-  }
-
-  if (letterCount < 28) {
-    return 0.68;
-  }
-
-  return module === "classical-autokey" ? 0.88 : 0.82;
-}
-
 function shortCipherEvidence(plaintext: string, solverName: string) {
-  const letterCount = plaintext.replace(/[^a-z]/gi, "").length;
+  const letterCount = countLatinLetters(plaintext);
   if (letterCount >= 20) {
     return [];
   }

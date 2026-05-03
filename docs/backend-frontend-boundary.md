@@ -2,7 +2,7 @@
 
 ## Decision
 
-GhostKey does not use a custom backend for the MVP.
+GhostKey does not use a custom backend for core cryptanalysis in the MVP.
 
 The first implementation should be a frontend-heavy Next.js application with browser Web Workers. The frontend owns the workspace, input validation, module selection, worker orchestration, logs, results, and security conclusions. Workers own CPU-heavy cryptanalysis jobs.
 
@@ -54,4 +54,4 @@ Keeping breach work local reduces privacy risk and abuse risk. A hosted analysis
 
 ## Next Implementation Action
 
-Scaffold the frontend app, then implement worker contracts before attack modules. Do not create `app/api/**` routes for breach jobs in the first implementation.
+Scaffold the frontend app, then implement worker contracts before attack modules. Do not create `app/api/**` routes for breach jobs. The approved exception is a narrow optional `app/api/ai-rerank/route.ts` proxy that keeps the Gemini API key server-side and reviews local solver candidates only.

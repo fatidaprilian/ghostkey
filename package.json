@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "validate": "npm run typecheck && npm run lint && npm run build"
+    "test:bypass": "node ./scripts/bypass-smoke.mjs",
+    "validate": "npm run typecheck && npm run lint && npm run test:bypass && npm run build"
   },
   "dependencies": {
     "next": "16.2.4",

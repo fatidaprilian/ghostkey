@@ -15,6 +15,10 @@ export const DEFAULT_TREND_WINDOW_DAYS = 90;
 export const MAX_TREND_PACKAGES = 10;
 export const FALLBACK_PACKAGE_VERSION = '0.0.0-local';
 
+// IMPORTANT: This version extraction logic is intentionally duplicated from lib/cli/constants.mjs.
+// The MCP server is designed to be copied directly into target user workspaces where
+// the original package.json may not exist in the parent tree. This try/catch fallback
+// ensures the server can still run standalone without crashing if package.json is missing.
 function resolvePackageVersion() {
   try {
     const parsedPackageManifest = JSON.parse(

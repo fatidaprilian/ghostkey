@@ -2,11 +2,11 @@
 
 ## Design Vision and Product Personality
 
-GhostKey should feel like a friendly cryptography learning web app, not a forced hacker console. The user is learning a required cipher first, then exploring advanced breach examples second.
+GhostKey should feel like a friendly cryptography learning web app, not a forced hacker console. The user is primarily running a multi-method Bypass Tool, then using the Autokey simulator when they need the coursework explanation.
 
-The visual language should be bright, guided, and classroom-safe. Characters, speech bubbles, formulas, and clear action buttons carry the Autokey lesson. Bypass surfaces can still use evidence panels, but they should not dominate the whole product with a dark cyber style.
+The visual language should be bright, guided, and classroom-safe. Bypass surfaces should feel like an evidence bench for weak-method analysis rather than a dark cyber terminal. Characters, speech bubbles, formulas, and clear action buttons carry the Autokey lesson as a compact supporting simulator.
 
-Current direction: the first viewport must separate the grading-safe Autokey Cipher path from the advanced Bypass Tool path. The Autokey tab teaches the required algorithm through a simple Alice, Eve, and Bob simulation: encrypt and send, then decrypt message. The Bypass Tool tab demonstrates bounded classroom cryptanalysis while clearly separating toy/classroom limits from modern cryptographic security.
+Current direction: the first viewport should make the Bypass Tool the main product concept for Auto Detect, classical ciphers, toy asymmetric auditors, and JWT checks. The Autokey tab teaches the required algorithm through a simple Alice, Eve, and Bob simulation: encrypt and send, then decrypt message. It is sufficient as the coursework simulator and should not crowd out the broader Bypass suite.
 
 ## Audience and Use-Context Signals
 
@@ -22,13 +22,13 @@ The UI must reduce mystery. Every automated attack should show visible progress,
 
 ### Conceptual Anchor
 
-The design anchor is a **classroom message lab**. The specific reference point is an interactive lesson board where Alice sends a protected message, Eve observes unreadable ciphertext, and Bob recovers the message with the shared key.
+The design anchor is a **classroom evidence bench**. The specific reference point is a teacher's demonstration bench where an unknown artifact is measured, routed to a method, and explained with visible evidence; the Autokey Alice-Eve-Bob board remains one instrument on that bench.
 
-This anchor fits GhostKey because the mandatory Autokey requirement needs to be explained visually before the advanced breach features appear. The interface should feel educational, approachable, and demonstrable in front of a class.
+This anchor fits GhostKey because the Bypass Tool must handle multiple weak methods without becoming a generic dashboard or offensive console. The interface should feel educational, approachable, and demonstrable in front of a class.
 
 ### Signature Move
 
-The signature interaction is a **message handoff**. When the user clicks Encrypt & Send, the ciphertext travels toward Eve and Eve shows a confused speech bubble. When the user clicks Decrypt Message, Bob's message box reveals the plaintext. Reduced-motion mode keeps the same state changes without animated handoff.
+The signature interaction is an **evidence lock-in**. When a worker finds a stronger candidate, the active method, trace log, confidence estimate, and finding panel snap to the same hypothesis. The Autokey simulator keeps its message handoff as a secondary lesson motion. Reduced-motion mode keeps the same state changes without animated sweeps.
 
 ### Product-Specific Signals
 
@@ -42,6 +42,8 @@ The signature interaction is a **message handoff**. When the user clicks Encrypt
 - Bypass panels should stay on the same light learning surface as Autokey. Finding blocks, history rows, terminal feeds, confidence meters, and spectrum bars should avoid leftover dark or gray-box styling.
 - Short ciphertext should never look magically solved. Complex solvers such as Autokey, Vigenere, Column, and Monoalphabetic must show capped confidence and caveats when the artifact is too short for strong statistical evidence.
 - Bypass Tool defaults to ciphertext-only attack mode. Optional crib controls are available only as a separate attack evidence mode so users do not think "bypass" requires knowing the plaintext.
+- Bypass is visibly multi-method: Auto Detect, Caesar, Reverse, Vigenere, Autokey, Monoalphabetic, Column, toy RSA, toy ElGamal, and JWT all belong to the same main concept.
+- Gemini AI review is optional and must be visually framed as candidate language reranking, not as the source of truth.
 
 ## Color Science and Semantic Roles
 
@@ -113,7 +115,7 @@ Motion should show analysis, not decorate the page.
 
 - Worker accepted: terminal rail lights and status changes to armed.
 - Progress: subtle pulse on the active module and terminal append animation.
-- Better candidate: signal lock sweep and confidence snap.
+- Better candidate: evidence lock-in sweep and confidence snap.
 - Success: green confirmation with evidence line.
 - Warning: amber edge and plain-language caveat.
 - Failure: red boundary, safe error message, and recovery action.
@@ -138,6 +140,10 @@ The module switcher should act like an instrument selector. Each module needs a 
 
 Ciphertext-only must be the first visible bypass mode. Known plaintext, probable words, and max key length controls may appear only after the user selects optional crib attack mode because they change the solver's evidence model. The fields must stay compact, clearly local, and keyboard-accessible. They should not imply GhostKey can break modern cryptography; they are a way to demonstrate known-plaintext and crib attacks against classroom-sized classical ciphers.
 
+### Multi-Method Bypass Bench
+
+The Bypass Tool is now the primary surface. It must show every supported method as part of one analysis suite, not as disconnected demos. Auto Detect is the first-class entry point; manual modules are instruments for controlled demonstrations. The copy should say "Bypass" for the suite and "simulator" for Autokey coursework.
+
 ### Finding Row
 
 Finding rows should prioritize rank, confidence, candidate key, evidence, and the action to inspect details.
@@ -153,7 +159,7 @@ The conclusion panel must always include:
 
 ### Autokey Simulation
 
-The Autokey simulation is part of the mandatory coursework path. It should show sender, observer, and receiver states, then show letter-value rows for `Pi`, `Ki`, and `Ci`. The required controls are Encrypt & Send, Decrypt Message, and Reset. Eve should show confusion after encryption because the ciphertext is unreadable; Bob should reveal plaintext only after decryption. This surface is explanatory, not an attack surface. It must make the formula visible while still preserving the exact encrypt/decrypt implementation output.
+The Autokey simulation is part of the mandatory coursework path. It should show sender, observer, and receiver states, then show letter-value rows for `Pi`, `Ki`, and `Ci`. The required controls are Encrypt & Send, Decrypt Message, and Reset. Eve should show confusion after encryption because the ciphertext is unreadable; Bob should reveal plaintext only after decryption. This surface is explanatory, not an attack surface. It must make the formula visible while still preserving the exact encrypt/decrypt implementation output. It is sufficient for the current Autokey requirement.
 
 ## Context Hygiene and Source Boundaries
 
@@ -181,17 +187,19 @@ The design is based on the current GhostKey brief and repo docs. Do not copy fam
 
 ## Implementation Notes for Future UI Tasks
 
-- Start with the Breach Workspace as the first screen, not a marketing landing page.
-- Keep Autokey Encrypt/Decrypt accessible in the first screen because it is the mandatory coursework path.
+- Start with the Bypass Workspace as the first screen, not a marketing landing page.
+- Keep Autokey Encrypt/Decrypt accessible as a simulator tab because it is the mandatory coursework path.
 - Keep the Autokey simulation tied to the active key and input, so every typed change resets the lesson and every action updates sender, observed ciphertext, receiver output, keystream, and formula rows.
 - Keep tab switches clean by resetting transient Bypass findings/log state when entering the Bypass Tool, so stale result boxes do not flash between Autokey and Bypass views.
 - Keep Auto Detect conservative: accept strong Caesar/Reverse hits early, and cap complex solver confidence on short artifacts instead of overclaiming a classroom breach.
+- Treat corpus details as supporting evidence, not as a visible promise of authoritative language detection; current language scoring uses documented self-authored assets.
+- Keep AI rerank controls secondary to local solver results, with copy that says Gemini reviews candidate plausibility and cannot prove ciphertext-only recovery.
 - Use Web Worker progress events as the source of terminal state.
 - Build a stable state matrix before styling components.
-- Keep the main action clear: detect, run breach, inspect finding, read fix.
+- Keep the main action clear: detect, run bypass, inspect finding, read fix.
 - Add charts only when they explain frequency, IoC, confidence, or iteration behavior.
 - Keep the design contract synchronized with `docs/design-intent.json`.
 
 ## Motion and Palette Decision
 
-Motion density is medium because the Autokey lesson benefits from clear message handoff states without feeling like a game. The palette uses soft classroom surfaces with learning blue, friendly green, coral intercept states, and amber caveats. 3D is unnecessary for the MVP; the priority is readable explanation and confident presentation.
+Motion density is medium because Bypass progress benefits from visible evidence lock-in while the Autokey simulator still benefits from clear message handoff states. The palette uses soft classroom surfaces with learning blue, friendly green, coral intercept states, and amber caveats. 3D is unnecessary for the MVP; the priority is readable evidence, honest confidence, and confident presentation.

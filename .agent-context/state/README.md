@@ -8,11 +8,9 @@ Tracked seed/config artifacts:
 - `benchmark-comparison-schema.json`
 - `benchmark-reproducibility.json`
 - `benchmark-thresholds.json`
-- `benchmark-watchlist.json`
 - `benchmark-writer-judge-config.json`
 - `memory-adapter-contract.json`
 - `memory-schema-v1.json`
-- `stack-research-snapshot.json`
 
 Tracked operational artifact:
 - `onboarding-report.json` stays tracked in this repository because internal audits read it as the current repository onboarding state. In installed projects, `init` and `upgrade` regenerate this file.
@@ -23,4 +21,4 @@ Local-only/generated artifacts:
 - `llm-judge-report.json`
 - benchmark, trend, weekly governance, and quality report outputs
 
-Do not treat generated reports as current project truth. Rerun the matching `npm run benchmark:*`, `npm run report:*`, or `npm run audit:*` command when fresh evidence is needed.
+Do not treat generated reports or archived research as current project truth. Rerun the matching `npm run benchmark:*`, `npm run report:*`, or `npm run audit:*` command when fresh evidence is needed.

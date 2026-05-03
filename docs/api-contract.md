@@ -8,22 +8,25 @@ This document defines the internal public contracts that implementation must kee
 
 - Web Worker job requests.
 - Web Worker progress events.
+- Optional Gemini AI rerank route handler.
 - Optional future Next.js route handlers.
 - Error shapes used by the UI.
 
 ## Backend Position for MVP
 
-GhostKey does not use a custom backend in the MVP.
+GhostKey does not use a custom backend for core cryptanalysis in the MVP.
 
 The active contract is the browser-to-worker contract. The UI sends typed jobs to Web Workers, receives progress events, and renders findings locally. No MVP endpoint should accept ciphertext, JWTs, candidate secrets, private keys, or wordlists.
 
-Next.js route handlers are reserved for future features. They are not part of the first breach workflow.
+Next.js route handlers are reserved for future features except the optional Gemini evidence-rerank proxy. That proxy is not a solver and must not run cracking jobs.
 
 ## External HTTP API Position
 
 The MVP should not expose a public HTTP attack API. Sending ciphertext, tokens, secrets, or wordlists to a server is not required for the first release and creates privacy and abuse risk.
 
 If future server routes are added, use Next.js Route Handlers under `app/api/**/route.ts`, validate every request at the route boundary, and return safe problem responses.
+
+The current allowed route is `POST /api/ai-rerank`. It calls Gemini server-side using `GEMINI_API_KEY` and reviews local solver candidates for language plausibility. It must not receive full secrets, private keys, wordlists, or remote target data.
 
 ## Worker Request Contract
 
@@ -105,7 +108,7 @@ type ProgressData = {
 
 ## Auto-Detect Contract
 
-`auto-detect` is an MVP module. It lets the user paste an artifact without choosing a solver first.
+`auto-detect` is the default MVP Bypass module. It lets the user paste an artifact without choosing a solver first.
 
 The first auto-detect pass must inspect:
 
@@ -120,6 +123,8 @@ The first auto-detect pass must inspect:
 Auto-detect results must include ranked family hints in `evidence[]`. If a full solver is not implemented for the top family yet, the worker must say so safely rather than pretending it recovered a key.
 
 Auto-detect ranking must evaluate recovered plaintext candidates across active solvers. The final rank should use calibrated plaintext quality, detected language confidence, solver complexity, and ciphertext length rather than a static algorithm order.
+
+Auto Detect must treat Bypass as multi-method. It should inspect and rank all feasible supported families within the worker limits instead of assuming Autokey is the main path.
 
 When known plaintext or crib hints are supplied in optional crib attack mode, Auto Detect may raise confidence only after a candidate matches that evidence. For Vigenere and Autokey, the worker should derive candidate keys from known-plaintext consistency before falling back to pure language scoring.
 
@@ -143,15 +148,75 @@ type BreachResult = {
   confidence: number;
   fitnessScore?: number;
   evidence: string[];
+  evidenceSignals?: EvidenceSignal[];
   conclusion: {
     whyWeak: string;
     howToFix: string;
     safeModernAlternative: string;
   };
 };
+
+type EvidenceSignal = {
+  signalName: string;
+  observedValue: string;
+  expectedRange: string;
+  interpretation: string;
+  weight: number;
+  trustLevel: "high" | "medium" | "low";
+};
 ```
 
 Confidence must be presented as a heuristic score, not a proof. The UI must explain when short input, mixed languages, or unusual formatting lowers confidence.
+
+`evidence[]` remains the UI-compatible plain-language contract. `evidenceSignals[]` is optional structured evidence for richer future result panels and should not replace the human-readable strings until the UI explicitly supports it.
+
+Language model evidence is generated from local corpus assets documented in `docs/corpus-assets.md`. These assets are educational scoring aids, not authoritative language-identification data.
+
+## AI Rerank Contract
+
+AI rerank is optional and runs after local solvers complete. The route accepts bounded candidate summaries:
+
+```ts
+type AiRerankRequest = {
+  context: {
+    module: WorkerModule;
+    artifactLetterCount: number;
+    candidateCount: number;
+    evidenceMode: "local-solver-candidates";
+  };
+  candidates: Array<{
+    rank: number;
+    module: string;
+    keyCandidate?: string;
+    plaintextPreview?: string;
+    confidence: number;
+    fitnessScore?: number;
+    evidence: string[];
+  }>;
+};
+```
+
+The response must stay conservative:
+
+```ts
+type AiRerankResponse = {
+  model: string;
+  bestRank: number;
+  summary: string;
+  caveat: string;
+  reviews: Array<{
+    candidateRank: number;
+    languageEstimate: string;
+    plausibilityScore: number;
+    confidenceAdjustment: "lower" | "same" | "raise-slightly";
+    ambiguityWarning: string;
+    explanation: string;
+    limitations: string[];
+  }>;
+};
+```
+
+AI rerank must never replace local confidence caps. The UI must label it as language-plausibility review, not proof of decryption.
 
 ## Error Contract
 
@@ -234,6 +299,8 @@ History must be clearable and must not require login, cookies, or a database.
 - Keep analysis local for the MVP.
 - Use synthetic demo tokens and keys only.
 - Do not include remote attack automation.
+- Do not frame Bypass as bypassing real accounts, authentication, CAPTCHA, payment, access control, or live systems.
+- Keep Gemini API keys server-side. Do not expose them in client bundles, logs, screenshots, docs, or committed env files.
 
 ## Official Research Notes
 
@@ -242,6 +309,8 @@ Fetched on 2026-04-27.
 - Next.js Route Handlers use Web Request and Response APIs: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
 - RFC 7519 defines JWT as a compact claims format carried as JSON Web Signature or JSON Web Encryption data: https://www.rfc-editor.org/rfc/rfc7519
 - OWASP documents `none` algorithm and weak HMAC secret risks for JWT implementations: https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+- Gemini API key docs warn not to commit API keys or expose them in client-side code: https://ai.google.dev/gemini-api/docs/api-key
+- Gemini `generateContent` is the standard REST endpoint used by the optional AI rerank proxy: https://ai.google.dev/api
 
 ## Next Validation Action
 

@@ -2,13 +2,13 @@
 
 ## Primary Flow: Workspace Tabs
 
-1. The user starts on the Autokey Cipher tab because it is the required coursework path.
-2. The user can switch to the Bypass Tool tab for advanced classroom cryptanalysis demos.
-3. The tabs are separate task surfaces. Autokey Cipher teaches deterministic encryption and decryption; Bypass Tool runs heuristic or mathematical attacks against weak examples.
+1. The user starts on the Bypass Tool tab because the product concept is multi-method local analysis.
+2. The user can switch to the Autokey Cipher tab when they need the coursework simulator.
+3. The tabs are separate task surfaces. Bypass Tool runs heuristic or mathematical attacks against weak examples; Autokey Cipher teaches deterministic encryption and decryption.
 
 ## Primary Flow: Bypass Tool
 
-1. The user opens the Breach Workspace.
+1. The user opens the Bypass Workspace.
 2. The user selects an input type:
    - ciphertext
    - JWT
@@ -33,37 +33,45 @@
    - Vigenere and Autokey family hints from Index of Coincidence
    - bounded columnar and monoalphabetic search where input length makes it practical
    - confidence caps for short artifacts where language evidence is weak
-8. When attack evidence is supplied, GhostKey derives Vigenere or Autokey keys from known-plaintext consistency before falling back to language scoring.
-9. GhostKey creates a worker job with a bounded iteration plan.
-10. The worker streams progress events:
+8. Language evidence comes from local corpus assets documented in `docs/corpus-assets.md`.
+9. When attack evidence is supplied, GhostKey derives Vigenere or Autokey keys from known-plaintext consistency before falling back to language scoring.
+10. GhostKey creates a worker job with a bounded iteration plan.
+11. The worker streams progress events:
    - current key candidate
    - current fitness score
    - best candidate so far
    - iteration count
    - elapsed time
-11. The UI updates the terminal log and result panel.
-12. The worker completes, fails safely, or is cancelled by the user.
-13. GhostKey shows:
+12. The UI updates the terminal log and result panel.
+13. The worker completes, fails safely, or is cancelled by the user.
+14. GhostKey shows:
    - best plaintext or decoded artifact
    - guessed key or weak parameter
    - confidence score
    - evidence summary
    - security conclusion
    - recommended fix
+15. If Gemini AI Evidence Rerank is enabled, the UI sends only bounded local candidate summaries to `POST /api/ai-rerank`.
+16. Gemini returns language-plausibility review, ambiguity warnings, and explanation text. Local solver evidence and confidence caps remain authoritative.
+
+Bypass is a multi-method concept. Auto Detect should not privilege Autokey over the rest of the suite unless the evidence supports it.
 
 ## Primary Flow: Autokey Coursework Lab
 
-1. The user enters a plaintext message.
-2. The user enters an alphabetic key.
-3. For encryption, GhostKey builds the Autokey stream from the key followed by plaintext letters.
-4. The user clicks Encrypt & Send.
-5. Eve receives the ciphertext and shows a confused speech bubble because the message is unreadable.
-6. The encryption table fills from plaintext plus keystream.
-7. The user clicks Decrypt Message.
-8. Bob's message box reveals the plaintext.
-9. The decryption table shows how ciphertext minus keystream recovers `Pi`.
-10. The user can click Reset to return to the default classroom sample.
-11. Non-letter characters remain visible for presentation readability and do not consume keystream positions.
+1. The user switches to the Autokey Cipher simulator.
+2. The user enters a plaintext message.
+3. The user enters an alphabetic key.
+4. For encryption, GhostKey builds the Autokey stream from the key followed by plaintext letters.
+5. The user clicks Encrypt & Send.
+6. Eve receives the ciphertext and shows a confused speech bubble because the message is unreadable.
+7. The encryption table fills from plaintext plus keystream.
+8. The user clicks Decrypt Message.
+9. Bob's message box reveals the plaintext.
+10. The decryption table shows how ciphertext minus keystream recovers `Pi`.
+11. The user can click Reset to return to the default classroom sample.
+12. Non-letter characters remain visible for presentation readability and do not consume keystream positions.
+
+This simulator is sufficient for the required Autokey coursework path. Broader product effort should focus on the Bypass Tool.
 
 ## Flow: Classical Cipher Detection
 
@@ -130,7 +138,7 @@ Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt pat
 2. Try bounded column counts.
 3. Generate candidate column orders.
 4. Score reconstructed text with quadgrams.
-5. Use hill climbing or beam search for larger key spaces.
+5. Keep larger search strategies bounded. Do not add heavier search expansion until fixtures show a measured need.
 6. Explain that transposition preserves letter frequency and can leak structure.
 
 ## Flow: Asymmetric Auditor
@@ -152,6 +160,16 @@ Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt pat
 2. Keep module, artifact preview, confidence, and timestamp only.
 3. Do not send history to a backend.
 4. Let the user clear the local history from the UI.
+
+## Flow: Optional AI Evidence Rerank
+
+1. The user runs a local Bypass analysis first.
+2. The UI gathers the top bounded candidates, including rank, module, key candidate, plaintext preview, confidence, fitness, and evidence.
+3. The UI sends those candidate summaries to `POST /api/ai-rerank`.
+4. The route reads `GEMINI_API_KEY` server-side and calls Gemini through the standard `generateContent` endpoint.
+5. Gemini reviews language plausibility only; it does not decrypt, brute force, or prove correctness.
+6. The UI shows the AI summary beside the local findings with a caveat that ciphertext-only recovery may remain ambiguous.
+7. If the API key is missing or the request fails, the local solver result remains usable.
 
 ## Flow: JWT Debugger and Manipulator
 
@@ -201,4 +219,4 @@ Every worker job should emit these event types:
 
 ## Next Validation Action
 
-Before implementation, define TypeScript request and event types for each worker job and map them to UI states.
+Keep the worker contract, corpus asset policy, AI rerank contract, and `npm run test:bypass` aligned whenever solver scoring changes.

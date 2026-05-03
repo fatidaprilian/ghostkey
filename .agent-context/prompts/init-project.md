@@ -7,7 +7,7 @@ This prompt boots a repository with strict AI coding guidance context.
 When a new project is created or initialized, the agent must automatically:
 1. Read [AGENTS.md](../../AGENTS.md) to understand the canonical bootstrap chain and active entrypoints.
 2. Resolve the smallest relevant rule set from [.agent-context/rules/](../rules/) instead of scanning the whole directory by default.
-3. Review dynamic runtime signals from [.agent-context/state/onboarding-report.json](../state/onboarding-report.json), [.agent-context/state/stack-research-snapshot.json](../state/stack-research-snapshot.json), repository evidence, and task constraints.
+3. Review dynamic runtime signals from [.agent-context/state/onboarding-report.json](../state/onboarding-report.json), repository evidence, task constraints, and live official documentation when runtime or ecosystem facts matter.
 4. If Docker or Compose is in scope, load [docker-runtime.md](../rules/docker-runtime.md) and verify the latest official Docker guidance before authoring container assets.
 5. For unresolved framework or package setup, recommend the latest stable compatible dependency set and official framework setup flow from live official documentation before coding unless a documented compatibility constraint blocks it.
 

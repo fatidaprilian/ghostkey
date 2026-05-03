@@ -370,6 +370,41 @@ input:focus-visible {
   line-height: 1.5;
 }
 
+.ai-assist-toggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  margin-top: 12px;
+  border: 1px solid rgba(199, 120, 16, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 248, 218, 0.62);
+  padding: 10px 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-assist-toggle input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--signal-info);
+}
+
+.ai-assist-toggle strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.ai-assist-toggle code {
+  color: var(--signal-info);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+}
+
 .attack-hints-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(180px, 0.7fr) minmax(96px, 0.25fr);
@@ -1019,6 +1054,92 @@ input:focus-visible {
 .history-panel {
   border: 1px solid rgba(40, 120, 200, 0.14);
   background: rgba(255, 255, 255, 0.72);
+}
+
+.ai-review-panel {
+  margin-top: 14px;
+  border: 1px solid rgba(40, 120, 200, 0.18);
+  border-radius: 14px;
+  background: rgba(237, 247, 255, 0.74);
+  padding: 12px;
+}
+
+.ai-review-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ai-review-heading span {
+  color: var(--signal-info);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ai-review-heading button {
+  min-height: 34px;
+  border: 1px solid rgba(40, 120, 200, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 0 10px;
+  color: var(--signal-info);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ai-review-heading button:disabled {
+  color: var(--text-dim);
+}
+
+.ai-review-panel p,
+.ai-review-body small,
+.ai-problem {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.ai-problem {
+  color: var(--signal-danger);
+}
+
+.ai-review-body > p {
+  color: var(--text-primary);
+}
+
+.ai-review-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ai-review-list div {
+  border: 1px solid rgba(40, 120, 200, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.64);
+  padding: 9px;
+}
+
+.ai-review-list strong,
+.ai-review-list span {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ai-review-list strong {
+  color: var(--signal-info);
+}
+
+.ai-review-list span {
+  margin-top: 3px;
+  color: var(--signal-warning);
 }
 
 .history-heading {

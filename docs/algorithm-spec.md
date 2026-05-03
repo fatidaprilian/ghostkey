@@ -4,6 +4,21 @@
 
 This document describes the first algorithm plan for GhostKey. It is not a claim that the MVP can break secure modern cryptography. It defines bounded educational solvers and auditors.
 
+The current product concept is **multi-method Bypass first**. Autokey Cipher encrypt/decrypt remains the coursework simulator, but automated analysis should be balanced across Auto Detect, Caesar, Reverse, Vigenere, Autokey, monoalphabetic substitution, columnar transposition, toy RSA, toy ElGamal, and JWT checks.
+
+## Multi-Method Bypass Policy
+
+Bypass means local analysis of weak educational artifacts. It does not mean bypassing real systems, access controls, CAPTCHA, payments, accounts, or remote services.
+
+All supported methods should follow the same evidence rules:
+
+- default to ciphertext-only or artifact-only analysis
+- show ranked candidates instead of a single magical answer
+- include confidence as a heuristic estimate
+- cap confidence when the artifact is short, noisy, or ambiguous
+- explain the weakness and the modern fix
+- refuse or safely bound real-world key sizes and unsafe automation scopes
+
 ## Shared Scoring Pipeline
 
 1. Normalize text for scoring while preserving the original input for display.
@@ -19,6 +34,8 @@ This document describes the first algorithm plan for GhostKey. It is not a claim
    - length confidence
    - language confidence
 5. Return ranked candidates with caveats.
+
+Implementation note: confidence ceilings are centralized in `src/lib/crypto-analysis/confidence-caps.ts`, classical family scoring is centralized in `src/lib/crypto-analysis/family-scorer.ts`, structured evidence signals are available through the optional `evidenceSignals` result field while preserving existing string evidence for the UI, and `npm run test:bypass` covers bounded smoke fixtures across the supported Bypass families.
 
 ## Fitness Function
 
@@ -47,7 +64,7 @@ The current implementation no longer relies on common-word matching alone. It no
 - auto-ranker complexity penalties
 - symbol penalties
 
-This is still a lightweight embedded-corpus scorer, not a large production language model. The corpus pack now lives in `src/lib/crypto-analysis/language-corpora.ts` so it can grow without crowding the scoring logic. The next upgrade should move the corpora into licensed JSON model assets and add a language detector such as `franc` when dependency policy allows it.
+This is still a compact corpus scorer, not a large production language model. The corpus assets now live in `src/lib/crypto-analysis/language-corpora.ts` with source and license metadata, and `docs/corpus-assets.md` documents the asset policy. A future upgrade may replace them with external JSON n-gram tables only after license review and measured browser-worker impact.
 
 ## Auto-Detection
 
@@ -72,6 +89,8 @@ Auto-detect may run a quick solver for the highest-confidence family. It must la
 
 Bypass Tool defaults to ciphertext-only attacks. The user should be able to run Auto Detect, Caesar, Reverse, Vigenere, Autokey, Substitution, Column, toy RSA, toy ElGamal, and JWT analysis without knowing the key.
 
+Auto Detect is the preferred entry point because the Bypass concept should work globally and dynamically. Manual modules remain available for classroom demonstrations, but implementation effort should not over-focus on Autokey at the expense of other supported families.
+
 Some short classical ciphertexts cannot be ranked reliably from ciphertext-only language scoring. For separate crib-attack lessons, GhostKey supports optional local evidence:
 
 - known plaintext prefix
@@ -84,11 +103,11 @@ The worker uses this evidence to derive Vigenere and Autokey key candidates, the
 
 ### English
 
-English can use existing published quadgram frequency tables if the source license is documented before implementation.
+English may use existing published quadgram frequency tables in a future upgrade only if the source license is documented before implementation.
 
 ### Indonesian
 
-Indonesian support must be marked experimental until a suitable corpus and generated quadgram table are documented. The UI should show lower confidence when Indonesian detection is weak.
+Indonesian support is educational and self-authored in the MVP. It should remain confidence-capped for short text and should not claim authoritative Indonesian corpus statistics until a larger licensed source is approved.
 
 ## Index of Coincidence
 
@@ -169,7 +188,7 @@ Current MVP approach:
 
 ## Autokey Encrypt and Decrypt
 
-Autokey encryption and decryption are mandatory classroom functions.
+Autokey encryption and decryption are mandatory classroom functions. The current simulator is sufficient for the coursework requirement as long as it stays correct, visible, and easy to present.
 
 Rules:
 
@@ -180,7 +199,7 @@ Rules:
 - For decryption, append each recovered plaintext letter after the initial key.
 - Return the generated keystream for explainability.
 
-This deterministic path must remain separate from heuristic breach logic.
+This deterministic path must remain separate from heuristic breach logic. It should support the Bypass Tool concept, not compete with it as the primary product identity.
 
 ## Columnar Transposition Solver
 
@@ -228,15 +247,19 @@ The JWT dictionary check should:
 
 ## Required Test Fixtures
 
+- Auto Detect sample that routes to each supported module family.
 - Caesar sample with known shift.
+- Reverse sample with known reversal.
 - Monoalphabetic sample with known substitution.
 - Vigenere sample with known key.
+- Autokey sample with known seed key.
 - Columnar transposition sample with known column order.
 - Toy RSA modulus with small primes.
+- Toy ElGamal small group sample.
 - JWT signed with a known weak demo secret.
 - Malformed JWT.
 - Short ciphertext that should produce low confidence.
 
 ## Next Validation Action
 
-Before implementation, choose source data for English and Indonesian quadgrams and document licenses.
+Before replacing the current self-authored corpus assets, choose source data for English and Indonesian quadgrams and document licenses.

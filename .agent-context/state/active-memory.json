@@ -8,26 +8,36 @@
   },
   "project": {
     "name": "GhostKey",
-    "currentFocus": "Friendly two-tab GhostKey learning web app with ciphertext-only Bypass Tool by default and optional crib attack mode separated.",
+    "currentFocus": "Bypass-first GhostKey learning web app: multi-method local analysis is the main concept, with Autokey kept as a sufficient coursework simulator.",
     "durableFacts": [
       "MVP direction is a single Next.js App Router application with React, Tailwind CSS, Vercel deployment, and browser Web Workers for heavy cryptanalysis.",
       "MVP has no custom backend, no database, and no auth unless saved labs, classroom management, accounts, sharing, or server-side processing are approved later.",
       "Auto Detect is the default breach mode and runs in the browser worker without app/api routes.",
       "Dual-use security boundary is documented: local educational analysis only, no remote attack automation, no bundled large cracking wordlists.",
-      "Design anchor is now an interactive classroom message lab with Alice, Eve, Bob, readable formulas, and friendly learning colors.",
-      "Autokey Cipher encryption and decryption with a user-provided key is the grading-safe core path.",
-      "Bypass Tool now targets classroom demos for Caesar, Reverse, Vigenere, Autokey, Monoalphabetic, Column, toy RSA, toy ElGamal, and JWT locally.",
+      "Design anchor is now an interactive classroom evidence bench, with Alice, Eve, Bob, readable formulas, and friendly learning colors retained for the Autokey simulator.",
+      "Autokey Cipher encryption and decryption with a user-provided key is the grading-safe simulator path, not the whole product identity.",
+      "Bypass Tool is now the primary product concept and targets classroom demos for Caesar, Reverse, Vigenere, Autokey, Monoalphabetic, Column, toy RSA, toy ElGamal, and JWT locally.",
       "Autokey breach uses beam search over seed-key prefixes plus coordinate refinement, with Indonesian scoring support for classroom phrases.",
       "Plaintext fitness now uses embedded English and Indonesian corpora to build local n-gram and frequency models, then meta-ranks solver outputs by language quality, solver confidence, complexity, and ciphertext length.",
-      "Autokey coursework UI includes Encrypt & Send, Decrypt Message, Reset, Eve confusion, Bob reveal, CSS characters, and formula rows for Pi, Ki, and Ci.",
+      "Confidence ceilings are centralized in src/lib/crypto-analysis/confidence-caps.ts and shared by Caesar, Auto Detect, classical solvers, and text-metrics ranking.",
+      "BreachResult now supports optional evidenceSignals for structured result panels while preserving evidence[] strings for the current UI.",
+      "Classical family scoring is centralized in src/lib/crypto-analysis/family-scorer.ts and shared by detection plus Auto Detect solver dispatch.",
+      "Language scoring now uses documented self-authored corpus assets with metadata in src/lib/crypto-analysis/language-corpora.ts and docs/corpus-assets.md.",
+      "Optional Gemini AI Evidence Rerank is implemented as POST /api/ai-rerank with the API key kept server-side through GEMINI_API_KEY or GOOGLE_API_KEY.",
+      "Autokey coursework UI includes Encrypt & Send, Decrypt Message, Reset, Eve confusion, Bob reveal, CSS characters, and formula rows for Pi, Ki, and Ci, and is considered enough for the current coursework requirement.",
       "Auto Detect prefers strong cheap Caesar or Reverse evidence before expensive heuristic solvers and caps complex solver confidence on short artifacts.",
       "Bypass Tool defaults to ciphertext-only attack mode. Optional crib attack mode can pass local known plaintext, probable words, and max key length hints for separate known-plaintext lessons."
     ]
   },
   "progress": {
     "lastAchievements": [
-      "Added browser-local run history with clear action and no account or backend dependency.",
-      "Updated project, flow, API, data, algorithm, and design docs for the hybrid Autokey plus classroom breach suite direction.",
+      "Reframed GhostKey docs and first-screen UI around a Bypass-first multi-method concept, with Autokey kept as a coursework simulator.",
+      "Added docs/cryptanalysis-upgrade-plan.md to capture the Claude-as-baseline, Gemini-as-supplemental research decision and Bypass implementation sequence.",
+      "Implemented the first two cryptanalysis upgrade steps: shared confidence caps and optional structured evidence signals.",
+      "Implemented the third cryptanalysis upgrade step: split family scoring from solver execution so Auto Detect can explain and order classical solver dispatch from one scorer.",
+      "Implemented the fourth cryptanalysis upgrade step: npm run test:bypass now runs dependency-free smoke fixtures across Auto Detect, classical methods, toy asymmetric audits, and JWT.",
+      "Implemented the fifth cryptanalysis upgrade step with documented self-authored English and Indonesian corpus assets, and closed the sixth step by deferring heavier search expansion until benchmark evidence shows a measured need.",
+      "Added optional Gemini AI Evidence Rerank: server route, UI toggle/review panel, env examples, gitignore safety, API docs, ADR update, and validation coverage.",
       "Improved Autokey breach so the sample ciphertext CICAFY QRRXGE SRKT XSJAK ranks KELAS -> SERANG MARKAS SAAT FAJAR first.",
       "Replaced fixed phrase-heavy text metrics with corpus-built language scoring and Auto Detect meta-ranking across active solver results.",
       "Added a live Autokey sender-observer-receiver simulation with formula tables to strengthen the mandatory coursework path.",
@@ -40,14 +50,14 @@
       "Separated Bypass Tool into default ciphertext-only mode and optional crib attack mode so the main bypass path no longer implies prior plaintext knowledge."
     ],
     "pendingIssues": [
-      "English and Indonesian quadgram data sources and licenses still need validation.",
+      "Current English and Indonesian scoring assets are self-authored and documented; externally sourced quadgram tables still need license review before replacement.",
       "Classical breach results remain heuristic and work best on classroom-sized, sufficiently long ciphertext.",
       "Phrase-specific classroom demos should still be smoke-tested before presentation."
     ],
     "nextBestActions": [
-      "Replace lightweight ngram hints with licensed English and Indonesian quadgram tables.",
-      "Add a fixture pack for known-plaintext and crib-assisted demo cases across classical modules.",
-      "Add behavior tests for malformed artifacts, worker errors, and result conclusions."
+      "Expand npm run test:bypass with known-plaintext and crib-assisted demo cases.",
+      "Benchmark whether larger external quadgram assets are worth adding after license review.",
+      "If Gemini rerank is used in production, add deployment secret setup notes and optional request-rate controls."
     ],
     "validationState": [
       "Headless Autokey and Auto Detect check returned CICAFY QRRXGE SRKT XSJAK, KELAS, and SERANG MARKAS SAAT FAJAR after the local corpus pack change.",
@@ -61,7 +71,19 @@
       "npm.cmd run validate passed outside the sandbox on 2026-04-30 after Bypass Tool visual polish, tab-switch cleanup, and confidence tuning.",
       "Headless solver probe returned Auto Detect rank 1 classical-autokey, MS, and AYO MAIN VALORANT for MQO KOUN DNGOCOET.",
       "Headless assisted-bypass probe returned Auto Detect rank 1 classical-autokey, MS, AYO MAIN VALORANT, and 85 percent confidence for MQO KOUN DNGOCOET with known plaintext and cribs.",
-      "npm.cmd run validate passed outside the sandbox on 2026-04-30 after making ciphertext-only the default Bypass mode and separating optional crib attack controls."
+      "npm.cmd run validate passed outside the sandbox on 2026-04-30 after making ciphertext-only the default Bypass mode and separating optional crib attack controls.",
+      "npm.cmd run typecheck and npm.cmd run lint passed on 2026-05-03 after the Bypass-first docs and UI copy update.",
+      "npm.cmd run build passed outside the sandbox on 2026-05-03 after the Bypass-first docs and UI copy update; sandboxed build had failed with spawn EPERM after compilation.",
+      "npm.cmd run typecheck and npm.cmd run lint passed on 2026-05-03 after shared confidence caps and optional evidenceSignals were added.",
+      "npm.cmd run build passed outside the sandbox on 2026-05-03 after shared confidence caps and optional evidenceSignals were added; sandboxed build again failed with spawn EPERM after compilation.",
+      "npm.cmd run typecheck and npm.cmd run lint passed on 2026-05-03 after family scoring was split into src/lib/crypto-analysis/family-scorer.ts.",
+      "npm.cmd run build passed outside the sandbox on 2026-05-03 after family scoring was split; sandboxed build again failed with spawn EPERM after compilation.",
+      "npm.cmd run test:bypass passed on 2026-05-03 with 12 checks across Auto Detect, Caesar, Reverse, Vigenere, Autokey, Substitution, Columnar, toy RSA, toy ElGamal, and JWT.",
+      "npm.cmd run typecheck and npm.cmd run lint passed on 2026-05-03 after adding scripts/bypass-smoke.mjs.",
+      "npm.cmd run build passed outside the sandbox on 2026-05-03 after adding scripts/bypass-smoke.mjs; sandboxed build again failed with spawn EPERM after compilation.",
+      "npm.cmd run validate passed outside the sandbox on 2026-05-03 after validate was expanded to run typecheck, lint, test:bypass, and build; sandboxed build still failed with spawn EPERM after compilation.",
+      "npm.cmd run test:bypass, npm.cmd run typecheck, npm.cmd run lint, and npm.cmd run validate passed on 2026-05-03 after adding documented corpus assets and closing the cryptanalysis upgrade plan; sandboxed build still failed with spawn EPERM after compilation, while escalated validate passed.",
+      "npm.cmd run typecheck, npm.cmd run lint, npm.cmd run test:bypass, and escalated npm.cmd run validate passed on 2026-05-03 after adding optional Gemini AI Evidence Rerank; sandboxed build still failed with spawn EPERM after compilation."
     ]
   },
   "designContinuity": {
@@ -79,5 +101,5 @@
     "redactSensitiveTextBeforeWriting": true
   },
   "generatedAt": "2026-04-27T12:38:41.841Z",
-  "lastUpdatedAt": "2026-04-30T21:52:00+07:00"
+  "lastUpdatedAt": "2026-05-03T13:35:04+07:00"
 }
