@@ -36,7 +36,7 @@ The product must explain what it is doing while it works. A user should see the 
 5. A learner can test a JWT against a small local wordlist to show why weak secrets fail.
 6. A learner receives a conclusion that answers "Why is this weak?" and "How do I fix it?"
 7. A learner can keep a small browser-local run history without accounts, login, or server persistence.
-8. A learner gets Gemini language review automatically after local solver candidates are generated, with local scoring fallback when Gemini is unavailable.
+8. A learner gets Gemini language decision support automatically after local solver candidates are generated. Gemini can accept, mark ambiguous, or reject plaintext candidates, with local scoring fallback when Gemini is unavailable.
 
 ## Non-Goals
 
@@ -77,7 +77,9 @@ The default module should be Auto Detect. A user should not need to know whether
 
 ### Gemini Evidence Rerank
 
-Gemini integration runs by default after local solvers generate candidates. It may judge language plausibility, estimate language, explain ambiguity, and suggest whether confidence should stay conservative. It must not replace IoC, frequency analysis, key search, confidence caps, or solver evidence. If Gemini is unavailable because of quota, network, or missing deployment secret, GhostKey falls back to local scoring without blocking results.
+Gemini integration runs by default after local solvers generate plaintext candidates. It may judge language plausibility, estimate language, explain ambiguity, and decide whether a local candidate should be accepted, marked ambiguous, or rejected. It must not replace IoC, frequency analysis, key search, confidence caps, or solver evidence. If Gemini is unavailable because of quota, network, or missing deployment secret, GhostKey falls back to local scoring without blocking results.
+
+When Gemini rejects every plaintext candidate, GhostKey should show "no reliable plaintext recovered" as the final result instead of showing the highest local candidate as if it were correct. The local candidate reviews may remain visible for classroom comparison.
 
 The browser must never contain Gemini credentials. Local development uses `.env.local`; production deployments must keep the Vertex AI service account JSON server-side in Vercel environment variables. The AI route should receive only bounded candidate summaries and plaintext previews from local solver output, not full JWT secrets, private keys, wordlists, or remote target data.
 
@@ -182,8 +184,8 @@ Fetched on 2026-04-27.
 - Indonesian quadgram data remains educational because the current corpus is self-authored and small. Treat it as a local scoring aid, not authoritative language statistics.
 - Vercel is the target deploy platform, but the first algorithm-heavy tasks should run in the browser to avoid serverless time and resource limits.
 - The practical project story should present Autokey correctness first, then explain automated cryptanalysis as a bounded classroom attack suite for weak/toy algorithms.
-- Gemini AI rerank can improve multilingual plausibility review, but it cannot prove the original plaintext when ciphertext evidence is insufficient.
+- Gemini AI rerank can improve multilingual plausibility decisions, but it cannot prove the original plaintext when ciphertext evidence is insufficient.
 
 ## Next Validation Action
 
-Proceed with the MVP boundary: local-first Next.js dashboard, no custom backend for cryptanalysis, no database, no auth, browser Web Workers for heavy analysis, and a narrow Gemini rerank route only for candidate language review with local fallback.
+Proceed with the MVP boundary: local-first Next.js dashboard, no custom backend for cryptanalysis, no database, no auth, browser Web Workers for heavy analysis, and a narrow Gemini rerank route only for plaintext candidate decision support with local fallback.

@@ -42,18 +42,22 @@
    - best candidate so far
    - iteration count
    - elapsed time
-12. The UI updates the terminal log and result panel.
+12. The UI updates the terminal log while keeping final findings pending.
 13. The worker completes, fails safely, or is cancelled by the user.
-14. GhostKey shows:
+14. The UI sends only bounded local candidate summaries to `POST /api/ai-rerank` for Gemini language decision support when the candidates contain plaintext previews.
+15. Gemini returns one of three decisions:
+   - `accept`: promote the preferred local candidate as the final result.
+   - `ambiguous`: promote the preferred candidate with reduced confidence and visible ambiguity.
+   - `reject`: show that no reliable plaintext was recovered instead of showing a nonsensical candidate as final.
+16. If Gemini is unavailable or rate-limited, GhostKey falls back to the local solver result.
+17. GhostKey shows:
    - best plaintext or decoded artifact
    - guessed key or weak parameter
    - confidence score
    - evidence summary
    - security conclusion
    - recommended fix
-15. The UI sends only bounded local candidate summaries to `POST /api/ai-rerank` for Gemini language review.
-16. Gemini returns language-plausibility review, ambiguity warnings, and explanation text. Local solver evidence and confidence caps remain authoritative.
-17. If Gemini is unavailable or rate-limited, GhostKey keeps the local result and marks AI review as unavailable.
+18. Non-plaintext outputs such as JWT decode or toy asymmetric audits bypass Gemini language decision and use the local result directly.
 
 Bypass is a multi-method concept. Auto Detect should not privilege Autokey over the rest of the suite unless the evidence supports it.
 
@@ -169,8 +173,13 @@ Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt pat
 3. The UI sends those candidate summaries to `POST /api/ai-rerank`.
 4. The route reads Vertex AI service account credentials server-side and calls Gemini through `aiplatform.googleapis.com`.
 5. Gemini reviews language plausibility only; it does not decrypt, brute force, or prove correctness.
-6. The UI shows the AI summary beside the local findings with a caveat that ciphertext-only recovery may remain ambiguous.
-7. If service account credentials are missing, quota is exhausted, or the request fails, the local solver result remains usable and the UI falls back to local scoring.
+6. Gemini returns `accept`, `ambiguous`, or `reject`.
+7. The UI uses that decision to build the final finding:
+   - accepted candidates are promoted with bounded confidence.
+   - ambiguous candidates stay visible but capped.
+   - rejected candidates become a "no reliable plaintext" result.
+8. The AI summary stays beside the final finding with a caveat that ciphertext-only recovery may remain ambiguous.
+9. If service account credentials are missing, quota is exhausted, or the request fails, the local solver result remains usable and the UI falls back to local scoring.
 
 ## Flow: JWT Debugger and Manipulator
 

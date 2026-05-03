@@ -33,7 +33,7 @@ const historyStorageKey = "ghostkey.local-history.v1";
 
 type WorkspaceMode = "autokey" | "breach";
 type AutokeyScene = "idle" | "encrypted" | "decrypted";
-type JobStatus = "idle" | "running" | "complete" | "error";
+type JobStatus = "idle" | "running" | "reviewing" | "complete" | "error";
 type AttackEvidenceMode = "ciphertext-only" | "crib-assisted";
 type AiAssistStatus = "idle" | "running" | "complete" | "error";
 
@@ -140,6 +140,7 @@ export function BreachWorkspace() {
   const [logs, setLogs] = useState<TerminalLine[]>([
     makeLog("SYSTEM", "Bypass suite armed. Auto Detect can rank every local method.")
   ]);
+  const [localCandidateResults, setLocalCandidateResults] = useState<BreachResult[]>([]);
   const [results, setResults] = useState<BreachResult[]>([]);
   const [problem, setProblem] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -226,10 +227,9 @@ export function BreachWorkspace() {
 
       if (event.type === "job.completed") {
         const completed = event.data as { results: BreachResult[] };
-        setStatus("complete");
-        setResults(completed.results);
-        rememberRun(completed.results[0], module, artifact);
-        appendLog("COMPLETE", "Local bypass analysis finished.");
+        setStatus("reviewing");
+        setLocalCandidateResults(completed.results);
+        appendLog("COMPLETE", "Local candidates generated. Waiting for Gemini final decision.");
         void requestAiRerank(completed.results, module, artifact);
       }
 
@@ -249,6 +249,7 @@ export function BreachWorkspace() {
     setWorkspaceMode("breach");
     setStatus("running");
     setProblem(null);
+    setLocalCandidateResults([]);
     setResults([]);
     setAiStatus("idle");
     setAiReview(null);
@@ -295,6 +296,7 @@ export function BreachWorkspace() {
     setKnownPlaintext("");
     setCribText("");
     setMaxKeyLength(6);
+    setLocalCandidateResults([]);
     setResults([]);
     setProblem(null);
     setAiStatus("idle");
@@ -351,8 +353,18 @@ export function BreachWorkspace() {
     window.localStorage.removeItem(historyStorageKey);
   }
 
+  function promoteLocalResults(
+    candidateResults: BreachResult[],
+    currentModule: WorkerModule,
+    currentArtifact: string
+  ) {
+    setResults(candidateResults);
+    rememberRun(candidateResults[0], currentModule, currentArtifact);
+    setStatus("complete");
+  }
+
   async function requestAiRerank(
-    candidateResults = results,
+    candidateResults = localCandidateResults.length > 0 ? localCandidateResults : results,
     currentModule = module,
     currentArtifact = artifact
   ) {
@@ -360,9 +372,16 @@ export function BreachWorkspace() {
       return;
     }
 
+    if (!candidateResults.some((candidate) => candidate.plaintextPreview)) {
+      promoteLocalResults(candidateResults, currentModule, currentArtifact);
+      setAiStatus("idle");
+      appendLog("AI", "Gemini language decision skipped for non-plaintext artifact output.");
+      return;
+    }
+
     setAiStatus("running");
     setAiProblem(null);
-    appendLog("AI", "Reviewing local candidates with Gemini language scoring.");
+    appendLog("AI", "Gemini is deciding whether local plaintext candidates are usable.");
 
     try {
       const response = await fetch("/api/ai-rerank", {
@@ -393,17 +412,26 @@ export function BreachWorkspace() {
       if (!body.ok) {
         setAiStatus("error");
         setAiProblem(`${body.problem.message} ${body.problem.recovery}`);
-        appendLog("AI", "Gemini review unavailable. Local scoring remains active.");
+        promoteLocalResults(candidateResults, currentModule, currentArtifact);
+        appendLog("AI", "Gemini unavailable. Final result falls back to local scoring.");
         return;
       }
 
+      const finalResults = applyAiDecision(body.data, candidateResults);
       setAiStatus("complete");
       setAiReview(body.data);
-      appendLog("AI", `Gemini reviewed candidates. Preferred rank: ${body.data.bestRank}.`);
+      setResults(finalResults);
+      rememberRun(finalResults[0], currentModule, currentArtifact);
+      setStatus("complete");
+      appendLog(
+        "AI",
+        `Gemini decision: ${body.data.decision}. Final rank: ${finalResults[0]?.rank ?? body.data.bestRank}.`
+      );
     } catch {
       setAiStatus("error");
-      setAiProblem("Gemini review is unavailable right now. Local scoring remains active.");
-      appendLog("AI", "Gemini review unavailable. Local scoring remains active.");
+      setAiProblem("Gemini decision is unavailable right now. Local scoring remains active.");
+      promoteLocalResults(candidateResults, currentModule, currentArtifact);
+      appendLog("AI", "Gemini unavailable. Final result falls back to local scoring.");
     }
   }
 
@@ -412,6 +440,7 @@ export function BreachWorkspace() {
     setProblem(null);
     if (nextMode === "breach") {
       setStatus("idle");
+      setLocalCandidateResults([]);
       setResults([]);
       setAiStatus("idle");
       setAiReview(null);
@@ -608,7 +637,7 @@ export function BreachWorkspace() {
                   type="button"
                   key={option.id}
                   onClick={() => selectModule(option.id)}
-                  disabled={!option.ready || status === "running"}
+                  disabled={!option.ready || status === "running" || status === "reviewing"}
                   className={module === option.id ? "is-active" : ""}
                 >
                   <span>{option.label}</span>
@@ -694,10 +723,10 @@ export function BreachWorkspace() {
               <button
                 type="button"
                 onClick={runBreach}
-                disabled={status === "running" || artifact.trim().length === 0}
+                disabled={status === "running" || status === "reviewing" || artifact.trim().length === 0}
                 className="primary-action"
               >
-                Run Bypass
+                {status === "reviewing" ? "Reviewing Candidates" : "Run Bypass"}
               </button>
               <button
                 type="button"
@@ -712,7 +741,7 @@ export function BreachWorkspace() {
             <div className="spectrum-stage" aria-label="Signal confidence">
               <div className="spectrum-scale">
                 {Array.from({ length: 28 }, (_, index) => {
-                  const lit = status === "running" || confidence > index * 3.5;
+                  const lit = status === "running" || status === "reviewing" || confidence > index * 3.5;
                   return (
                     <span
                       key={index}
@@ -722,7 +751,7 @@ export function BreachWorkspace() {
                   );
                 })}
               </div>
-              <div className={`signal-sweep ${status === "running" ? "is-running" : ""}`} />
+              <div className={`signal-sweep ${status === "running" || status === "reviewing" ? "is-running" : ""}`} />
             </div>
           </section>
 
@@ -759,8 +788,12 @@ export function BreachWorkspace() {
 
             {!activeResult ? (
               <div className="empty-state">
-                <span>Awaiting worker output</span>
-                <p>Auto Detect, Caesar, Reverse, Vigenere, Autokey, Monoalphabetic, Column, toy RSA, toy ElGamal, and JWT checks are active.</p>
+                <span>{status === "reviewing" ? "Gemini decision pending" : "Awaiting worker output"}</span>
+                <p>
+                  {status === "reviewing"
+                    ? "Local candidates are ready. Gemini is deciding whether any plaintext is reliable enough to show as the final result."
+                    : "Auto Detect, Caesar, Reverse, Vigenere, Autokey, Monoalphabetic, Column, toy RSA, toy ElGamal, and JWT checks are active."}
+                </p>
               </div>
             ) : (
               <div className="finding-stack">
@@ -788,6 +821,16 @@ export function BreachWorkspace() {
                 {activeResult.weakParameter ? (
                   <FindingBlock label="Weak parameter" value={activeResult.weakParameter} />
                 ) : null}
+                {activeResult.evidence.length > 0 ? (
+                  <div className="finding-block evidence-lines">
+                    <div>Evidence</div>
+                    <ul>
+                      {activeResult.evidence.slice(0, 4).map((line, index) => (
+                        <li key={`${index}-${line.slice(0, 24)}`}>{line}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
                 <div className="conclusion-band">
                   <ConclusionLine title="Why weak" value={activeResult.conclusion.whyWeak} />
                   <ConclusionLine title="Fix" value={activeResult.conclusion.howToFix} />
@@ -798,7 +841,7 @@ export function BreachWorkspace() {
                 </div>
                 <div className="ai-review-panel">
                   <div className="ai-review-heading">
-                    <span>Gemini language review</span>
+                    <span>Gemini language decision</span>
                     <button
                       type="button"
                       onClick={() => void requestAiRerank()}
@@ -828,8 +871,8 @@ export function BreachWorkspace() {
                   ) : (
                     <p>
                       {aiStatus === "running"
-                        ? "Gemini is reviewing local candidates for language plausibility."
-                        : "Gemini review runs automatically after local analysis. If it is unavailable, GhostKey falls back to local scoring."}
+                        ? "Gemini is deciding whether local plaintext candidates should be accepted, marked ambiguous, or rejected."
+                        : "Gemini decision runs automatically after local analysis. If it is unavailable, GhostKey falls back to local scoring."}
                     </p>
                   )}
                 </div>
@@ -1013,6 +1056,80 @@ function buildAttackHints(
     knownPlaintext: knownPlaintext.trim(),
     cribs,
     maxKeyLength: Math.max(1, Math.min(12, Math.floor(maxKeyLength || 6)))
+  };
+}
+
+function applyAiDecision(review: AiRerankResponse, candidates: BreachResult[]): BreachResult[] {
+  if (review.decision === "reject") {
+    return [buildRejectedPlaintextResult(review)];
+  }
+
+  const reordered = orderCandidatesByAiBestRank(candidates, review.bestRank);
+  if (review.decision === "ambiguous") {
+    return reordered.map((candidate, index) => ({
+      ...candidate,
+      rank: index + 1,
+      confidence: Math.min(candidate.confidence, review.finalConfidence, 0.45),
+      evidence: [
+        `Gemini decision: ambiguous. ${review.decisionReason}`,
+        ...candidate.evidence
+      ].slice(0, 6),
+      conclusion: {
+        ...candidate.conclusion,
+        whyWeak: `Candidate remains plausible but ambiguous. ${candidate.conclusion.whyWeak}`
+      }
+    }));
+  }
+
+  return reordered.map((candidate, index) => {
+    const confidence =
+      index === 0
+        ? Math.min(Math.max(candidate.confidence, review.finalConfidence), candidate.confidence + 0.08, 0.9)
+        : candidate.confidence;
+
+    return {
+      ...candidate,
+      rank: index + 1,
+      confidence,
+      evidence:
+        index === 0
+          ? [
+              `Gemini decision: accepted rank ${review.bestRank}. ${review.decisionReason}`,
+              ...candidate.evidence
+            ].slice(0, 6)
+          : candidate.evidence
+    };
+  });
+}
+
+function orderCandidatesByAiBestRank(candidates: BreachResult[], bestRank: number) {
+  const best = candidates.find((candidate) => candidate.rank === bestRank);
+  if (!best) {
+    return candidates;
+  }
+
+  return [best, ...candidates.filter((candidate) => candidate !== best)];
+}
+
+function buildRejectedPlaintextResult(review: AiRerankResponse): BreachResult {
+  return {
+    rank: 1,
+    module: "ai-reviewed-no-reliable-plaintext",
+    confidence: Math.min(review.finalConfidence, 0.12),
+    evidence: [
+      "Gemini reviewed local solver candidates and rejected them as unreliable plaintext.",
+      review.decisionReason,
+      review.summary,
+      "Local candidates are still visible in the Gemini decision panel for classroom comparison."
+    ],
+    conclusion: {
+      whyWeak:
+        "Ciphertext-only analysis did not produce a reliable natural-language plaintext from the local candidate set.",
+      howToFix:
+        "Use a longer ciphertext, a known classroom key, or explicit crib-assisted lesson evidence before treating any candidate as correct.",
+      safeModernAlternative:
+        "Use authenticated modern encryption for real secrecy. Classical ciphertext-only recovery is heuristic and can fail cleanly."
+    }
   };
 }
 

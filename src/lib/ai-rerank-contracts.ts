@@ -30,9 +30,14 @@ export type AiCandidateReview = {
   limitations: string[];
 };
 
+export type AiRerankDecision = "accept" | "ambiguous" | "reject";
+
 export type AiRerankResponse = {
   model: string;
+  decision: AiRerankDecision;
   bestRank: number;
+  finalConfidence: number;
+  decisionReason: string;
   summary: string;
   caveat: string;
   reviews: AiCandidateReview[];

@@ -937,6 +937,10 @@ input:focus-visible {
   color: var(--signal-info);
 }
 
+.status-reviewing {
+  color: var(--signal-warning);
+}
+
 .status-complete {
   color: var(--signal-success);
 }
@@ -989,6 +993,18 @@ input:focus-visible {
 
 .finding-stack {
   margin-top: 14px;
+}
+
+.evidence-lines ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.evidence-lines li {
+  margin-top: 6px;
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .confidence-meter {

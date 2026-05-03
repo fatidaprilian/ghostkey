@@ -52,7 +52,7 @@
       "Short ciphertext produces capped confidence and caveats instead of overconfident magic",
       "Bypass defaults to ciphertext-only attack mode, with optional crib evidence separated into its own control state",
       "Autokey stays available as a sufficient coursework simulator instead of the whole product identity",
-      "Gemini AI review runs after local results and is framed as candidate language plausibility, not decryption proof"
+      "Gemini AI decision runs after local plaintext candidates and can accept, mark ambiguous, or reject the final plaintext promotion without claiming proof"
     ],
     "copiedReferenceAllowed": false
   },
@@ -78,7 +78,7 @@
       "light Bypass Tool panels, history rows, terminal feed, and finding blocks",
       "ciphertext-only mode marker plus optional crib controls only when explicitly selected",
       "multi-method Bypass roster visible as the main product surface",
-      "AI rerank caveat and local fallback visible when Gemini reviews local candidates"
+      "AI decision caveat and local fallback visible when Gemini accepts, marks ambiguous, or rejects local plaintext candidates"
     ],
     "blockingByDefault": true
   },
@@ -203,7 +203,7 @@
       "autokeySimulation": "two-action sender-observer-receiver lesson with CSS characters, Eve confusion, Bob reveal, reset, and formula rows from the active Autokey transform",
       "moduleSwitcher": "instrument selector with risk labels and input expectations",
       "findingRow": "ranked evidence row with confidence and key candidate",
-      "aiRerankPanel": "Gemini language-plausibility review that stays secondary to local solver evidence and falls back calmly",
+      "aiRerankPanel": "Gemini language decision support that accepts, marks ambiguous, or rejects local plaintext candidates while staying bounded by solver evidence and falling back calmly",
       "conclusionBand": "weakness, evidence, fix, and modern alternative"
     },
     "stateKeys": [
@@ -537,7 +537,7 @@
       "Text scoring uses documented self-authored English and Indonesian corpus assets in src/lib/crypto-analysis/language-corpora.ts and docs/corpus-assets.md",
       "Auto Detect now accepts strong Caesar and Reverse evidence early, then caps complex solver confidence on short artifacts to reduce false certainty",
       "Bypass Tool styling now uses explicit light learning surfaces for findings, history, terminal feed, meters, and spectrum bars",
-      "Gemini AI rerank uses POST /api/ai-rerank, calls Vertex AI with server-side service account credentials, and falls back to local scoring"
+      "Gemini AI rerank uses POST /api/ai-rerank, calls Vertex AI with server-side service account credentials, returns accept/ambiguous/reject decisions for plaintext candidates, and falls back to local scoring"
     ]
   }
 }

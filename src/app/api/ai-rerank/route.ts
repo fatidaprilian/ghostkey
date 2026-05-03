@@ -3,6 +3,7 @@ import { createSign } from "node:crypto";
 import type {
   AiCandidateReview,
   AiRerankApiResponse,
+  AiRerankDecision,
   AiRerankRequest,
   AiRerankResponse
 } from "@/lib/ai-rerank-contracts";
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     payload = normalizePayload(await request.json());
   } catch (error) {
     return jsonProblem(
-      error instanceof Error ? error.message.replace("AI rerank", "Gemini review") : "Gemini review request is malformed.",
+      error instanceof Error ? error.message.replace("AI rerank", "Gemini decision") : "Gemini decision request is malformed.",
       "Local scoring remains active."
     );
   }
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       return jsonProblem(
-        "Gemini review is temporarily unavailable.",
+        "Gemini decision is temporarily unavailable.",
         "Local scoring remains active."
       );
     }
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, data: parsed } satisfies AiRerankApiResponse);
   } catch {
     return jsonProblem(
-      "Gemini review could not be completed.",
+      "Gemini decision could not be completed.",
       "Local scoring remains active."
     );
   }
@@ -75,7 +76,7 @@ function getGeminiConfig(): GeminiConfig {
   if (provider === "developer") {
     const apiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
     if (!apiKey) {
-      throw new Error("Gemini review is unavailable.");
+      throw new Error("Gemini decision is unavailable.");
     }
 
     return {
@@ -276,8 +277,11 @@ function buildPrompt(payload: AiRerankRequest) {
     "Do not decrypt the ciphertext yourself. Do not invent a key. Do not claim proof.",
     "Local cryptanalysis solvers already generated these candidates. Your job is only to judge language plausibility, ambiguity, and explanation quality.",
     "Keep confidence conservative, especially for short ciphertext. If candidates are close, say so.",
+    "Choose decision accept only when one candidate is clearly natural language and materially better than the others.",
+    "Choose decision ambiguous when one or more candidates might be plausible but the evidence is weak, short, or close.",
+    "Choose decision reject when no candidate is linguistically plausible. In that case, do not promote any plaintext as recovered.",
     "Return strict JSON only with this shape:",
-    '{"bestRank":1,"summary":"...","caveat":"...","reviews":[{"candidateRank":1,"languageEstimate":"...","plausibilityScore":0.0,"confidenceAdjustment":"lower|same|raise-slightly","ambiguityWarning":"...","explanation":"...","limitations":["..."]}]}',
+    '{"decision":"accept|ambiguous|reject","bestRank":1,"finalConfidence":0.0,"decisionReason":"...","summary":"...","caveat":"...","reviews":[{"candidateRank":1,"languageEstimate":"...","plausibilityScore":0.0,"confidenceAdjustment":"lower|same|raise-slightly","ambiguityWarning":"...","explanation":"...","limitations":["..."]}]}',
     "",
     `Context: ${JSON.stringify(payload.context)}`,
     `Candidates: ${JSON.stringify(payload.candidates)}`
@@ -295,16 +299,81 @@ function normalizeModelResponse(raw: unknown, model: string, payload: AiRerankRe
   const bestRank = payload.candidates.some((candidate) => candidate.rank === requestedBestRank)
     ? requestedBestRank
     : firstRank;
+  const decision = normalizeDecision(value.decision, reviews, payload);
+  const finalConfidence = normalizeFinalConfidence(value.finalConfidence, decision, reviews);
 
   return {
     model,
+    decision,
     bestRank,
-    summary: truncate(value.summary, 320) ?? "Gemini reviewed local candidates for language plausibility.",
+    finalConfidence,
+    decisionReason:
+      truncate(value.decisionReason, 260) ??
+      buildDecisionReason(decision, reviews, payload.context.artifactLetterCount),
+    summary: truncate(value.summary, 320) ?? "Gemini evaluated local candidates for language plausibility.",
     caveat:
       truncate(value.caveat, 320) ??
-      "AI rerank is a language-plausibility review, not proof that a ciphertext-only recovery is correct.",
+      "AI rerank is language-plausibility decision support, not proof that a ciphertext-only recovery is correct.",
     reviews
   };
+}
+
+function normalizeDecision(
+  raw: unknown,
+  reviews: AiCandidateReview[],
+  payload: AiRerankRequest
+): AiRerankDecision {
+  if (raw === "accept" || raw === "ambiguous" || raw === "reject") {
+    return raw;
+  }
+
+  const sortedPlausibility = reviews
+    .map((review) => review.plausibilityScore)
+    .sort((a, b) => b - a);
+  const top = sortedPlausibility[0] ?? 0;
+  const second = sortedPlausibility[1] ?? 0;
+  const allLower = reviews.length > 0 && reviews.every((review) => review.confidenceAdjustment === "lower");
+
+  if (top < 0.18 || (allLower && top < 0.35)) {
+    return "reject";
+  }
+
+  if (payload.context.artifactLetterCount < 36 || top < 0.48 || top - second < 0.16) {
+    return "ambiguous";
+  }
+
+  return "accept";
+}
+
+function normalizeFinalConfidence(
+  raw: unknown,
+  decision: AiRerankDecision,
+  reviews: AiCandidateReview[]
+) {
+  const topPlausibility = Math.max(0, ...reviews.map((review) => review.plausibilityScore));
+  const fallback = decision === "accept" ? topPlausibility : decision === "ambiguous" ? Math.min(topPlausibility, 0.42) : 0.08;
+  const value = clampNumber(raw, 0, 0.98) || fallback;
+  const ceiling = decision === "accept" ? 0.88 : decision === "ambiguous" ? 0.45 : 0.12;
+
+  return Math.min(value, ceiling);
+}
+
+function buildDecisionReason(
+  decision: AiRerankDecision,
+  reviews: AiCandidateReview[],
+  letterCount: number
+) {
+  const top = Math.max(0, ...reviews.map((review) => review.plausibilityScore));
+
+  if (decision === "reject") {
+    return `No reviewed candidate showed enough natural-language signal to promote as recovered plaintext. Top plausibility was ${Math.round(top * 100)}% across ${letterCount} letters.`;
+  }
+
+  if (decision === "ambiguous") {
+    return `Gemini found language evidence too close or too weak for a single definitive plaintext. Top plausibility was ${Math.round(top * 100)}% across ${letterCount} letters.`;
+  }
+
+  return `Gemini found one candidate materially more plausible than the rest, with ${Math.round(top * 100)}% language plausibility across ${letterCount} letters.`;
 }
 
 function normalizeReview(raw: unknown, index: number): AiCandidateReview {

@@ -26,7 +26,7 @@ The MVP should not expose a public HTTP attack API. Sending ciphertext, tokens, 
 
 If future server routes are added, use Next.js Route Handlers under `app/api/**/route.ts`, validate every request at the route boundary, and return safe problem responses.
 
-The current allowed route is `POST /api/ai-rerank`. It calls Gemini through Vertex AI / Gemini Enterprise Agent Platform by default using a server-side service account and reviews local solver candidates for language plausibility. It must not receive full secrets, private keys, wordlists, or remote target data.
+The current allowed route is `POST /api/ai-rerank`. It calls Gemini through Vertex AI / Gemini Enterprise Agent Platform by default using a server-side service account and reviews local solver candidates for language plausibility. The route returns a final language decision that can accept, mark ambiguous, or reject the local plaintext candidates. It must not receive full secrets, private keys, wordlists, or remote target data.
 
 ## Worker Request Contract
 
@@ -201,7 +201,10 @@ The response must stay conservative:
 ```ts
 type AiRerankResponse = {
   model: string;
+  decision: "accept" | "ambiguous" | "reject";
   bestRank: number;
+  finalConfidence: number;
+  decisionReason: string;
   summary: string;
   caveat: string;
   reviews: Array<{
@@ -216,7 +219,13 @@ type AiRerankResponse = {
 };
 ```
 
-AI rerank must never replace local confidence caps. The UI must label it as language-plausibility review, not proof of decryption. If Gemini is unavailable because of quota, network, malformed response, or missing server secret, the UI must silently preserve local scoring as the usable result.
+Decision rules:
+
+- `accept`: One local plaintext candidate is clearly more natural-language-like than the others.
+- `ambiguous`: One or more candidates may be plausible, but the input is short, noisy, or close-scoring.
+- `reject`: No local plaintext candidate is plausible enough to promote as recovered text.
+
+AI rerank must never remove local confidence caps. The UI must label it as language-plausibility decision support, not proof of decryption. If Gemini is unavailable because of quota, network, malformed response, or missing server secret, the UI must promote local scoring as the usable fallback result.
 
 ### Gemini Runtime Environment
 
