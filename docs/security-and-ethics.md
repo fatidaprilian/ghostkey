@@ -24,7 +24,7 @@ GhostKey teaches why weak cryptography fails. It must help users understand risk
 ## Product Guardrails
 
 - Keep breach jobs local in the browser for the MVP.
-- Do not add a custom backend for breach jobs in the MVP. The optional Gemini AI rerank proxy may review bounded local solver candidate summaries, but it must not become a server-side cracking job.
+- Do not add a custom backend for breach jobs in the MVP. The Gemini AI rerank proxy may review bounded local solver candidate summaries, but it must not become a server-side cracking job.
 - Do not provide remote target fields.
 - Do not include network attack automation.
 - Use small bounded wordlists for demos.
@@ -69,4 +69,4 @@ Modern alternative:
 
 ## Next Validation Action
 
-Before implementation, add these guardrails to UI copy, worker limits, and test cases. Keep backend endpoints out of scope until a future feature explicitly needs accounts, persistence, sharing, server-side processing, or the approved optional Gemini candidate-rerank proxy.
+Before implementation, add these guardrails to UI copy, worker limits, and test cases. Keep backend endpoints out of scope until a future feature explicitly needs accounts, persistence, sharing, server-side processing, or the approved Gemini candidate-rerank proxy.

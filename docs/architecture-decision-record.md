@@ -122,7 +122,7 @@ Security education works best when the user understands the weakness and the fix
 
 ### Status
 
-Accepted for MVP planning, amended for optional AI rerank.
+Accepted for MVP planning, amended for Gemini AI rerank.
 
 ### Context
 
@@ -134,7 +134,7 @@ Do not implement a custom backend for core cryptanalysis in the MVP. Build Ghost
 
 Next.js is still the application framework and deployment target. In this decision, "no backend" means no application-owned API surface for processing user artifacts as solver input, no database, no auth service, no queue, and no server-side cracking jobs.
 
-The approved exception is `POST /api/ai-rerank`, a narrow server-side Gemini proxy. It receives bounded local solver candidate summaries, calls Gemini with a server-side API key, and returns language-plausibility review. It is not allowed to decrypt, brute force, persist artifacts, or replace local confidence caps.
+The approved exception is `POST /api/ai-rerank`, a narrow server-side Gemini proxy. It receives bounded local solver candidate summaries, calls Gemini with a server-side API key, and returns language-plausibility review. It is not allowed to decrypt, brute force, persist artifacts, or replace local confidence caps. If Gemini is unavailable, the app must fall back to local scoring.
 
 ### Rationale
 
@@ -175,4 +175,4 @@ Fetched on 2026-04-27.
 
 ## Next Validation Action
 
-Keep the worker message contract as the core attack path. Any route handler must stay outside solver execution; the current approved route is only the optional Gemini candidate-rerank proxy.
+Keep the worker message contract as the core attack path. Any route handler must stay outside solver execution; the current approved route is only the Gemini candidate-rerank proxy.

@@ -370,41 +370,6 @@ input:focus-visible {
   line-height: 1.5;
 }
 
-.ai-assist-toggle {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-  margin-top: 12px;
-  border: 1px solid rgba(199, 120, 16, 0.22);
-  border-radius: 12px;
-  background: rgba(255, 248, 218, 0.62);
-  padding: 10px 12px;
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.ai-assist-toggle input {
-  width: 18px;
-  height: 18px;
-  margin-top: 2px;
-  accent-color: var(--signal-info);
-}
-
-.ai-assist-toggle strong {
-  display: block;
-  color: var(--text-primary);
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-.ai-assist-toggle code {
-  color: var(--signal-info);
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 12px;
-}
-
 .attack-hints-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(180px, 0.7fr) minmax(96px, 0.25fr);

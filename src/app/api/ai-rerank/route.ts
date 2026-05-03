@@ -17,8 +17,8 @@ export async function POST(request: Request) {
 
   if (!apiKey) {
     return jsonProblem(
-      "Gemini API key is not configured.",
-      "Copy .env.local.example to .env.local and set GEMINI_API_KEY."
+      "Gemini review is unavailable.",
+      "Local scoring remains active."
     );
   }
 
@@ -27,8 +27,8 @@ export async function POST(request: Request) {
     payload = normalizePayload(await request.json());
   } catch (error) {
     return jsonProblem(
-      error instanceof Error ? error.message : "AI rerank request is malformed.",
-      "Run a local Bypass analysis first, then submit the generated candidates."
+      error instanceof Error ? error.message.replace("AI rerank", "Gemini review") : "Gemini review request is malformed.",
+      "Local scoring remains active."
     );
   }
 
@@ -57,8 +57,8 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       return jsonProblem(
-        "Gemini rerank request failed.",
-        "Check GEMINI_API_KEY, GEMINI_MODEL, quota, and network access."
+        "Gemini review is temporarily unavailable.",
+        "Local scoring remains active."
       );
     }
 
@@ -69,8 +69,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, data: parsed } satisfies AiRerankApiResponse);
   } catch {
     return jsonProblem(
-      "Gemini response could not be parsed safely.",
-      "Keep the local solver result as the source of truth and try AI rerank again."
+      "Gemini review could not be completed.",
+      "Local scoring remains active."
     );
   }
 }
@@ -210,6 +210,6 @@ function jsonProblem(message: string, recovery: string) {
       ok: false,
       problem: { message, recovery }
     } satisfies AiRerankApiResponse,
-    { status: message.includes("not configured") ? 503 : 400 }
+    { status: 200 }
   );
 }

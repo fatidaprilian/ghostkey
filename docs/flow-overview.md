@@ -51,8 +51,9 @@
    - evidence summary
    - security conclusion
    - recommended fix
-15. If Gemini AI Evidence Rerank is enabled, the UI sends only bounded local candidate summaries to `POST /api/ai-rerank`.
+15. The UI sends only bounded local candidate summaries to `POST /api/ai-rerank` for Gemini language review.
 16. Gemini returns language-plausibility review, ambiguity warnings, and explanation text. Local solver evidence and confidence caps remain authoritative.
+17. If Gemini is unavailable or rate-limited, GhostKey keeps the local result and marks AI review as unavailable.
 
 Bypass is a multi-method concept. Auto Detect should not privilege Autokey over the rest of the suite unless the evidence supports it.
 
@@ -161,7 +162,7 @@ Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt pat
 3. Do not send history to a backend.
 4. Let the user clear the local history from the UI.
 
-## Flow: Optional AI Evidence Rerank
+## Flow: Gemini Evidence Rerank
 
 1. The user runs a local Bypass analysis first.
 2. The UI gathers the top bounded candidates, including rank, module, key candidate, plaintext preview, confidence, fitness, and evidence.
@@ -169,7 +170,7 @@ Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt pat
 4. The route reads `GEMINI_API_KEY` server-side and calls Gemini through the standard `generateContent` endpoint.
 5. Gemini reviews language plausibility only; it does not decrypt, brute force, or prove correctness.
 6. The UI shows the AI summary beside the local findings with a caveat that ciphertext-only recovery may remain ambiguous.
-7. If the API key is missing or the request fails, the local solver result remains usable.
+7. If the API key is missing, quota is exhausted, or the request fails, the local solver result remains usable and the UI falls back to local scoring.
 
 ## Flow: JWT Debugger and Manipulator
 

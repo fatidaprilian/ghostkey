@@ -8,7 +8,7 @@ This document defines the internal public contracts that implementation must kee
 
 - Web Worker job requests.
 - Web Worker progress events.
-- Optional Gemini AI rerank route handler.
+- Gemini AI rerank route handler.
 - Optional future Next.js route handlers.
 - Error shapes used by the UI.
 
@@ -18,7 +18,7 @@ GhostKey does not use a custom backend for core cryptanalysis in the MVP.
 
 The active contract is the browser-to-worker contract. The UI sends typed jobs to Web Workers, receives progress events, and renders findings locally. No MVP endpoint should accept ciphertext, JWTs, candidate secrets, private keys, or wordlists.
 
-Next.js route handlers are reserved for future features except the optional Gemini evidence-rerank proxy. That proxy is not a solver and must not run cracking jobs.
+Next.js route handlers are reserved for future features except the Gemini evidence-rerank proxy. That proxy is not a solver and must not run cracking jobs.
 
 ## External HTTP API Position
 
@@ -174,7 +174,7 @@ Language model evidence is generated from local corpus assets documented in `doc
 
 ## AI Rerank Contract
 
-AI rerank is optional and runs after local solvers complete. The route accepts bounded candidate summaries:
+AI rerank runs after local solvers complete. The route accepts bounded candidate summaries:
 
 ```ts
 type AiRerankRequest = {
@@ -216,7 +216,7 @@ type AiRerankResponse = {
 };
 ```
 
-AI rerank must never replace local confidence caps. The UI must label it as language-plausibility review, not proof of decryption.
+AI rerank must never replace local confidence caps. The UI must label it as language-plausibility review, not proof of decryption. If Gemini is unavailable because of quota, network, malformed response, or missing server secret, the UI must silently preserve local scoring as the usable result.
 
 ## Error Contract
 
@@ -310,7 +310,7 @@ Fetched on 2026-04-27.
 - RFC 7519 defines JWT as a compact claims format carried as JSON Web Signature or JSON Web Encryption data: https://www.rfc-editor.org/rfc/rfc7519
 - OWASP documents `none` algorithm and weak HMAC secret risks for JWT implementations: https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
 - Gemini API key docs warn not to commit API keys or expose them in client-side code: https://ai.google.dev/gemini-api/docs/api-key
-- Gemini `generateContent` is the standard REST endpoint used by the optional AI rerank proxy: https://ai.google.dev/api
+- Gemini `generateContent` is the standard REST endpoint used by the AI rerank proxy: https://ai.google.dev/api
 
 ## Next Validation Action
 

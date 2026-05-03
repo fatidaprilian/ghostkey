@@ -134,7 +134,6 @@ export function BreachWorkspace() {
   const [cribText, setCribText] = useState("");
   const [maxKeyLength, setMaxKeyLength] = useState(6);
   const [status, setStatus] = useState<JobStatus>("idle");
-  const [aiAssistEnabled, setAiAssistEnabled] = useState(false);
   const [aiStatus, setAiStatus] = useState<AiAssistStatus>("idle");
   const [aiReview, setAiReview] = useState<AiRerankResponse | null>(null);
   const [aiProblem, setAiProblem] = useState<string | null>(null);
@@ -231,9 +230,7 @@ export function BreachWorkspace() {
         setResults(completed.results);
         rememberRun(completed.results[0], module, artifact);
         appendLog("COMPLETE", "Local bypass analysis finished.");
-        if (aiAssistEnabled) {
-          void requestAiRerank(completed.results, module, artifact);
-        }
+        void requestAiRerank(completed.results, module, artifact);
       }
 
       if (event.type === "job.failed") {
@@ -365,7 +362,7 @@ export function BreachWorkspace() {
 
     setAiStatus("running");
     setAiProblem(null);
-    appendLog("AI", "Submitting local candidates to Gemini for language plausibility review.");
+    appendLog("AI", "Reviewing local candidates with Gemini language scoring.");
 
     try {
       const response = await fetch("/api/ai-rerank", {
@@ -396,7 +393,7 @@ export function BreachWorkspace() {
       if (!body.ok) {
         setAiStatus("error");
         setAiProblem(`${body.problem.message} ${body.problem.recovery}`);
-        appendLog("AI", body.problem.message);
+        appendLog("AI", "Gemini review unavailable. Local scoring remains active.");
         return;
       }
 
@@ -405,8 +402,8 @@ export function BreachWorkspace() {
       appendLog("AI", `Gemini reviewed candidates. Preferred rank: ${body.data.bestRank}.`);
     } catch {
       setAiStatus("error");
-      setAiProblem("AI rerank failed. Keep the local solver result as the source of truth.");
-      appendLog("AI", "AI rerank request failed.");
+      setAiProblem("Gemini review is unavailable right now. Local scoring remains active.");
+      appendLog("AI", "Gemini review unavailable. Local scoring remains active.");
     }
   }
 
@@ -693,19 +690,6 @@ export function BreachWorkspace() {
               </p>
             )}
 
-            <label className="ai-assist-toggle">
-              <input
-                type="checkbox"
-                checked={aiAssistEnabled}
-                onChange={(event) => setAiAssistEnabled(event.target.checked)}
-              />
-              <span>
-                <strong>Gemini AI Evidence Rerank</strong>
-                Review local solver candidates for language plausibility. Requires server-side
-                <code> GEMINI_API_KEY</code>.
-              </span>
-            </label>
-
             <div className="breach-actions">
               <button
                 type="button"
@@ -814,13 +798,13 @@ export function BreachWorkspace() {
                 </div>
                 <div className="ai-review-panel">
                   <div className="ai-review-heading">
-                    <span>AI evidence rerank</span>
+                    <span>Gemini language review</span>
                     <button
                       type="button"
                       onClick={() => void requestAiRerank()}
                       disabled={aiStatus === "running"}
                     >
-                      {aiStatus === "running" ? "Reviewing" : "Review with Gemini"}
+                      {aiStatus === "running" ? "Reviewing" : "Retry review"}
                     </button>
                   </div>
                   {aiProblem ? <p className="ai-problem">{aiProblem}</p> : null}
@@ -834,7 +818,7 @@ export function BreachWorkspace() {
                             <strong>
                               Rank {review.candidateRank} - {Math.round(review.plausibilityScore * 100)}%
                             </strong>
-                            <span>{review.languageEstimate} · {review.confidenceAdjustment}</span>
+                            <span>{review.languageEstimate} - {review.confidenceAdjustment}</span>
                             <p>{review.explanation}</p>
                             <small>{review.ambiguityWarning}</small>
                           </div>
@@ -843,8 +827,9 @@ export function BreachWorkspace() {
                     </div>
                   ) : (
                     <p>
-                      Local solvers stay authoritative. Gemini only reviews candidate language
-                      plausibility after a result exists.
+                      {aiStatus === "running"
+                        ? "Gemini is reviewing local candidates for language plausibility."
+                        : "Gemini review runs automatically after local analysis. If it is unavailable, GhostKey falls back to local scoring."}
                     </p>
                   )}
                 </div>

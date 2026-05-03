@@ -23,7 +23,7 @@
       "BreachResult now supports optional evidenceSignals for structured result panels while preserving evidence[] strings for the current UI.",
       "Classical family scoring is centralized in src/lib/crypto-analysis/family-scorer.ts and shared by detection plus Auto Detect solver dispatch.",
       "Language scoring now uses documented self-authored corpus assets with metadata in src/lib/crypto-analysis/language-corpora.ts and docs/corpus-assets.md.",
-      "Optional Gemini AI Evidence Rerank is implemented as POST /api/ai-rerank with the API key kept server-side through GEMINI_API_KEY or GOOGLE_API_KEY.",
+      "Gemini AI Evidence Rerank now runs automatically after local solver results, uses POST /api/ai-rerank with the API key kept server-side through GEMINI_API_KEY or GOOGLE_API_KEY, and falls back to local scoring when unavailable.",
       "Autokey coursework UI includes Encrypt & Send, Decrypt Message, Reset, Eve confusion, Bob reveal, CSS characters, and formula rows for Pi, Ki, and Ci, and is considered enough for the current coursework requirement.",
       "Auto Detect prefers strong cheap Caesar or Reverse evidence before expensive heuristic solvers and caps complex solver confidence on short artifacts.",
       "Bypass Tool defaults to ciphertext-only attack mode. Optional crib attack mode can pass local known plaintext, probable words, and max key length hints for separate known-plaintext lessons."
@@ -38,6 +38,7 @@
       "Implemented the fourth cryptanalysis upgrade step: npm run test:bypass now runs dependency-free smoke fixtures across Auto Detect, classical methods, toy asymmetric audits, and JWT.",
       "Implemented the fifth cryptanalysis upgrade step with documented self-authored English and Indonesian corpus assets, and closed the sixth step by deferring heavier search expansion until benchmark evidence shows a measured need.",
       "Added optional Gemini AI Evidence Rerank: server route, UI toggle/review panel, env examples, gitignore safety, API docs, ADR update, and validation coverage.",
+      "Polished Gemini AI Evidence Rerank for production UX: removed the UI toggle/setup copy, made Gemini review automatic, and changed quota/key failures into calm local-scoring fallback.",
       "Improved Autokey breach so the sample ciphertext CICAFY QRRXGE SRKT XSJAK ranks KELAS -> SERANG MARKAS SAAT FAJAR first.",
       "Replaced fixed phrase-heavy text metrics with corpus-built language scoring and Auto Detect meta-ranking across active solver results.",
       "Added a live Autokey sender-observer-receiver simulation with formula tables to strengthen the mandatory coursework path.",
@@ -57,7 +58,7 @@
     "nextBestActions": [
       "Expand npm run test:bypass with known-plaintext and crib-assisted demo cases.",
       "Benchmark whether larger external quadgram assets are worth adding after license review.",
-      "If Gemini rerank is used in production, add deployment secret setup notes and optional request-rate controls."
+      "If Gemini rerank gets public traffic, add optional request-rate controls."
     ],
     "validationState": [
       "Headless Autokey and Auto Detect check returned CICAFY QRRXGE SRKT XSJAK, KELAS, and SERANG MARKAS SAAT FAJAR after the local corpus pack change.",
@@ -83,7 +84,8 @@
       "npm.cmd run build passed outside the sandbox on 2026-05-03 after adding scripts/bypass-smoke.mjs; sandboxed build again failed with spawn EPERM after compilation.",
       "npm.cmd run validate passed outside the sandbox on 2026-05-03 after validate was expanded to run typecheck, lint, test:bypass, and build; sandboxed build still failed with spawn EPERM after compilation.",
       "npm.cmd run test:bypass, npm.cmd run typecheck, npm.cmd run lint, and npm.cmd run validate passed on 2026-05-03 after adding documented corpus assets and closing the cryptanalysis upgrade plan; sandboxed build still failed with spawn EPERM after compilation, while escalated validate passed.",
-      "npm.cmd run typecheck, npm.cmd run lint, npm.cmd run test:bypass, and escalated npm.cmd run validate passed on 2026-05-03 after adding optional Gemini AI Evidence Rerank; sandboxed build still failed with spawn EPERM after compilation."
+      "npm.cmd run typecheck, npm.cmd run lint, npm.cmd run test:bypass, and escalated npm.cmd run validate passed on 2026-05-03 after adding optional Gemini AI Evidence Rerank; sandboxed build still failed with spawn EPERM after compilation.",
+      "npm.cmd run typecheck, npm.cmd run lint, npm.cmd run test:bypass, and escalated npm.cmd run validate passed on 2026-05-03 after making Gemini review automatic with local-scoring fallback; sandboxed build still failed with spawn EPERM after compilation."
     ]
   },
   "designContinuity": {
@@ -101,5 +103,5 @@
     "redactSensitiveTextBeforeWriting": true
   },
   "generatedAt": "2026-04-27T12:38:41.841Z",
-  "lastUpdatedAt": "2026-05-03T13:35:04+07:00"
+  "lastUpdatedAt": "2026-05-03T15:00:09+07:00"
 }

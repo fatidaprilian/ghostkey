@@ -54,4 +54,4 @@ Keeping breach work local reduces privacy risk and abuse risk. A hosted analysis
 
 ## Next Implementation Action
 
-Scaffold the frontend app, then implement worker contracts before attack modules. Do not create `app/api/**` routes for breach jobs. The approved exception is a narrow optional `app/api/ai-rerank/route.ts` proxy that keeps the Gemini API key server-side and reviews local solver candidates only.
+Scaffold the frontend app, then implement worker contracts before attack modules. Do not create `app/api/**` routes for breach jobs. The approved exception is a narrow `app/api/ai-rerank/route.ts` proxy that keeps the Gemini API key server-side, reviews local solver candidates only, and falls back to local scoring when unavailable.

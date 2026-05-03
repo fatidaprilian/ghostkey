@@ -36,7 +36,7 @@ The product must explain what it is doing while it works. A user should see the 
 5. A learner can test a JWT against a small local wordlist to show why weak secrets fail.
 6. A learner receives a conclusion that answers "Why is this weak?" and "How do I fix it?"
 7. A learner can keep a small browser-local run history without accounts, login, or server persistence.
-8. A learner can optionally ask Gemini to review local solver candidates for language plausibility without replacing the cryptographic evidence.
+8. A learner gets Gemini language review automatically after local solver candidates are generated, with local scoring fallback when Gemini is unavailable.
 
 ## Non-Goals
 
@@ -75,9 +75,9 @@ The main workspace accepts an input artifact, selects an attack module, and stre
 
 The default module should be Auto Detect. A user should not need to know whether an artifact is Caesar, Reverse, Monoalphabetic, Column, Vigenere, Autokey, RSA, ElGamal, or JWT before starting. Manual module selection remains useful for demos and controlled labs, but the product should communicate that every supported module is part of the Bypass concept.
 
-### Optional AI Evidence Rerank
+### Gemini Evidence Rerank
 
-Gemini integration is allowed only as an optional review layer after local solvers generate candidates. It may judge language plausibility, estimate language, explain ambiguity, and suggest whether confidence should stay conservative. It must not replace IoC, frequency analysis, key search, confidence caps, or solver evidence.
+Gemini integration runs by default after local solvers generate candidates. It may judge language plausibility, estimate language, explain ambiguity, and suggest whether confidence should stay conservative. It must not replace IoC, frequency analysis, key search, confidence caps, or solver evidence. If Gemini is unavailable because of quota, network, or missing deployment secret, GhostKey falls back to local scoring without blocking results.
 
 The browser must never contain the Gemini API key. Local development uses `.env.local`; production deployments must keep the key server-side. The AI route should receive only bounded candidate summaries and plaintext previews from local solver output, not full JWT secrets, private keys, wordlists, or remote target data.
 
@@ -135,7 +135,7 @@ The first scoring models must support English and Indonesian. The MVP uses docum
 
 ## Runtime Recommendation
 
-Use a single Next.js application with the App Router. Keep cryptanalysis engines as pure TypeScript modules and run heavy search tasks in browser Web Workers. Use route handlers only for lightweight utility endpoints, optional Gemini evidence rerank, or future saved-lab features. This keeps core cryptographic analysis local for the MVP and fits Vercel's deployment model.
+Use a single Next.js application with the App Router. Keep cryptanalysis engines as pure TypeScript modules and run heavy search tasks in browser Web Workers. Use route handlers only for lightweight utility endpoints, Gemini evidence rerank, or future saved-lab features. This keeps core cryptographic analysis local for the MVP and fits Vercel's deployment model.
 
 ## Backend Scope Decision
 
@@ -143,7 +143,7 @@ Do not build a custom backend for core cryptanalysis in the MVP.
 
 GhostKey should start as a frontend-heavy Next.js application. The browser owns the active breach workflow, and Web Workers own expensive cryptanalysis jobs. This means ciphertext, JWTs, candidate secrets, and local wordlists stay on the user's device by default.
 
-Next.js may still provide the application shell, static assets, deployment runtime, and a narrow optional Gemini rerank proxy. That does not mean GhostKey needs application backend features such as database writes, authentication, server-side cracking jobs, queues, or remote analysis endpoints in the first release.
+Next.js may still provide the application shell, static assets, deployment runtime, and a narrow Gemini rerank proxy. That does not mean GhostKey needs application backend features such as database writes, authentication, server-side cracking jobs, queues, or remote analysis endpoints in the first release.
 
 Backend rules remain useful as guardrails, not as implementation scope. They become active only if a future feature adds one of these needs:
 
@@ -182,8 +182,8 @@ Fetched on 2026-04-27.
 - Indonesian quadgram data remains educational because the current corpus is self-authored and small. Treat it as a local scoring aid, not authoritative language statistics.
 - Vercel is the target deploy platform, but the first algorithm-heavy tasks should run in the browser to avoid serverless time and resource limits.
 - The practical project story should present Autokey correctness first, then explain automated cryptanalysis as a bounded classroom attack suite for weak/toy algorithms.
-- Gemini AI rerank can improve multilingual plausibility review, but it remains optional and cannot prove the original plaintext when ciphertext evidence is insufficient.
+- Gemini AI rerank can improve multilingual plausibility review, but it cannot prove the original plaintext when ciphertext evidence is insufficient.
 
 ## Next Validation Action
 
-Proceed with the MVP boundary: local-first Next.js dashboard, no custom backend for cryptanalysis, no database, no auth, browser Web Workers for heavy analysis, and a narrow optional Gemini rerank route only for candidate language review.
+Proceed with the MVP boundary: local-first Next.js dashboard, no custom backend for cryptanalysis, no database, no auth, browser Web Workers for heavy analysis, and a narrow Gemini rerank route only for candidate language review with local fallback.
