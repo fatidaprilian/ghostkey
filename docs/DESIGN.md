@@ -148,7 +148,7 @@ The Bypass Tool is now the primary surface. It must show every supported method 
 
 Finding rows should prioritize rank, confidence, candidate key, evidence, and the action to inspect details.
 
-When Gemini rejects all plaintext candidates, the finding row must not show a fake plaintext preview. It should show a low-confidence "no reliable plaintext" result, the AI decision reason, and the next evidence needed for a better classroom run.
+When Gemini rejects all plaintext candidates, the finding row must not show a fake plaintext preview. It should show a low-confidence "no reliable plaintext" result, the AI decision reason, and the next evidence needed for a better classroom run. The rejected local plaintext candidates should remain visible in the Gemini decision panel as reviewed candidates, clearly labeled so they are not mistaken for the final answer. Gemini may show an AI refinement attempt, but it must be labeled as an unverified language guess rather than a recovered plaintext.
 
 ### Security Conclusion
 
@@ -195,7 +195,7 @@ The design is based on the current GhostKey brief and repo docs. Do not copy fam
 - Keep tab switches clean by resetting transient Bypass findings/log state when entering the Bypass Tool, so stale result boxes do not flash between Autokey and Bypass views.
 - Keep Auto Detect conservative: accept strong Caesar/Reverse hits early, and cap complex solver confidence on short artifacts instead of overclaiming a classroom breach.
 - Treat corpus details as supporting evidence, not as a visible promise of authoritative language detection; current language scoring uses documented self-authored assets.
-- Keep AI decision support bounded by local solver candidates and confidence caps. Gemini may promote, cap, or reject plaintext candidates, but cannot prove ciphertext-only recovery. When Gemini is unavailable, show a calm local-scoring fallback instead of setup jargon.
+- Keep AI decision support bounded by local solver candidates and confidence caps. Gemini may promote, cap, reject, or cautiously refine plaintext candidates, but cannot prove ciphertext-only recovery. Any refinement is an unverified language guess. When Gemini is unavailable, show a calm local-scoring fallback instead of setup jargon.
 - Use Web Worker progress events as the source of terminal state.
 - Build a stable state matrix before styling components.
 - Keep the main action clear: detect, run bypass, inspect finding, read fix.

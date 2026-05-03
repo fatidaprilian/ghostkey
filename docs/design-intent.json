@@ -79,6 +79,10 @@
       "ciphertext-only mode marker plus optional crib controls only when explicitly selected",
       "multi-method Bypass roster visible as the main product surface",
       "AI decision caveat and local fallback visible when Gemini accepts, marks ambiguous, or rejects local plaintext candidates"
+      ,
+      "Rejected plaintext candidates remain visible as reviewed candidates without being promoted as final results"
+      ,
+      "AI refinement attempts are labeled as unverified language guesses, not recovered plaintext"
     ],
     "blockingByDefault": true
   },
@@ -203,7 +207,7 @@
       "autokeySimulation": "two-action sender-observer-receiver lesson with CSS characters, Eve confusion, Bob reveal, reset, and formula rows from the active Autokey transform",
       "moduleSwitcher": "instrument selector with risk labels and input expectations",
       "findingRow": "ranked evidence row with confidence and key candidate",
-      "aiRerankPanel": "Gemini language decision support that accepts, marks ambiguous, or rejects local plaintext candidates while staying bounded by solver evidence and falling back calmly",
+      "aiRerankPanel": "Gemini language decision support that accepts, marks ambiguous, rejects, or cautiously refines local plaintext candidates while keeping refinement labeled as an unverified language guess",
       "conclusionBand": "weakness, evidence, fix, and modern alternative"
     },
     "stateKeys": [

@@ -173,6 +173,9 @@ export function BreachWorkspace() {
 
   const activeResult = results[0];
   const confidence = activeResult ? Math.round(activeResult.confidence * 100) : 0;
+  const reviewedPlaintextCandidates = (localCandidateResults.length > 0 ? localCandidateResults : results)
+    .filter((candidate) => candidate.plaintextPreview)
+    .slice(0, 3);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -855,6 +858,38 @@ export function BreachWorkspace() {
                     <div className="ai-review-body">
                       <p>{aiReview.summary}</p>
                       <small>{aiReview.caveat}</small>
+                      {reviewedPlaintextCandidates.length > 0 ? (
+                        <div className="ai-candidate-previews">
+                          <strong>
+                            {aiReview.decision === "reject"
+                              ? "Rejected plaintext candidates"
+                              : "Reviewed plaintext candidates"}
+                          </strong>
+                          {reviewedPlaintextCandidates.map((candidate) => (
+                            <div key={`${candidate.rank}-${candidate.module}`}>
+                              <span>
+                                Rank {candidate.rank} | {Math.round(candidate.confidence * 100)}% local
+                              </span>
+                              <code>{candidate.plaintextPreview}</code>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                      {aiReview.refinement.attempted ? (
+                        <div className="ai-refinement-box">
+                          <strong>AI refinement attempt</strong>
+                          {aiReview.refinement.suggestedPlaintext ? (
+                            <div className="ai-refinement-suggestion">
+                              <span>
+                                Unverified suggestion | rank {aiReview.refinement.candidateRank ?? aiReview.bestRank}
+                              </span>
+                              <code>{aiReview.refinement.suggestedPlaintext}</code>
+                            </div>
+                          ) : null}
+                          <p>{aiReview.refinement.rationale}</p>
+                          <small>{aiReview.refinement.warning}</small>
+                        </div>
+                      ) : null}
                       <div className="ai-review-list">
                         {aiReview.reviews.slice(0, 3).map((review) => (
                           <div key={`${review.candidateRank}-${review.languageEstimate}`}>

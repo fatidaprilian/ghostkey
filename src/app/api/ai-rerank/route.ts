@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSign } from "node:crypto";
 import type {
   AiCandidateReview,
+  AiRefinementSuggestion,
   AiRerankApiResponse,
   AiRerankDecision,
   AiRerankRequest,
@@ -280,8 +281,10 @@ function buildPrompt(payload: AiRerankRequest) {
     "Choose decision accept only when one candidate is clearly natural language and materially better than the others.",
     "Choose decision ambiguous when one or more candidates might be plausible but the evidence is weak, short, or close.",
     "Choose decision reject when no candidate is linguistically plausible. In that case, do not promote any plaintext as recovered.",
+    "You should also attempt a cautious linguistic refinement. This is not decryption. You only see local candidate previews, not the original ciphertext.",
+    "Set refinement.suggestedPlaintext only when a candidate can be minimally repaired into a coherent message without inventing new facts. Otherwise set it to null and explain why.",
     "Return strict JSON only with this shape:",
-    '{"decision":"accept|ambiguous|reject","bestRank":1,"finalConfidence":0.0,"decisionReason":"...","summary":"...","caveat":"...","reviews":[{"candidateRank":1,"languageEstimate":"...","plausibilityScore":0.0,"confidenceAdjustment":"lower|same|raise-slightly","ambiguityWarning":"...","explanation":"...","limitations":["..."]}]}',
+    '{"decision":"accept|ambiguous|reject","bestRank":1,"finalConfidence":0.0,"decisionReason":"...","refinement":{"attempted":true,"candidateRank":1,"suggestedPlaintext":null,"confidence":0.0,"rationale":"...","warning":"..."},"summary":"...","caveat":"...","reviews":[{"candidateRank":1,"languageEstimate":"...","plausibilityScore":0.0,"confidenceAdjustment":"lower|same|raise-slightly","ambiguityWarning":"...","explanation":"...","limitations":["..."]}]}',
     "",
     `Context: ${JSON.stringify(payload.context)}`,
     `Candidates: ${JSON.stringify(payload.candidates)}`
@@ -301,6 +304,7 @@ function normalizeModelResponse(raw: unknown, model: string, payload: AiRerankRe
     : firstRank;
   const decision = normalizeDecision(value.decision, reviews, payload);
   const finalConfidence = normalizeFinalConfidence(value.finalConfidence, decision, reviews);
+  const refinement = normalizeRefinement(value.refinement, bestRank);
 
   return {
     model,
@@ -310,11 +314,34 @@ function normalizeModelResponse(raw: unknown, model: string, payload: AiRerankRe
     decisionReason:
       truncate(value.decisionReason, 260) ??
       buildDecisionReason(decision, reviews, payload.context.artifactLetterCount),
+    refinement,
     summary: truncate(value.summary, 320) ?? "Gemini evaluated local candidates for language plausibility.",
     caveat:
       truncate(value.caveat, 320) ??
       "AI rerank is language-plausibility decision support, not proof that a ciphertext-only recovery is correct.",
     reviews
+  };
+}
+
+function normalizeRefinement(raw: unknown, bestRank: number): AiRefinementSuggestion {
+  const value = raw && typeof raw === "object" ? raw as Partial<AiRefinementSuggestion> : {};
+  const suggestedPlaintext = truncate(value.suggestedPlaintext, maxPlaintextPreviewLength);
+
+  return {
+    attempted: value.attempted === false ? false : true,
+    candidateRank: value.candidateRank === undefined
+      ? bestRank
+      : clampInteger(value.candidateRank, 1, maxCandidates),
+    suggestedPlaintext,
+    confidence: suggestedPlaintext ? clampNumber(value.confidence, 0, 0.42) : 0,
+    rationale:
+      truncate(value.rationale, 280) ??
+      (suggestedPlaintext
+        ? "Gemini produced a cautious linguistic repair from a local candidate preview."
+        : "Gemini did not find a safe linguistic repair from the local candidate previews."),
+    warning:
+      truncate(value.warning, 240) ??
+      "This is an AI language guess, not cryptographic proof or verified plaintext."
   };
 }
 

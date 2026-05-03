@@ -178,8 +178,9 @@ Autokey breach is separate from Autokey encrypt/decrypt. The encrypt/decrypt pat
    - accepted candidates are promoted with bounded confidence.
    - ambiguous candidates stay visible but capped.
    - rejected candidates become a "no reliable plaintext" result.
-8. The AI summary stays beside the final finding with a caveat that ciphertext-only recovery may remain ambiguous.
-9. If service account credentials are missing, quota is exhausted, or the request fails, the local solver result remains usable and the UI falls back to local scoring.
+8. Gemini may include a cautious language refinement attempt. If shown, it is labeled as an unverified AI guess and does not replace solver evidence.
+9. The AI summary stays beside the final finding with a caveat that ciphertext-only recovery may remain ambiguous.
+10. If service account credentials are missing, quota is exhausted, or the request fails, the local solver result remains usable and the UI falls back to local scoring.
 
 ## Flow: JWT Debugger and Manipulator
 

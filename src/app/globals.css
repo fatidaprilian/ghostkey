@@ -1099,6 +1099,84 @@ input:focus-visible {
   margin-top: 10px;
 }
 
+.ai-candidate-previews {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ai-candidate-previews > strong {
+  color: var(--signal-warning);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ai-candidate-previews div {
+  border: 1px dashed rgba(255, 185, 85, 0.5);
+  border-radius: 10px;
+  background: rgba(255, 249, 232, 0.72);
+  padding: 9px;
+}
+
+.ai-candidate-previews span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ai-candidate-previews code {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ai-refinement-box {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  border-top: 1px solid rgba(40, 120, 200, 0.14);
+  padding-top: 12px;
+}
+
+.ai-refinement-box > strong {
+  color: var(--signal-info);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ai-refinement-suggestion {
+  border: 1px solid rgba(40, 120, 200, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 9px;
+}
+
+.ai-refinement-suggestion span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ai-refinement-suggestion code {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .ai-review-list div {
   border: 1px solid rgba(40, 120, 200, 0.14);
   border-radius: 10px;

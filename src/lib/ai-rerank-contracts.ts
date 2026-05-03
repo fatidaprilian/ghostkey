@@ -32,12 +32,22 @@ export type AiCandidateReview = {
 
 export type AiRerankDecision = "accept" | "ambiguous" | "reject";
 
+export type AiRefinementSuggestion = {
+  attempted: boolean;
+  candidateRank?: number;
+  suggestedPlaintext?: string;
+  confidence: number;
+  rationale: string;
+  warning: string;
+};
+
 export type AiRerankResponse = {
   model: string;
   decision: AiRerankDecision;
   bestRank: number;
   finalConfidence: number;
   decisionReason: string;
+  refinement: AiRefinementSuggestion;
   summary: string;
   caveat: string;
   reviews: AiCandidateReview[];

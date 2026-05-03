@@ -77,9 +77,9 @@ The default module should be Auto Detect. A user should not need to know whether
 
 ### Gemini Evidence Rerank
 
-Gemini integration runs by default after local solvers generate plaintext candidates. It may judge language plausibility, estimate language, explain ambiguity, and decide whether a local candidate should be accepted, marked ambiguous, or rejected. It must not replace IoC, frequency analysis, key search, confidence caps, or solver evidence. If Gemini is unavailable because of quota, network, or missing deployment secret, GhostKey falls back to local scoring without blocking results.
+Gemini integration runs by default after local solvers generate plaintext candidates. It may judge language plausibility, estimate language, explain ambiguity, decide whether a local candidate should be accepted, marked ambiguous, or rejected, and attempt a cautious language refinement. It must not replace IoC, frequency analysis, key search, confidence caps, or solver evidence. If Gemini is unavailable because of quota, network, or missing deployment secret, GhostKey falls back to local scoring without blocking results.
 
-When Gemini rejects every plaintext candidate, GhostKey should show "no reliable plaintext recovered" as the final result instead of showing the highest local candidate as if it were correct. The local candidate reviews may remain visible for classroom comparison.
+When Gemini rejects every plaintext candidate, GhostKey should show "no reliable plaintext recovered" as the final result instead of showing the highest local candidate as if it were correct. The local candidate reviews may remain visible for classroom comparison. If Gemini proposes a refined sentence, the UI must label it as an unverified AI language guess, not recovered plaintext.
 
 The browser must never contain Gemini credentials. Local development uses `.env.local`; production deployments must keep the Vertex AI service account JSON server-side in Vercel environment variables. The AI route should receive only bounded candidate summaries and plaintext previews from local solver output, not full JWT secrets, private keys, wordlists, or remote target data.
 
